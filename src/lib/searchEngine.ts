@@ -249,9 +249,7 @@ const SYNONYM_MAP: Record<string, string[]> = {
   // ── Частые опечатки / транслит ──
   'ганттели':      ['gantere', 'dumbbell', 'гантели'],
   'ганделя':       ['gantere', 'dumbbell', 'гантели'],
-  'штанга':        ['bara', 'haltera', 'barbell'],
   'штанги':        ['bara', 'haltera', 'barbell'],
-  'беговая':       ['banda', 'treadmill'],
   'бигвой':        ['беговая', 'banda', 'treadmill'],
   'hms':           ['hms'],
   'kettler':       ['kettler'],

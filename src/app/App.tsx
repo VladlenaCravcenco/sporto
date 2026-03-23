@@ -4,7 +4,7 @@ import { LanguageProvider } from './contexts/LanguageContext';
 import { CartProvider } from './contexts/CartContext';
 import { CategoriesProvider } from './contexts/CategoriesContext';
 import { router } from './routes';
-import { Analytics } from "@vercel/analytics/next"
+
 
 export default function App() {
   return (
@@ -16,7 +16,7 @@ export default function App() {
           </CategoriesProvider>
         </CartProvider>
       </LanguageProvider>
-      <Analytics />
+      
     </AuthProvider>
   );
 }
