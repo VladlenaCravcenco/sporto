@@ -14,7 +14,10 @@ export interface Case    {
   year:     string;
 }
 
+export type SectionKey = 'stats' | 'services' | 'process' | 'why' | 'cases' | 'cta';
+
 export interface PageData {
+  section_order:   SectionKey[];
   show_stats:     boolean;
   show_services:  boolean;
   show_process:   boolean;
@@ -40,6 +43,7 @@ export interface PageData {
 }
 
 export const DEFAULTS: PageData = {
+  section_order: ['stats', 'services', 'process', 'why', 'cases', 'cta'],
   show_stats: true, show_services: true, show_process: true,
   show_why: true, show_cases: false, show_cta: true,
   hero_title: {
@@ -115,6 +119,7 @@ export async function loadFromSupabase(): Promise<PageData> {
       cta_title:      { ...DEFAULTS.cta_title,       ...(parsed.cta_title      || {}) },
       cta_body:       { ...DEFAULTS.cta_body,        ...(parsed.cta_body       || {}) },
       cta_btn:        { ...DEFAULTS.cta_btn,         ...(parsed.cta_btn        || {}) },
+      section_order: parsed.section_order ?? DEFAULTS.section_order,
       stats:    parsed.stats    ?? DEFAULTS.stats,
       services: parsed.services ?? DEFAULTS.services,
       steps:    parsed.steps    ?? DEFAULTS.steps,

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { toast } from 'sonner';
+import { usePreviewFieldFocus } from '../hooks/usePreviewFieldFocus';
 import {
   type PageContent as PageData,
   type PageContentType as PageType,
@@ -323,6 +324,7 @@ export function AdminContentPages() {
     privacy: { ...DEFAULTS.privacy },
   });
   const [previewLang, setPreviewLang] = useState<'ro' | 'ru'>('ro');
+  const { activeFieldId, registerField, focusField } = usePreviewFieldFocus();
 
   useEffect(() => {
     Promise.all([
@@ -425,7 +427,7 @@ export function AdminContentPages() {
 
         {/* Fields */}
         <div className="px-5 py-5 space-y-4">
-          <div>
+          <div ref={registerField('title_ro')} className={activeFieldId === 'title_ro' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
               {isRu ? 'Заголовок (RO)' : 'Titlu (RO)'}
             </label>
@@ -436,7 +438,7 @@ export function AdminContentPages() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('title_ru')} className={activeFieldId === 'title_ru' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
               {isRu ? 'Заголовок (RU)' : 'Titlu (RU)'}
             </label>
@@ -447,7 +449,7 @@ export function AdminContentPages() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('content_ro')} className={activeFieldId === 'content_ro' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
               {isRu ? 'Контент (RO) — Markdown' : 'Conținut (RO) — Markdown'}
             </label>
@@ -459,7 +461,7 @@ export function AdminContentPages() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('content_ru')} className={activeFieldId === 'content_ru' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
               {isRu ? 'Контент (RU) — Markdown' : 'Conținut (RU) — Markdown'}
             </label>
@@ -488,10 +490,20 @@ export function AdminContentPages() {
 
         <div className="flex-1 overflow-y-auto bg-white p-8">
           <div className="max-w-3xl mx-auto prose prose-sm">
-            <h1 className="text-2xl font-bold mb-4">{previewLang === 'ro' ? current.title_ro : current.title_ru}</h1>
-            <div className="whitespace-pre-wrap text-sm text-gray-700 leading-relaxed">
+            <button
+              type="button"
+              onClick={() => focusField(previewLang === 'ro' ? 'title_ro' : 'title_ru')}
+              className={`block w-full text-left transition-colors ${activeFieldId === (previewLang === 'ro' ? 'title_ro' : 'title_ru') ? 'outline outline-1 outline-black/30' : 'hover:outline hover:outline-1 hover:outline-black/15'}`}
+            >
+              <h1 className="text-2xl font-bold mb-4">{previewLang === 'ro' ? current.title_ro : current.title_ru}</h1>
+            </button>
+            <button
+              type="button"
+              onClick={() => focusField(previewLang === 'ro' ? 'content_ro' : 'content_ru')}
+              className={`block w-full text-left whitespace-pre-wrap text-sm text-gray-700 leading-relaxed transition-colors ${activeFieldId === (previewLang === 'ro' ? 'content_ro' : 'content_ru') ? 'outline outline-1 outline-black/30' : 'hover:outline hover:outline-1 hover:outline-black/15'}`}
+            >
               {previewLang === 'ro' ? current.content_ro : current.content_ru}
-            </div>
+            </button>
           </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Save, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { toast } from 'sonner';
+import { usePreviewFieldFocus } from '../hooks/usePreviewFieldFocus';
 import {
   DEFAULTS,
   loadFromSupabase,
@@ -140,13 +141,13 @@ function CardList<T>({
   );
 }
 
-function Preview({ data, lang }: { data: PageData; lang: 'ro' | 'ru' }) {
+function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; lang: 'ro' | 'ru'; activeFieldId: string | null; focusField: (id: string) => void }) {
   const t = (value: BiText) => value[lang] || value.ro;
   const packageFeatures = (item: PackagePlan) => (lang === 'ro' ? item.features_ro : item.features_ru).split('\n').filter(Boolean);
 
   const sections: Record<SectionKey, React.ReactNode> = {
     stats: data.show_stats ? (
-      <section className="px-6 py-6 border-b border-gray-100">
+      <button type="button" onClick={() => focusField('stats')} className={`block w-full text-left px-6 py-6 border-b transition-colors ${activeFieldId === 'stats' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="grid grid-cols-3 divide-x divide-gray-100">
           {data.stats.map((s, i) => (
             <div key={i} className="px-4 first:pl-0 py-2">
@@ -155,10 +156,10 @@ function Preview({ data, lang }: { data: PageData; lang: 'ro' | 'ru' }) {
             </div>
           ))}
         </div>
-      </section>
+      </button>
     ) : null,
     services: data.show_services ? (
-      <section className="px-6 py-6 border-b border-gray-100">
+      <button type="button" onClick={() => focusField('services')} className={`block w-full text-left px-6 py-6 border-b transition-colors ${activeFieldId === 'services' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-3">{t(data.services_eyebrow)}</div>
         <h2 className="text-2xl whitespace-pre-line mb-5">{t(data.services_title)}</h2>
         <div className="grid grid-cols-2 gap-4">
@@ -170,10 +171,10 @@ function Preview({ data, lang }: { data: PageData; lang: 'ro' | 'ru' }) {
             </div>
           ))}
         </div>
-      </section>
+      </button>
     ) : null,
     packages: data.show_packages ? (
-      <section className="px-6 py-6 border-b border-gray-100 bg-gray-50">
+      <button type="button" onClick={() => focusField('packages')} className={`block w-full text-left px-6 py-6 border-b transition-colors ${activeFieldId === 'packages' ? 'border-black/30 bg-gray-100' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}>
         <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-3">{t(data.packages_eyebrow)}</div>
         <h2 className="text-2xl whitespace-pre-line mb-5">{t(data.packages_title)}</h2>
         <div className="grid grid-cols-3 gap-3">
@@ -189,10 +190,10 @@ function Preview({ data, lang }: { data: PageData; lang: 'ro' | 'ru' }) {
             </div>
           ))}
         </div>
-      </section>
+      </button>
     ) : null,
     process: data.show_process ? (
-      <section className="px-6 py-6 border-b border-gray-100">
+      <button type="button" onClick={() => focusField('process')} className={`block w-full text-left px-6 py-6 border-b transition-colors ${activeFieldId === 'process' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-3">{t(data.process_eyebrow)}</div>
         <h2 className="text-2xl whitespace-pre-line mb-5">{t(data.process_title)}</h2>
         <div className="space-y-3">
@@ -204,10 +205,10 @@ function Preview({ data, lang }: { data: PageData; lang: 'ro' | 'ru' }) {
             </div>
           ))}
         </div>
-      </section>
+      </button>
     ) : null,
     delivery: data.show_delivery ? (
-      <section className="px-6 py-6 border-b border-gray-100 bg-gray-50">
+      <button type="button" onClick={() => focusField('delivery')} className={`block w-full text-left px-6 py-6 border-b transition-colors ${activeFieldId === 'delivery' ? 'border-black/30 bg-gray-100' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}>
         <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-3">{t(data.delivery_eyebrow)}</div>
         <h2 className="text-2xl whitespace-pre-line mb-3">{t(data.delivery_title)}</h2>
         <p className="text-sm text-gray-500 mb-5">{t(data.delivery_desc)}</p>
@@ -220,28 +221,28 @@ function Preview({ data, lang }: { data: PageData; lang: 'ro' | 'ru' }) {
             </div>
           ))}
         </div>
-      </section>
+      </button>
     ) : null,
     cta: data.show_cta ? (
-      <section className="px-6 py-6">
+      <button type="button" onClick={() => focusField('cta')} className={`block w-full text-left px-6 py-6 transition-colors ${activeFieldId === 'cta' ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
         <div className="bg-black text-white px-6 py-8">
           <h2 className="text-2xl whitespace-pre-line mb-3">{t(data.cta_title)}</h2>
           <p className="text-sm text-gray-400 mb-4">{t(data.cta_body)}</p>
           <div className="text-[10px] uppercase tracking-widest">{t(data.cta_btn)}</div>
         </div>
-      </section>
+      </button>
     ) : null,
   };
 
   return (
     <div className="bg-white min-h-full text-black">
-      <section className="px-6 pt-8 pb-6 border-b border-gray-100">
+      <button type="button" onClick={() => focusField('hero')} className={`block w-full text-left px-6 pt-8 pb-6 border-b transition-colors ${activeFieldId === 'hero' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-3">{t(data.hero_eyebrow)}</div>
         <h1 className="text-3xl whitespace-pre-line mb-4">{t(data.hero_title)}</h1>
         <p className="text-sm text-gray-500 mb-4">{t(data.hero_body)}</p>
         <div className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[10px] uppercase tracking-widest">{t(data.hero_cta)}</div>
         <div className="text-xs text-gray-400 mt-3">{t(data.hero_sub)}</div>
-      </section>
+      </button>
       {data.section_order.map((key) => <div key={key}>{sections[key]}</div>)}
     </div>
   );
@@ -263,6 +264,7 @@ export function AdminMaintenance() {
   const [published, setPublished] = useState<PageData>({ ...DEFAULTS });
   const [previewLang, setPreviewLang] = useState<'ro' | 'ru'>('ro');
   const [saving, setSaving] = useState(false);
+  const { activeFieldId, registerField, focusField } = usePreviewFieldFocus();
 
   useEffect(() => {
     loadFromSupabase().then((next) => {
@@ -355,7 +357,7 @@ export function AdminMaintenance() {
         </div>
 
         <div className="px-5 py-5 space-y-6">
-          <div>
+          <div ref={registerField('hero')} className={activeFieldId === 'hero' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Hero</div>
             <div className="space-y-3">
               <BiField label="Eyebrow" value={data.hero_eyebrow} onChange={(value) => setField('hero_eyebrow', value)} />
@@ -366,7 +368,7 @@ export function AdminMaintenance() {
             </div>
           </div>
 
-          <div>
+          <div ref={registerField('section_order')} className={activeFieldId === 'section_order' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Block order</div>
             <div className="space-y-2">
               {data.section_order.map((section, index) => {
@@ -389,7 +391,7 @@ export function AdminMaintenance() {
             </div>
           </div>
 
-          <div>
+          <div ref={registerField('stats')} className={activeFieldId === 'stats' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Stats</div>
             <CardList
               items={data.stats}
@@ -403,7 +405,7 @@ export function AdminMaintenance() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('services')} className={activeFieldId === 'services' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Services</div>
             <div className="space-y-3 mb-3">
               <BiField label="Eyebrow" value={data.services_eyebrow} onChange={(value) => setField('services_eyebrow', value)} />
@@ -422,7 +424,7 @@ export function AdminMaintenance() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('packages')} className={activeFieldId === 'packages' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Packages</div>
             <div className="space-y-3 mb-3">
               <BiField label="Eyebrow" value={data.packages_eyebrow} onChange={(value) => setField('packages_eyebrow', value)} />
@@ -462,7 +464,7 @@ export function AdminMaintenance() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('process')} className={activeFieldId === 'process' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Process</div>
             <div className="space-y-3 mb-3">
               <BiField label="Eyebrow" value={data.process_eyebrow} onChange={(value) => setField('process_eyebrow', value)} />
@@ -481,7 +483,7 @@ export function AdminMaintenance() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('delivery')} className={activeFieldId === 'delivery' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Delivery</div>
             <div className="space-y-3 mb-3">
               <BiField label="Eyebrow" value={data.delivery_eyebrow} onChange={(value) => setField('delivery_eyebrow', value)} />
@@ -502,7 +504,7 @@ export function AdminMaintenance() {
             />
           </div>
 
-          <div>
+          <div ref={registerField('cta')} className={activeFieldId === 'cta' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">CTA</div>
             <div className="space-y-3">
               <BiField label={isRu ? 'Заголовок' : 'Titlu'} value={data.cta_title} onChange={(value) => setField('cta_title', value)} textarea />
@@ -523,7 +525,7 @@ export function AdminMaintenance() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto bg-white">
-          <Preview data={data} lang={previewLang} />
+          <Preview data={data} lang={previewLang} activeFieldId={activeFieldId} focusField={focusField} />
         </div>
       </div>
     </div>

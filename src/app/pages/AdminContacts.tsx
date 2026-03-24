@@ -8,6 +8,7 @@ import { toast } from 'sonner';
 import { supabase } from '../../lib/supabase';
 import { CONTACTS } from '../../lib/contacts';
 import { saveContacts } from '../hooks/useContacts';
+import { usePreviewFieldFocus } from '../hooks/usePreviewFieldFocus';
 
 // ── Типы ────────────────────────────────────────────────────────────────────
 interface SocialEntry {
@@ -157,7 +158,7 @@ const SOCIAL_SVGS: Record<SocialType, React.ReactNode> = {
 };
 
 // ── Превью ───────────────────────────────────────────────────────────────────
-function ContactsPreview({ d }: { d: ContactsData }) {
+function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; activeFieldId: string | null; focusField: (id: string) => void }) {
   const phone = d.phone || DEFAULTS.phone;
   const email = d.email || DEFAULTS.email;
 
@@ -196,7 +197,7 @@ function ContactsPreview({ d }: { d: ContactsData }) {
 
         {/* Contact cards */}
         <div className="grid grid-cols-2 gap-3">
-          <a href={`mailto:${email}`} className="group border border-gray-100 hover:border-gray-300 p-4 flex items-start gap-3 transition-colors">
+          <button type="button" onClick={() => focusField('email')} className={`group border p-4 flex items-start gap-3 transition-colors text-left ${activeFieldId === 'email' ? 'border-black' : 'border-gray-100 hover:border-gray-300'}`}>
             <div className="w-8 h-8 bg-gray-50 group-hover:bg-black flex items-center justify-center flex-shrink-0 transition-colors">
               <Mail className="w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-colors" />
             </div>
@@ -204,8 +205,8 @@ function ContactsPreview({ d }: { d: ContactsData }) {
               <div className="text-[9px] uppercase tracking-widest text-gray-400 mb-1">Email</div>
               <div className="text-xs text-gray-700 break-all">{email}</div>
             </div>
-          </a>
-          <a href={`tel:${toRaw(phone)}`} className="group border border-gray-100 hover:border-gray-300 p-4 flex items-start gap-3 transition-colors">
+          </button>
+          <button type="button" onClick={() => focusField('phone')} className={`group border p-4 flex items-start gap-3 transition-colors text-left ${activeFieldId === 'phone' || activeFieldId === 'phone_2' ? 'border-black' : 'border-gray-100 hover:border-gray-300'}`}>
             <div className="w-8 h-8 bg-gray-50 group-hover:bg-black flex items-center justify-center flex-shrink-0 transition-colors">
               <Phone className="w-3.5 h-3.5 text-gray-400 group-hover:text-white transition-colors" />
             </div>
@@ -214,7 +215,7 @@ function ContactsPreview({ d }: { d: ContactsData }) {
               <div className="text-xs text-gray-700">{phone}</div>
               {d.phone_2 && <div className="text-[10px] text-gray-400 mt-0.5">{d.phone_2}</div>}
             </div>
-          </a>
+          </button>
         </div>
 
         {/* Legal card — точная копия стиля сайта */}
@@ -226,8 +227,23 @@ function ContactsPreview({ d }: { d: ContactsData }) {
             <span className="text-[10px] uppercase tracking-[0.18em] text-gray-700">Date Juridice</span>
           </div>
           <div className="px-5 py-4 space-y-3.5">
-            {infoRows.map((row, i) => (
-              <div key={i} className="flex gap-3">
+            {infoRows.map((row, i) => {
+              const fieldId =
+                row.label === 'Denumire' ? 'legal_name' :
+                row.label === 'Cod Fiscal' ? 'legal_idno' :
+                row.label === 'Adresă' ? 'address' :
+                row.label === 'Email' ? 'email' :
+                row.label === 'Telefon' || row.label === 'Telefon 2' ? 'phone' :
+                'hours';
+              return (
+              <div
+                key={i}
+                role="button"
+                tabIndex={0}
+                onClick={() => focusField(fieldId)}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') focusField(fieldId); }}
+                className={`w-full flex gap-3 text-left p-1 -m-1 border transition-colors cursor-pointer ${activeFieldId === fieldId ? 'border-black' : 'border-transparent hover:border-gray-200'}`}
+              >
                 <div className="mt-0.5 text-gray-300 flex-shrink-0">{row.icon}</div>
                 <div>
                   <div className="text-[9px] text-gray-400 uppercase tracking-widest mb-0.5">{row.label}</div>
@@ -238,13 +254,19 @@ function ContactsPreview({ d }: { d: ContactsData }) {
                   )}
                 </div>
               </div>
-            ))}
+            );})}
           </div>
         </div>
 
         {/* Messengers — квадратные кнопки с SVG как на сайте */}
         {d.socials.filter(s => s.url).length > 0 && (
-          <div className="border border-gray-100 bg-white px-5 py-4">
+          <div
+            role="button"
+            tabIndex={0}
+            onClick={() => focusField('socials')}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') focusField('socials'); }}
+            className={`w-full border bg-white px-5 py-4 text-left transition-colors cursor-pointer ${activeFieldId === 'socials' ? 'border-black' : 'border-gray-100 hover:border-gray-300'}`}
+          >
             <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-4">Scrieți-ne direct</div>
             <div className="flex items-center gap-3 flex-wrap">
               {d.socials.filter(s => s.url).map(s => {
@@ -279,6 +301,7 @@ function ContactsPreview({ d }: { d: ContactsData }) {
 export function AdminContacts() {
   const { lang } = useAdminLang();
   const isRu = lang === 'ru';
+  const { activeFieldId, registerField, focusField } = usePreviewFieldFocus();
 
   const [data, setData]           = useState<ContactsData>({ ...DEFAULTS });
   const [published, setPublished] = useState<ContactsData>({ ...DEFAULTS });
@@ -389,6 +412,7 @@ export function AdminContacts() {
         <div className="px-5 py-5 space-y-6">
 
           <Section title={isRu ? 'Телефоны' : 'Telefoane'}>
+            <div ref={registerField('phone')} className={activeFieldId === 'phone' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <Field
               label={isRu ? 'Основной телефон' : 'Telefon principal'}
               value={data.phone} onChange={v => set('phone', v)} type="tel"
@@ -397,34 +421,47 @@ export function AdminContacts() {
                 ? 'Вводи с пробелами (+373 61 262 777) — красиво отобразится везде, ссылка создастся автоматически'
                 : 'Introdu cu spații (+373 61 262 777) — se afișează frumos, link-ul se creează automat'}
             />
+            </div>
+            <div ref={registerField('phone_2')} className={activeFieldId === 'phone_2' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <Field
               label={isRu ? 'Второй телефон (необязательно)' : 'Al 2-lea telefon (opțional)'}
               value={data.phone_2} onChange={v => set('phone_2', v)} type="tel"
               placeholder="+373 69 000 000"
             />
+            </div>
           </Section>
 
           <Section title="Email">
+            <div ref={registerField('email')} className={activeFieldId === 'email' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <Field label="Email" value={data.email} onChange={v => set('email', v)} type="email" placeholder={DEFAULTS.email} />
+            </div>
           </Section>
 
           <Section title={isRu ? 'Адрес и часы' : 'Adresă și ore'}>
+            <div ref={registerField('address')} className={activeFieldId === 'address' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <BiField label={isRu ? 'Адрес' : 'Adresă'}
               valRo={data.address_ro} valRu={data.address_ru}
               onRo={v => set('address_ro', v)} onRu={v => set('address_ru', v)} />
+            </div>
+            <div ref={registerField('hours')} className={activeFieldId === 'hours' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <BiField label={isRu ? 'Часы работы' : 'Ore de lucru'}
               valRo={data.hours_ro} valRu={data.hours_ru}
               onRo={v => set('hours_ro', v)} onRu={v => set('hours_ru', v)} />
+            </div>
           </Section>
 
           <Section title={isRu ? 'Юридические данные' : 'Date juridice'}>
+            <div ref={registerField('legal_name')} className={activeFieldId === 'legal_name' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <Field label={isRu ? 'Юр. название' : 'Denumire juridică'} value={data.legal_name} onChange={v => set('legal_name', v)} placeholder={DEFAULTS.legal_name} />
+            </div>
+            <div ref={registerField('legal_idno')} className={activeFieldId === 'legal_idno' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             <Field label={isRu ? 'Код фискал (IDNO)' : 'Cod fiscal (IDNO)'} value={data.legal_idno} onChange={v => set('legal_idno', v)} placeholder={DEFAULTS.legal_idno} />
+            </div>
           </Section>
 
           {/* ── Соцсети ── */}
           <Section title={isRu ? 'Соцсети и мессенджеры' : 'Rețele sociale & mesagerie'}>
-
+            <div ref={registerField('socials')} className={activeFieldId === 'socials' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
             {data.socials.length > 0 && (
               <div className="space-y-2">
                 {data.socials.map((s, idx) => {
@@ -455,6 +492,7 @@ export function AdminContacts() {
                 })}
               </div>
             )}
+            </div>
 
             {availableTypes.length > 0 && (
               <div>
@@ -496,7 +534,7 @@ export function AdminContacts() {
           </div>
         </div>
         <div className="flex-1 overflow-y-auto">
-          <ContactsPreview d={data} />
+          <ContactsPreview d={data} activeFieldId={activeFieldId} focusField={focusField} />
         </div>
       </div>
     </div>
