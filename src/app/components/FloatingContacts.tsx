@@ -1,17 +1,12 @@
 import { useState } from 'react';
 import { Phone, X, MessageCircle } from 'lucide-react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { CONTACTS } from '../../lib/contacts';
+import { useContacts } from '../hooks/useContacts';
 
 export function FloatingContacts() {
   const { language } = useLanguage();
+  const CONTACTS = useContacts();
   const [open, setOpen] = useState(false);
-
-  const waMsg = encodeURIComponent(
-    language === 'ro'
-      ? 'Bună ziua! Sunt interesat de echipamentele sportive Sporto.'
-      : 'Добрый день! Меня интересует спортивное оборудование Sporto.'
-  );
 
   return (
     <div className="fixed bottom-6 right-4 sm:right-6 z-[150] flex flex-col items-end gap-2.5">
@@ -22,7 +17,7 @@ export function FloatingContacts() {
 
           {/* WhatsApp */}
           <a
-            href={`https://wa.me/${CONTACTS.phone.replace('+', '')}?text=${waMsg}`}
+            href={CONTACTS.whatsapp}
             target="_blank"
             rel="noopener noreferrer"
             title="WhatsApp"
@@ -55,9 +50,7 @@ export function FloatingContacts() {
             className="w-10 h-10 flex items-center justify-center bg-[#7360F2] shadow-lg hover:opacity-80 transition-opacity"
             aria-label="Viber"
           >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M11.4 0C7.2.2 3.6 1.7 1.3 4.4-.6 6.7-.3 9.4.4 11.2c.2.5.6 1.2 1.2 1.9.6.8.7 1.2.6 1.7l-.6 3.6c-.1.4.3.8.7.7l3.7-.7c.5-.1 1 0 1.7.5.9.6 2.1 1.2 3.7 1.5 3.3.6 6.8-.1 9.2-2.4 2.5-2.4 3.5-5.7 3.4-8.7-.2-5.3-4.2-9.5-9.5-9.8C13 0 12.2 0 11.4 0zM12 2c4.5.2 8 3.8 8.1 8.3.1 2.5-.7 5.2-2.8 7.1-2 1.9-4.9 2.6-7.7 2-.9-.2-1.8-.6-2.5-1.1-.7-.5-1.4-.8-2.3-.6l-2.8.5.5-2.8c.2-.8 0-1.6-.7-2.4C1.3 12.3.9 11.8.7 11.3c-.6-1.5-.8-3.7.8-5.7C3.6 3.1 6.9 2 10.1 2c.6 0 1.3 0 1.9 0zm-2.8 3.7c-.2 0-.5.1-.7.2-.9.6-1.8 1.7-2 2.7-.2 1 .2 2 .6 2.8.5.9 1.6 2.3 3.1 3.4 1.1.8 2.1 1.3 2.9 1.6.9.3 1.7.4 2.2.1.4-.2.9-.8 1.1-1.3.1-.3 0-.5-.2-.7l-2.1-1.2c-.2-.1-.5-.1-.7.1l-.7.7c-.2.2-.4.2-.6.1-.7-.3-1.6-.9-2.3-1.8-.6-.8-.9-1.5-.9-1.7 0-.2 0-.4.2-.5l.7-.7c.2-.2.2-.4.1-.6L10 6.4c-.1-.4-.3-.6-.5-.7-.1 0-.2 0-.3 0z"/>
-            </svg>
+            <img src="https://cdn.simpleicons.org/viber/white" className="w-[18px] h-[18px]" alt="Viber" />
           </a>
 
           {/* Phone — with number */}

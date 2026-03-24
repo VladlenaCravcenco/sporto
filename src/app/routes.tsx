@@ -33,6 +33,8 @@ import { AdminContacts } from './pages/AdminContacts';
 import { AdminPopup } from './pages/AdminPopup';
 import { AdminFaq } from './pages/AdminFaq';
 import { AdminServices } from './pages/AdminServices';
+import { AdminMaintenance } from './pages/AdminMaintenance';
+import { AdminContentPages } from './pages/AdminContentPages';
 
 export const router = createBrowserRouter([
 
@@ -57,6 +59,8 @@ export const router = createBrowserRouter([
       { path: 'popup', Component: AdminPopup },
       { path: 'faq', Component: AdminFaq },
       { path: 'services', Component: AdminServices },
+      { path: 'maintenance', Component: AdminMaintenance },
+      { path: 'content-pages', Component: AdminContentPages },
     ],
   },
 

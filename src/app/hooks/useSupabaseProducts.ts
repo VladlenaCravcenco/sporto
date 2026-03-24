@@ -43,7 +43,7 @@ function rowToProduct(row: ProductRow): Product {
 // ─── Retry helper ─────────────────────────────────────────────────────────────
 // Retries a Supabase query up to `maxAttempts` times with exponential backoff.
 async function withRetry<T>(
-  fn: () => Promise<{ data: T | null; error: { message: string } | null }>,
+  fn: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
   maxAttempts = 3,
 ): Promise<{ data: T | null; error: { message: string } | null }> {
   let lastError: { message: string } | null = null;
@@ -101,7 +101,7 @@ export function useSupabaseProducts(): UseSupabaseProductsResult {
     setError(null);
 
     (async () => {
-      const { data, error: err } = await withRetry(() =>
+      const { data, error: err } = await withRetry<ProductRow[]>(() =>
         supabase
           .from('products')
           .select('*')
@@ -165,7 +165,7 @@ export function useSupabaseProduct(id: string | undefined) {
     setLoading(true);
 
     (async () => {
-      const { data, error: err } = await withRetry(() =>
+      const { data, error: err } = await withRetry<ProductRow>(() =>
         supabase
           .from('products')
           .select('*')
@@ -209,7 +209,7 @@ export function useSupabaseFeatured() {
 
     (async () => {
       // 1. Try featured products
-      const { data: featured } = await withRetry(() =>
+      const { data: featured } = await withRetry<ProductRow[]>(() =>
         supabase
           .from('products')
           .select('*')
@@ -230,7 +230,7 @@ export function useSupabaseFeatured() {
       }
 
       // 2. Fallback: any 7 active products
-      const { data: fallback } = await withRetry(() =>
+      const { data: fallback } = await withRetry<ProductRow[]>(() =>
         supabase
           .from('products')
           .select('*')
@@ -271,7 +271,7 @@ export function useBrandProducts(brand: string | undefined, excludeId: string | 
 
     setLoading(true);
     (async () => {
-      const { data } = await withRetry(() =>
+      const { data } = await withRetry<ProductRow[]>(() =>
         supabase
           .from('products')
           .select('*')

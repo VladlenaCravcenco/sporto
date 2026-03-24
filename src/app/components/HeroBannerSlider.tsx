@@ -64,9 +64,10 @@ export function HeroBannerSlider({ banners, language, onCtaClick }: Props) {
   const banner = banners[active];
   const title = language === 'ro' ? banner.title_ro : (banner.title_ru || banner.title_ro);
   const subtitle = language === 'ro' ? banner.subtitle_ro : (banner.subtitle_ru || banner.subtitle_ro);
+  const defaultCtaText = language === 'ro' ? 'Solicită Ofertă' : 'Запросить предложение';
   const ctaText = language === 'ro'
-    ? (banner.cta_text_ro || (language === 'ro' ? 'Solicită Ofertă' : 'Запросить предложение'))
-    : (banner.cta_text_ru || (language === 'ro' ? 'Solicită Ofertă' : 'Запросить предложение'));
+    ? (banner.cta_text_ro || defaultCtaText)
+    : (banner.cta_text_ru || defaultCtaText);
   const ctaLink = banner.cta_link || '/order-request';
   const isExternal = ctaLink.startsWith('http');
 

@@ -69,7 +69,6 @@ function showBrowserNotification(req: NewRequestNotification) {
       body: `${req.client_name}${amount}`,
       icon: '/favicon.ico',
       tag: `order-${req.id}`,
-      renotify: true,
     });
   } catch { /* safari may throw */ }
 }

@@ -5,7 +5,7 @@ import { logoutAdmin } from '../lib/adminAuth';
 import {
   Package, Star, Upload, LogOut, ExternalLink,
   LayoutDashboard, Layers, Bookmark, Users, ShoppingCart,
-  Tag, Bell, Globe, ChevronDown, Phone, Megaphone, HelpCircle, Wrench,
+  Tag, Bell, Globe, ChevronDown, Phone, Megaphone, HelpCircle, Wrench, FileText, Settings,
 } from 'lucide-react';
 import { useAdminNotifications } from './hooks/useAdminNotifications';
 import { toast } from 'sonner';
@@ -52,11 +52,13 @@ function AdminLayoutInner() {
       icon: <Layers className="w-[18px] h-[18px]" />,
       firstRoute: '/admin/banners',
       items: [
-        { to: '/admin/banners',  label: t.nav.banners,                        icon: <Layers      className="w-4 h-4" /> },
-        { to: '/admin/contacts', label: t.hub.contactsTitle,                  icon: <Phone       className="w-4 h-4" /> },
-        { to: '/admin/popup',    label: t.hub.popupTitle,                     icon: <Megaphone   className="w-4 h-4" /> },
-        { to: '/admin/faq',      label: 'FAQ',                                icon: <HelpCircle  className="w-4 h-4" /> },
-        { to: '/admin/services', label: t.hub.servicesTitle,                  icon: <Wrench      className="w-4 h-4" /> },
+        { to: '/admin/banners',       label: t.nav.banners,                        icon: <Layers      className="w-4 h-4" /> },
+        { to: '/admin/contacts',      label: t.hub.contactsTitle,                  icon: <Phone       className="w-4 h-4" /> },
+        { to: '/admin/popup',         label: t.hub.popupTitle,                     icon: <Megaphone   className="w-4 h-4" /> },
+        { to: '/admin/faq',           label: 'FAQ',                                icon: <HelpCircle  className="w-4 h-4" /> },
+        { to: '/admin/services',      label: t.hub.servicesTitle,                  icon: <Wrench      className="w-4 h-4" /> },
+        { to: '/admin/maintenance',   label: t.hub.maintenanceTitle,               icon: <Settings    className="w-4 h-4" /> },
+        { to: '/admin/content-pages', label: t.hub.contentPagesTitle,              icon: <FileText    className="w-4 h-4" /> },
       ],
     },
   ];

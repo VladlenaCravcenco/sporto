@@ -1,12 +1,13 @@
 import { useState } from 'react';
+import { useAuth } from '../contexts/AuthContext';
 import { Link, useNavigate } from 'react-router';
 import { useLanguage } from '../contexts/LanguageContext';
-import { useAuth } from '../contexts/AuthContext';
+import { PhoneInput } from '../components/PhoneInput';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
-import { toast } from 'sonner';
 import { UserCircle, Briefcase } from 'lucide-react';
+import { toast } from 'sonner';
 
 export function Register() {
   const { t, language } = useLanguage();
@@ -26,7 +27,7 @@ export function Register() {
     e.preventDefault();
     setLoading(true);
 
-    try {
+    try { 
       const result = await register({
         email: formData.email,
         password: formData.password,
@@ -173,14 +174,12 @@ export function Register() {
 
             <div>
               <Label htmlFor="phone" className="text-xs text-gray-400 uppercase tracking-wider">{t('auth.phone')}</Label>
-              <Input
+              <PhoneInput
                 id="phone"
-                type="tel"
                 required
                 value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                onChange={(value) => setFormData({ ...formData, phone: value })}
                 className="mt-1.5"
-                placeholder="+373 69 000 000"
               />
             </div>
 

@@ -1,29 +1,29 @@
-import React, { useState, FormEvent } from 'react';
+import React, { useState, type FormEvent } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
-import { SeoHead, SEO_PAGES, LOCAL_BUSINESS_JSON_LD } from '../components/SeoHead';
-import { EMAILJS, isEmailConfigured } from '../../lib/emailService';
-import emailjs from '@emailjs/browser';
 import {
-  ArrowRight,
-  Check,
-  Mail,
-  Phone,
-  Building2,
-  FileText,
-  MapPin,
-  Handshake,
-  Clock,
   Dumbbell,
   ShoppingBag,
   GraduationCap,
   Baby,
+  Check,
+  Mail,
+  MapPin,
+  Clock,
+  ExternalLink,
+  ArrowRight,
   UserCircle,
   Briefcase,
-  ExternalLink,
-  MessageCircle,
+  FileText,
+  Building2,
+  Phone as PhoneIcon,
+  Handshake,
 } from 'lucide-react';
-import { useContacts } from '../hooks/useContacts';
+import { useContacts, SOCIAL_CONFIG, SOCIAL_ICON_IMAGE_SRC, SOCIAL_SVG_PATHS, type SocialType } from '../hooks/useContacts';
+import { isEmailConfigured, EMAILJS } from '../../lib/emailService';
+import emailjs from '@emailjs/browser';
+import { PhoneInput } from '../components/PhoneInput';
+import { SeoHead, SEO_PAGES, LOCAL_BUSINESS_JSON_LD } from '../components/SeoHead';
+import { supabase } from '../../lib/supabase';
 
 type Lang = 'ro' | 'ru';
 
@@ -206,7 +206,7 @@ const TEXT: Record<Lang, {
     ],
     whyTitle: 'Почему Стоит Сотрудничать С Нами',
     why: [
-      { num: '01', title: 'Оптовые цены', desc: 'Специальные условия для постоянных партнёров и крупных объёмов.' },
+      { num: '01', title: 'Оптовые цены', desc: 'Специальные условия для постоянных партнёров и крупных объёов.' },
       { num: '02', title: 'Бесплатная консультация', desc: 'Помогаем выбрать подходящее оборудование для вашего проекта.' },
       { num: '03', title: 'Доставка по всей Молдове', desc: 'Организуем доставку и монтаж оборудования на месте.' },
       { num: '04', title: 'Постпродажная поддержка', desc: 'Гарантия и сервис для всего поставляемого оборудования.' },
@@ -399,8 +399,12 @@ export function Contacts() {
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.phoneLabel} <span className="text-black">*</span></label>
-                        <input type="tel" value={form.phone} onChange={setField('phone')} placeholder="+373 69 000 000"
-                          className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors ${errors.phone ? 'border-black' : 'border-gray-200'}`} />
+                        <PhoneInput
+                          value={form.phone}
+                          onChange={v => setForm(prev => ({ ...prev, phone: v }))}
+                          placeholder="+373 (69) 12-34-56"
+                          className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors ${errors.phone ? 'border-black' : 'border-gray-200'}`}
+                        />
                         {errors.phone && <p className="mt-1.5 text-[10px] text-black">{errors.phone}</p>}
                       </div>
                       <div>
@@ -466,7 +470,7 @@ export function Contacts() {
                   <a href={`mailto:${email}`} className="text-xs text-gray-700 hover:text-black transition-colors">{email}</a>
                 </div>
                 <div className="bg-white p-5 flex flex-col gap-2">
-                  <Phone className="w-4 h-4 text-gray-400" />
+                  <PhoneIcon className="w-4 h-4 text-gray-400" />
                   <div className="text-[10px] text-gray-400 uppercase tracking-widest">{T.legalPhone}</div>
                   <a href={`tel:${C.phone}`} className="text-xs text-gray-700 hover:text-black transition-colors">{phone}</a>
                 </div>
@@ -486,7 +490,7 @@ export function Contacts() {
                     { label: T.legalIdno,    value: legalIdno, icon: <FileText   className="w-3.5 h-3.5" /> },
                     { label: T.legalAddress, value: address,   icon: <MapPin     className="w-3.5 h-3.5" /> },
                     { label: T.legalEmail,   value: email,     icon: <Mail       className="w-3.5 h-3.5" />, href: `mailto:${email}` },
-                    { label: T.legalPhone,   value: phone,     icon: <Phone      className="w-3.5 h-3.5" />, href: `tel:${C.phone}` },
+                    { label: T.legalPhone,   value: phone,     icon: <PhoneIcon  className="w-3.5 h-3.5" />, href: `tel:${C.phone}` },
                     { label: T.legalHours,   value: hours,     icon: <Clock      className="w-3.5 h-3.5" /> },
                   ].map((row) => (
                     <div key={row.label} className="flex gap-3">
@@ -526,22 +530,34 @@ export function Contacts() {
                 <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-4">
                   {language === 'ro' ? 'Scrieți-ne direct' : 'Напишите нам напрямую'}
                 </div>
-                <div className="flex items-center gap-3">
-                  <a href={C.whatsapp} target="_blank" rel="noopener noreferrer" title="WhatsApp"
-                     className="w-10 h-10 flex items-center justify-center bg-[#25D366] hover:opacity-80 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.555 4.104 1.523 5.826L.044 23.428a.5.5 0 0 0 .612.612l5.602-1.479A11.946 11.946 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.868 9.868 0 0 1-5.034-1.376l-.36-.214-3.733.985.999-3.642-.235-.374A9.869 9.869 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118c5.467 0 9.882 4.415 9.882 9.882 0 5.467-4.415 9.882-9.882 9.882z"/></svg>
-                  </a>
-                  <a href={C.telegram} target="_blank" rel="noopener noreferrer" title="Telegram"
-                     className="w-10 h-10 flex items-center justify-center bg-[#29A8EB] hover:opacity-80 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.17 13.5l-2.95-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.537-.194 1.006.131.973.057z"/></svg>
-                  </a>
-                  <a href={C.viber} title="Viber"
-                     className="w-10 h-10 flex items-center justify-center bg-[#7360F2] hover:opacity-80 transition-opacity">
-                    <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white"><path d="M11.4 0C7.2.2 3.6 1.7 1.3 4.4-.6 6.7-.3 9.4.4 11.2c.2.5.6 1.2 1.2 1.9.6.8.7 1.2.6 1.7l-.6 3.6c-.1.4.3.8.7.7l3.7-.7c.5-.1 1 0 1.7.5.9.6 2.1 1.2 3.7 1.5 3.3.6 6.8-.1 9.2-2.4 2.5-2.4 3.5-5.7 3.4-8.7-.2-5.3-4.2-9.5-9.5-9.8C13 0 12.2 0 11.4 0zM12 2c4.5.2 8 3.8 8.1 8.3.1 2.5-.7 5.2-2.8 7.1-2 1.9-4.9 2.6-7.7 2-.9-.2-1.8-.6-2.5-1.1-.7-.5-1.4-.8-2.3-.6l-2.8.5.5-2.8c.2-.8 0-1.6-.7-2.4C1.3 12.3.9 11.8.7 11.3c-.6-1.5-.8-3.7.8-5.7C3.6 3.1 6.9 2 10.1 2c.6 0 1.3 0 1.9 0zm-2.8 3.7c-.2 0-.5.1-.7.2-.9.6-1.8 1.7-2 2.7-.2 1 .2 2 .6 2.8.5.9 1.6 2.3 3.1 3.4 1.1.8 2.1 1.3 2.9 1.6.9.3 1.7.4 2.2.1.4-.2.9-.8 1.1-1.3.1-.3 0-.5-.2-.7l-2.1-1.2c-.2-.1-.5-.1-.7.1l-.7.7c-.2.2-.4.2-.6.1-.7-.3-1.6-.9-2.3-1.8-.6-.8-.9-1.5-.9-1.7 0-.2 0-.4.2-.5l.7-.7c.2-.2.2-.4.1-.6L10 6.4c-.1-.4-.3-.6-.5-.7-.1 0-.2 0-.3 0z"/></svg>
-                  </a>
+                <div className="flex items-center gap-3 flex-wrap">
+                  {(C.socials ?? []).filter(s => s.url).map(s => {
+                    const cfg = SOCIAL_CONFIG[s.type as SocialType];
+                    const pathData = SOCIAL_SVG_PATHS[s.type as SocialType];
+                    const imageSrc = SOCIAL_ICON_IMAGE_SRC[s.type as SocialType];
+                    return (
+                      <a
+                        key={s.id}
+                        href={s.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={cfg?.label ?? s.type}
+                        className="w-10 h-10 flex items-center justify-center hover:opacity-80 transition-opacity"
+                        style={{ backgroundColor: cfg?.color ?? '#333' }}
+                      >
+                        {imageSrc ? (
+                          <img src={imageSrc} className="w-5 h-5" alt={cfg?.label ?? s.type} />
+                        ) : (
+                          <svg viewBox="0 0 24 24" className="w-5 h-5 fill-white">
+                            <path d={pathData} />
+                          </svg>
+                        )}
+                      </a>
+                    );
+                  })}
                   <a href={`tel:${C.phone}`} title={C.phoneDisplay}
                      className="w-10 h-10 flex items-center justify-center bg-black hover:opacity-80 transition-opacity">
-                    <Phone className="w-4 h-4 text-white" />
+                    <PhoneIcon className="w-4 h-4 text-white" />
                   </a>
                 </div>
               </div>

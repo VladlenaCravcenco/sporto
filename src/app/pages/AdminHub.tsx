@@ -7,7 +7,7 @@ import {
   Package, Star, Upload,
   TrendingUp, AlertCircle, Eye, Box, Layers, FolderOpen,
   Download, ChevronDown, Check, Loader2,
-  Users, ClipboardList, Phone, Megaphone, HelpCircle, Wrench,
+  Users, ClipboardList, Phone, Megaphone, HelpCircle, Wrench, Settings, FileText,
 } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 
@@ -269,6 +269,8 @@ export function AdminHub() {
     { to: '/admin/popup',       icon: <Megaphone     className="w-6 h-6" />, title: t.hub.popupTitle,      desc: t.hub.popupDesc,      stat: '—',                                                              statBad: null,                                                                        primary: false },
     { to: '/admin/faq',         icon: <HelpCircle    className="w-6 h-6" />, title: t.hub.faqTitle,        desc: t.hub.faqDesc,        stat: '—',                                                              statBad: null,                                                                        primary: false },
     { to: '/admin/services',    icon: <Wrench        className="w-6 h-6" />, title: t.hub.servicesTitle,   desc: t.hub.servicesDesc,   stat: '—',                                                              statBad: null,                                                                        primary: false },
+    { to: '/admin/maintenance', icon: <Settings      className="w-6 h-6" />, title: t.hub.maintenanceTitle, desc: t.hub.maintenanceDesc, stat: '—',                                                              statBad: null,                                                                        primary: false },
+    { to: '/admin/content-pages', icon: <FileText    className="w-6 h-6" />, title: t.hub.contentPagesTitle, desc: t.hub.contentPagesDesc, stat: '—',                                                            statBad: null,                                                                        primary: false },
   ];
 
   return (

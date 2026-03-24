@@ -1,9 +1,10 @@
-import { useState, useEffect, useRef, type FormEvent, type ChangeEvent, type MouseEvent } from 'react';
-import { X, ArrowRight, Check, UserCircle, Briefcase } from 'lucide-react';
+import { useState, useRef, useEffect, ChangeEvent, FormEvent, MouseEvent } from 'react';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
-import { EMAILJS, isEmailConfigured } from '../../lib/emailService';
+import { X, Send, Check, UserCircle, Briefcase, ArrowRight } from 'lucide-react';
 import emailjs from '@emailjs/browser';
+import { PhoneInput } from './PhoneInput';
+import { supabase } from '../../lib/supabase';
+import { isEmailConfigured, EMAILJS } from '../../lib/emailService';
 
 interface ConsultationModalProps {
   open: boolean;
@@ -129,7 +130,7 @@ const TEXT: Record<Lang, Record<'turnkey' | 'maintenance', ModalText>> = {
       submit: 'Отправить заявку',
       submitting: 'Отправляем…',
       required: 'Обязательное поле',
-      thankTitle: 'Спасибо!',
+      thankTitle: 'С��асибо!',
       thankBody: 'Мы получили вашу заявку. Техник свяжется с вами в ближайшее время.',
       thankClose: 'Закрыть',
     },
@@ -378,11 +379,10 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
                   <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5 sm:mb-2">
                     {T.phoneLabel} <span className="text-black">*</span>
                   </label>
-                  <input
-                    type="tel"
+                  <PhoneInput
                     value={form.phone}
-                    onChange={setField('phone')}
-                    placeholder={T.phonePlaceholder}
+                    onChange={v => setForm(prev => ({ ...prev, phone: v }))}
+                    placeholder="+373 (69) 12-34-56"
                     className={`w-full h-10 sm:h-11 px-4 text-sm bg-gray-50 border text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors ${
                       errors.phone ? 'border-black' : 'border-gray-200'
                     }`}

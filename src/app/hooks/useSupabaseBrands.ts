@@ -4,7 +4,7 @@ import { cacheGet, cacheSet, cacheInvalidate, TTL_LONG } from '../../lib/queryCa
 
 // ─── Retry helper (same pattern as products hook) ─────────────────────────────
 async function withRetry<T>(
-  fn: () => Promise<{ data: T | null; error: { message: string } | null }>,
+  fn: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
   maxAttempts = 3,
 ): Promise<{ data: T | null; error: { message: string } | null }> {
   let lastError: { message: string } | null = null;
@@ -41,7 +41,7 @@ export function useSupabaseBrands() {
     setError(null);
 
     (async () => {
-      const { data, error: err } = await withRetry(() =>
+      const { data, error: err } = await withRetry<BrandRow[]>(() =>
         supabase
           .from('brands')
           .select('*')
@@ -97,7 +97,7 @@ export function useActiveBrands() {
 
     // Step 1: distinct brand names from active products
     // Select only the 'brand' column to keep payload tiny
-    const { data: productRows } = await withRetry(() =>
+    const { data: productRows } = await withRetry<Array<{ brand: string | null }>>(() =>
       supabase
         .from('products')
         .select('brand')
@@ -123,7 +123,7 @@ export function useActiveBrands() {
     }
 
     // Step 2: fetch only brands whose name is in that list
-    const { data: brandRows } = await withRetry(() =>
+    const { data: brandRows } = await withRetry<BrandRow[]>(() =>
       supabase
         .from('brands')
         .select('*')
@@ -154,16 +154,18 @@ export function useBrandProductCounts() {
     if (cached) { setCounts(cached); return; }
 
     (async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('brand')
-        .eq('active', true)
-        .not('brand', 'is', null)
-        .limit(10_000);
+      const { data } = await withRetry<Array<{ brand: string | null }>>(() =>
+        supabase
+          .from('products')
+          .select('brand')
+          .eq('active', true)
+          .not('brand', 'is', null)
+          .limit(10_000)
+      );
 
       if (!data) return;
       const c: Record<string, number> = {};
-      (data as { brand: string | null }[]).forEach(r => {
+      data.forEach(r => {
         if (r.brand) c[r.brand] = (c[r.brand] ?? 0) + 1;
       });
       cacheSet(CACHE_KEY, c);
@@ -196,7 +198,7 @@ export function useBrandByName(brandName: string | null | undefined) {
 
     setLoading(true);
     (async () => {
-      const { data } = await withRetry(() =>
+      const { data } = await withRetry<BrandRow>(() =>
         supabase
           .from('brands')
           .select('*')

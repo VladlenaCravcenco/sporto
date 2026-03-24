@@ -355,16 +355,17 @@ export function AdminProducts() {
 
         // Stock formatting (red if 0, orange if <5)
         const qtyCell = row.getCell('qty');
+        const qty = product.qty ?? 0;
         qtyCell.alignment = { vertical: 'middle', horizontal: 'center' };
         qtyCell.font = { bold: true };
-        if (product.qty === 0) {
+        if (qty === 0) {
           qtyCell.font.color = { argb: 'FFDC2626' };
           qtyCell.fill = {
             type: 'pattern',
             pattern: 'solid',
             fgColor: { argb: 'FFFEF2F2' }
           };
-        } else if (product.qty < 5) {
+        } else if (qty < 5) {
           qtyCell.font.color = { argb: 'FFF59E0B' };
           qtyCell.fill = {
             type: 'pattern',
@@ -435,8 +436,8 @@ export function AdminProducts() {
               });
 
               worksheet.addImage(imageId, {
-                tl: { col: 0.1, row: rowIndex - 1 + 0.1 },
-                br: { col: 0.9, row: rowIndex - 0.1 },
+                tl: { col: 0.1, row: rowIndex - 1 + 0.1 } as any,
+                br: { col: 0.9, row: rowIndex - 0.1 } as any,
                 editAs: 'oneCell'
               });
             }
