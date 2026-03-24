@@ -16,7 +16,7 @@ function toSlug(name: string): string {
 
 type BrandForm = Omit<BrandRow, 'id' | 'created_at'>;
 const EMPTY: BrandForm = {
-  name: '', slug: '', logo_url: null,
+  name: '', slug: '', active: true, logo_url: null,
   description_ro: '', description_ru: '',
   country_ro: '', country_ru: '', country_flag: '🌍',
   founded: null, segment_ro: '', segment_ru: '',
@@ -177,12 +177,14 @@ export function AdminBrands() {
   const [deleteId, setDeleteId]     = useState<string | null>(null);
   const [deleting, setDeleting]     = useState(false);
   const [search, setSearch]         = useState('');
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [sqlCopied, setSqlCopied]   = useState(false);
   const [sqlExpanded, setSqlExpanded] = useState(false);
 
-  const SQL_SETUP = `ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS website_url text;
+const SQL_SETUP = `ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS website_url text;
 ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS banner_desktop_url text;
 ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS banner_mobile_url text;
+ALTER TABLE public.brands ADD COLUMN IF NOT EXISTS active boolean DEFAULT true;
 NOTIFY pgrst, 'reload schema';
 
 CREATE TABLE IF NOT EXISTS public.brands (
@@ -193,6 +195,7 @@ CREATE TABLE IF NOT EXISTS public.brands (
   founded integer, segment_ro text, segment_ru text,
   tagline_ro text, tagline_ru text, website text,
   website_url text, banner_desktop_url text, banner_mobile_url text,
+  active boolean DEFAULT true,
   catalog_pdf text,
   created_at timestamptz DEFAULT now()
 );
@@ -212,7 +215,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
   const openNew = () => { setForm(EMPTY); setSlugManual(false); setSaveErr(null); setEditingId('new'); };
   const openEdit = (brand: BrandRow) => {
     setForm({
-      name: brand.name, slug: brand.slug, logo_url: brand.logo_url,
+      name: brand.name, slug: brand.slug, active: brand.active ?? true, logo_url: brand.logo_url,
       description_ro: brand.description_ro ?? '', description_ru: brand.description_ru ?? '',
       country_ro: brand.country_ro ?? '', country_ru: brand.country_ru ?? '',
       country_flag: brand.country_flag ?? '🌍', founded: brand.founded,
@@ -234,7 +237,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
     if (!form.slug.trim()) { setSaveErr('Slug обязателен.'); return; }
     setSaving(true); setSaveErr(null);
     const payload = {
-      name: form.name.trim(), slug: form.slug.trim(),
+      name: form.name.trim(), slug: form.slug.trim(), active: form.active ?? true,
       logo_url: form.logo_url || null,
       description_ro: form.description_ro || null, description_ru: form.description_ru || null,
       country_ro: form.country_ro || null, country_ru: form.country_ru || null,
@@ -263,7 +266,21 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
     setDeleting(false); setDeleteId(null); refetch();
   };
 
-  const filtered = brands.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
+  const toggleBrandActive = async (brand: BrandRow) => {
+    const next = !(brand.active ?? true);
+    const { error } = await supabase.from('brands').update({ active: next }).eq('id', brand.id);
+    if (error) setSaveErr(error.message);
+    else refetch();
+  };
+
+  const filtered = brands.filter(b => {
+    const matchSearch = b.name.toLowerCase().includes(search.toLowerCase());
+    const isActive = b.active ?? true;
+    const matchStatus = statusFilter === 'all'
+      || (statusFilter === 'active' && isActive)
+      || (statusFilter === 'inactive' && !isActive);
+    return matchSearch && matchStatus;
+  });
   const panelOpen = editingId !== null;
 
   return (
@@ -307,6 +324,19 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                 </button>
               )}
             </div>
+            <div className="flex border border-gray-200 bg-white w-fit mt-2">
+              {(['all', 'active', 'inactive'] as const).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-3 h-8 text-xs transition-colors border-r last:border-0 border-gray-100 ${
+                    statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
+                  }`}
+                >
+                  {s === 'all' ? 'Toate' : s === 'active' ? 'Active' : 'Inactive'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -317,7 +347,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
       <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-4">
 
         {/* SQL error notice */}
-        {error && (
+        {(error || saveErr) && (
           <div className="mb-4 border border-orange-200 bg-orange-50 p-4">
             <div className="flex items-start gap-3">
               <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
@@ -340,7 +370,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     {SQL_SETUP}
                   </pre>
                 )}
-                <p className="text-[10px] text-orange-500">Ошибка: <code>{error}</code></p>
+                <p className="text-[10px] text-orange-500">Ошибка: <code>{error || saveErr}</code></p>
               </div>
             </div>
           </div>
@@ -405,13 +435,20 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                         <div className={`text-[11px] tabular-nums px-2 py-0.5 flex-shrink-0 ${count > 0 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
                           {count}
                         </div>
-                        <span className={`hidden sm:inline text-[9px] uppercase tracking-wide px-1.5 py-0.5 flex-shrink-0 ${count > 0 ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
-                          {count > 0 ? (t.brands.active ?? 'activ') : (t.brands.hidden ?? 'ascuns')}
+                        <span className={`hidden sm:inline text-[9px] uppercase tracking-wide px-1.5 py-0.5 flex-shrink-0 ${(brand.active ?? true) ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+                          {(brand.active ?? true) ? (t.brands.active ?? 'activ') : (t.brands.hidden ?? 'ascuns')}
                         </span>
                       </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <button
+                          onClick={() => toggleBrandActive(brand)}
+                          className={`w-8 h-5 rounded-full transition-colors flex items-center ${(brand.active ?? true) ? 'bg-black' : 'bg-gray-200'}`}
+                          title={(brand.active ?? true) ? 'Ascunde de pe site' : 'Arată pe site'}
+                        >
+                          <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${(brand.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
+                        </button>
                         <button
                           onClick={() => openEdit(brand)}
                           className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"

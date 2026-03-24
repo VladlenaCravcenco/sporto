@@ -56,6 +56,7 @@ export interface BrandRow {
   id: string;
   name: string;
   slug: string;
+  active?: boolean;
   logo_url: string | null;
   description_ro: string | null;
   description_ru: string | null;
@@ -80,6 +81,7 @@ export interface BrandRow {
 export interface CategoryRow {
   id: string;
   slug: string;
+  active?: boolean;
   name_ro: string;
   name_ru: string;
   description_ro: string | null;

@@ -131,7 +131,7 @@ export function useActiveBrands() {
         .order('name', { ascending: true })
     );
 
-    const rows = (brandRows as BrandRow[]) ?? [];
+    const rows = ((brandRows as BrandRow[]) ?? []).filter((brand) => brand.active !== false);
     cacheSet(CACHE_KEY, rows);
     setBrands(rows);
     setLoading(false);
@@ -207,7 +207,7 @@ export function useBrandByName(brandName: string | null | undefined) {
           .single()
       );
 
-      if (data) {
+      if (data && (data as BrandRow).active !== false) {
         cacheSet(CACHE_KEY, data as BrandRow);
         setBrand(data as BrandRow);
       } else {

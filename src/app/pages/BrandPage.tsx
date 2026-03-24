@@ -26,7 +26,8 @@ function useBrandBySlug(slug: string | undefined) {
         .single();
 
       if (!cancelled) {
-        setBrand((data as BrandRow) ?? null);
+        const row = (data as BrandRow) ?? null;
+        setBrand(row && row.active === false ? null : row);
         setLoading(false);
       }
     })();

@@ -23,18 +23,18 @@ const KNOWN_BRANDS = [
 
 // ─── 12 categories matching the site ─────────────────────────────────────────
 const CATEGORY_OPTIONS = [
-  { slug: 'aparate-cardio',      label: 'Aparate Cardio' },
-  { slug: 'aparate-forta',       label: 'Aparate Forta' },
-  { slug: 'greutati',            label: 'Greutati & Haltere' },
-  { slug: 'fitness-yoga',        label: 'Fitness & Yoga' },
-  { slug: 'inot',                label: 'Inot & Natatie' },
-  { slug: 'sporturi-colective',  label: 'Sporturi Colective' },
-  { slug: 'sporturi-individuale',label: 'Sporturi Individuale' },
-  { slug: 'arte-martiale',       label: 'Arte Martiale' },
-  { slug: 'tenis-masa',          label: 'Tenis de Masa' },
-  { slug: 'jocuri',              label: 'Jocuri & Recreatie' },
-  { slug: 'forta-exterior',      label: 'Forta Exterior' },
-  { slug: 'inventar-institutii', label: 'Inventar Institutii' },
+  { slug: 'aparate-cardio',       ro: 'Aparate Cardio',         ru: 'Кардио тренажеры' },
+  { slug: 'aparate-forta',        ro: 'Aparate Forta',          ru: 'Силовые тренажеры' },
+  { slug: 'greutati',             ro: 'Greutati & Haltere',     ru: 'Гантели и штанги' },
+  { slug: 'fitness-yoga',         ro: 'Fitness & Yoga',         ru: 'Фитнес и йога' },
+  { slug: 'inot',                 ro: 'Inot & Natatie',         ru: 'Плавание' },
+  { slug: 'sporturi-colective',   ro: 'Sporturi Colective',     ru: 'Командные виды спорта' },
+  { slug: 'sporturi-individuale', ro: 'Sporturi Individuale',   ru: 'Индивидуальные виды спорта' },
+  { slug: 'arte-martiale',        ro: 'Arte Martiale',          ru: 'Боевые искусства' },
+  { slug: 'tenis-masa',           ro: 'Tenis de Masa',          ru: 'Настольный теннис' },
+  { slug: 'jocuri',               ro: 'Jocuri & Recreatie',     ru: 'Игры и отдых' },
+  { slug: 'forta-exterior',       ro: 'Forta Exterior',         ru: 'Уличный спорт' },
+  { slug: 'inventar-institutii',  ro: 'Inventar Institutii',    ru: 'Инвентарь для учреждений' },
 ];
 
 // ─── Auto-detect category from any text (section name OR product name) ────────
@@ -138,6 +138,10 @@ export function AdminImport() {
   const [step, setStep] = useState<'upload' | 'preview' | 'done'>('upload');
   const [filterNoCat, setFilterNoCat] = useState(false);
   const L = (ro: string, ru: string) => lang === 'ro' ? ro : ru;
+  const categoryLabel = (slug: string) => {
+    const category = CATEGORY_OPTIONS.find((item) => item.slug === slug);
+    return category ? (lang === 'ro' ? category.ro : category.ru) : slug;
+  };
 
   // ── Parse Excel ─────────────────────────────────────────────────────────────
   const handleFile = useCallback((file: File) => {
@@ -351,7 +355,7 @@ export function AdminImport() {
       {/* Header */}
       <div className="bg-black text-white">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl text-white">Import produse din Excel</h1>
+          <h1 className="text-2xl text-white">{L('Import produse din Excel', 'Импорт товаров из Excel')}</h1>
           <p className="text-gray-500 text-sm mt-1">
             {L(
               'Încarcă fișierul Excel — rândurile-separatoare și prețurile zero sunt ignorate automat',
@@ -373,8 +377,8 @@ export function AdminImport() {
               className="border-2 border-dashed border-gray-200 hover:border-black transition-colors cursor-pointer p-16 text-center"
             >
               <Upload className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-700 mb-1">{L('Перетащи файл или нажми для выбора', 'Перетащи файл или нажми для выбора')}</p>
-              <p className="text-sm text-gray-400">{L('Поддерживается: .xlsx, .xls', 'Поддерживается: .xlsx, .xls')}</p>
+              <p className="text-gray-700 mb-1">{L('Trage fișierul sau apasă pentru a selecta', 'Перетащи файл или нажми для выбора')}</p>
+              <p className="text-sm text-gray-400">{L('Suportat: .xlsx, .xls', 'Поддерживается: .xlsx, .xls')}</p>
               <input
                 ref={fileRef}
                 type="file"
@@ -496,7 +500,7 @@ export function AdminImport() {
                           >
                             {!row.category && <option value="">{L('— alege —', '— выбрать —')}</option>}
                             {CATEGORY_OPTIONS.map(c => (
-                              <option key={c.slug} value={c.slug}>{c.label}</option>
+                              <option key={c.slug} value={c.slug}>{categoryLabel(c.slug)}</option>
                             ))}
                           </select>
                         </td>

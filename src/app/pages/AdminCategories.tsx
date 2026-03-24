@@ -13,6 +13,7 @@ import { useAdminLang } from '../contexts/AdminLangContext';
 interface CatRow {
   id: string;
   slug: string;
+  active?: boolean;
   name_ro: string;
   name_ru: string;
   description_ro: string | null;
@@ -46,10 +47,14 @@ function toSlug(s: string): string {
 }
 
 // ─── SQL setup string ─────────────────────────────────────────────────────────
-const SQL_SETUP = `-- Categorii
+const SQL_SETUP = `ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS active boolean DEFAULT true;
+NOTIFY pgrst, 'reload schema';
+
+-- Categorii
 CREATE TABLE IF NOT EXISTS public.categories (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   slug text NOT NULL UNIQUE,
+  active boolean DEFAULT true,
   name_ro text NOT NULL,
   name_ru text NOT NULL,
   description_ro text,
@@ -98,6 +103,7 @@ export function AdminCategories() {
   const [productCounts, setProductCounts] = useState<Record<string, number>>({});
 
   const [expandedCat, setExpandedCat] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [panel, setPanel] = useState<PanelMode>(null);
 
   const [form, setForm] = useState({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '' });
@@ -144,6 +150,17 @@ export function AdminCategories() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const toggleCategoryActive = async (cat: CatRow) => {
+    const next = !(cat.active ?? true);
+    const { error } = await supabase.from('categories').update({ active: next }).eq('id', cat.id);
+    if (error) {
+      setDbError(error.message);
+    } else {
+      await loadData();
+      refetchCategories();
+    }
+  };
 
   // ── Auto-slug ─────────────────────────────────────────────────────────────
   useEffect(() => {
@@ -192,6 +209,7 @@ export function AdminCategories() {
     if (panel?.type === 'new-cat') {
       const { error } = await supabase.from('categories').insert([{
         slug: form.slug.trim(),
+        active: true,
         name_ro: form.name_ro.trim(),
         name_ru: form.name_ru.trim(),
         description_ro: form.description_ro.trim() || null,
@@ -404,6 +422,19 @@ export function AdminCategories() {
 
           {/* ── Category list ── */}
           <div className="flex-1 min-w-0">
+            <div className="flex border border-gray-200 bg-white w-fit mb-3">
+              {(['all', 'active', 'inactive'] as const).map(s => (
+                <button
+                  key={s}
+                  onClick={() => setStatusFilter(s)}
+                  className={`px-3 h-8 text-xs transition-colors border-r last:border-0 border-gray-100 ${
+                    statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
+                  }`}
+                >
+                  {s === 'all' ? 'Toate' : s === 'active' ? 'Active' : 'Inactive'}
+                </button>
+              ))}
+            </div>
 
             {/* Populate from static button — shown when empty */}
             {!loading && cats.length === 0 && (
@@ -432,7 +463,12 @@ export function AdminCategories() {
               </div>
             ) : (
               <div className="space-y-px">
-                {cats.map(cat => {
+                {cats.filter(cat => {
+                  const enabled = cat.active ?? true;
+                  return statusFilter === 'all'
+                    || (statusFilter === 'active' && enabled)
+                    || (statusFilter === 'inactive' && !enabled);
+                }).map(cat => {
                   const catSubs = subs.filter(s => s.category_slug === cat.slug);
                   const prodCount = productCounts[cat.slug] || 0;
                   const isExpanded = expandedCat === cat.id;
@@ -489,6 +525,13 @@ export function AdminCategories() {
 
                         {/* Actions */}
                         <div className="flex items-center gap-1 flex-shrink-0">
+                          <button
+                            onClick={() => toggleCategoryActive(cat)}
+                            className={`w-8 h-5 rounded-full transition-colors flex items-center ${(cat.active ?? true) ? 'bg-black' : 'bg-gray-200'}`}
+                            title={(cat.active ?? true) ? 'Ascunde de pe site' : 'Arată pe site'}
+                          >
+                            <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${(cat.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
+                          </button>
                           <button
                             onClick={() => openNewSub(cat.slug, cat.name_ro)}
                             className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-black hover:bg-gray-100 transition-colors"

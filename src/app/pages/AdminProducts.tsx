@@ -436,12 +436,13 @@ function subcatLabel(categories: ReturnType<typeof useCategories>, catId: string
 
 export function AdminProducts() {
   const { t } = useAdminLang();
-  const categories = useCategories();
-  const { refetchCategories } = useCategoriesContext();
+  const { allCategories: categories, refetchCategories } = useCategoriesContext();
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [catFilter, setCatFilter] = useState('');
+  const [brandFilter, setBrandFilter] = useState('');
+  const [subcatFilter, setSubcatFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name_ro');
   const [sortAsc, setSortAsc] = useState(true);
@@ -910,6 +911,10 @@ export function AdminProducts() {
   };
 
   // ─── Filter + sort ────────────────────────────────────────────────────────
+  const categoryFilterQuery = catFilter.trim().toLowerCase();
+  const brandFilterQuery = brandFilter.trim().toLowerCase();
+  const subcategoryFilterQuery = subcatFilter.trim().toLowerCase();
+
   const filtered = rows
     .filter(p => {
       const q = search.toLowerCase();
@@ -919,11 +924,22 @@ export function AdminProducts() {
         || (p.sku ?? '').toLowerCase().includes(q)
         || (p.brand ?? '').toLowerCase().includes(q)
         || p.id.includes(q);
-      const matchCat = !catFilter || p.category === catFilter;
+      const categoryName = catLabel(categories, p.category).toLowerCase();
+      const subcategoryName = p.subcategory
+        ? subcatLabel(categories, p.category, p.subcategory).toLowerCase()
+        : '';
+      const brandName = (p.brand ?? '').toLowerCase();
+      const matchCat = !categoryFilterQuery
+        || p.category.toLowerCase().includes(categoryFilterQuery)
+        || categoryName.includes(categoryFilterQuery);
+      const matchBrand = !brandFilterQuery || brandName.includes(brandFilterQuery);
+      const matchSubcategory = !subcategoryFilterQuery
+        || (p.subcategory ?? '').toLowerCase().includes(subcategoryFilterQuery)
+        || subcategoryName.includes(subcategoryFilterQuery);
       const matchStatus = statusFilter === 'all'
         || (statusFilter === 'active' && p.active)
         || (statusFilter === 'inactive' && !p.active);
-      return matchQ && matchCat && matchStatus;
+      return matchQ && matchCat && matchBrand && matchSubcategory && matchStatus;
     })
     .sort((a, b) => {
       const av = a[sortKey] ?? '';
@@ -941,6 +957,20 @@ export function AdminProducts() {
     sortKey === k ? <span className="ml-0.5">{sortAsc ? '↑' : '↓'}</span> : null;
 
   const selectedCatSubs = categories.find(c => c.id === form.category)?.subcategories ?? [];
+  const allCategoryOptions = useMemo(
+    () => categories.map((c) => ({ value: c.id, label: c.name.ro })),
+    [categories]
+  );
+  const allSubcategoryOptions = useMemo(
+    () => categories.flatMap((category) =>
+      category.subcategories.map((subcategory) => ({
+        value: subcategory.id,
+        label: subcategory.name.ro,
+        categoryId: category.id,
+      }))
+    ),
+    [categories]
+  );
 
   const createCategory = async (name: string): Promise<string | null> => {
     const baseSlug = toSlug(name);
@@ -1078,13 +1108,72 @@ export function AdminProducts() {
             )}
           </div>
 
-          <select
-            value={catFilter} onChange={e => setCatFilter(e.target.value)}
-            className="h-9 px-3 text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-black appearance-none pr-7 min-w-[160px]"
-          >
-            <option value="">Toate categoriile</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name.ro}</option>)}
-          </select>
+          <div className="relative min-w-[180px]">
+            <input
+              type="text"
+              list="admin-products-category-filter"
+              value={catFilter}
+              onChange={e => setCatFilter(e.target.value)}
+              placeholder="Categorie..."
+              className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+            />
+            {catFilter && (
+              <button onClick={() => setCatFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            <datalist id="admin-products-category-filter">
+              {allCategoryOptions.map((category) => (
+                <option key={category.value} value={category.label} />
+              ))}
+            </datalist>
+          </div>
+
+          <div className="relative min-w-[180px]">
+            <input
+              type="text"
+              list="admin-products-brand-filter"
+              value={brandFilter}
+              onChange={e => setBrandFilter(e.target.value)}
+              placeholder="Brand..."
+              className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+            />
+            {brandFilter && (
+              <button onClick={() => setBrandFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            <datalist id="admin-products-brand-filter">
+              {[...supabaseBrandNames, ...allProductBrands.filter((brand) => !supabaseBrandNames.includes(brand))]
+                .sort((a, b) => a.localeCompare(b))
+                .map((brand) => (
+                  <option key={brand} value={brand} />
+                ))}
+            </datalist>
+          </div>
+
+          <div className="relative min-w-[200px]">
+            <input
+              type="text"
+              list="admin-products-subcategory-filter"
+              value={subcatFilter}
+              onChange={e => setSubcatFilter(e.target.value)}
+              placeholder="Subcategorie..."
+              className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+            />
+            {subcatFilter && (
+              <button onClick={() => setSubcatFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
+                <X className="w-3 h-3" />
+              </button>
+            )}
+            <datalist id="admin-products-subcategory-filter">
+              {allSubcategoryOptions
+                .filter((subcategory) => !categoryFilterQuery || subcategory.categoryId.toLowerCase().includes(categoryFilterQuery) || subcategory.label.toLowerCase().includes(categoryFilterQuery))
+                .map((subcategory) => (
+                  <option key={`${subcategory.categoryId}-${subcategory.value}`} value={subcategory.label} />
+                ))}
+            </datalist>
+          </div>
 
           <div className="flex border border-gray-200 bg-white">
             {(['all', 'active', 'inactive'] as const).map(s => (

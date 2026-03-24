@@ -2,18 +2,24 @@ import { createContext, useContext, useEffect, useState, useCallback, type React
 import { supabase } from '../../lib/supabase';
 import { categories as staticCategories, type Category } from '../data/products';
 
+type CategoryWithActive = Category & { active?: boolean };
+
 interface CategoriesContextValue {
   categories: Category[];
+  allCategories: CategoryWithActive[];
   refetchCategories: () => void;
 }
 
 const CategoriesContext = createContext<CategoriesContextValue>({
   categories: staticCategories,
+  allCategories: staticCategories,
   refetchCategories: () => {},
 });
 
 export function CategoriesProvider({ children }: { children: ReactNode }) {
-  const [categories, setCategories] = useState<Category[]>(staticCategories);
+  const [allCategories, setAllCategories] = useState<CategoryWithActive[]>(
+    staticCategories.map((category) => ({ ...category, active: true }))
+  );
 
   const fetchCategories = useCallback(async () => {
     const { data: catData, error } = await supabase
@@ -32,11 +38,12 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
       category_slug: string; slug: string; name_ro: string; name_ru: string;
     }[];
 
-    const mapped: Category[] = (catData as {
-      slug: string; name_ro: string; name_ru: string;
+    const mapped: CategoryWithActive[] = (catData as {
+      slug: string; active?: boolean; name_ro: string; name_ru: string;
       description_ro: string | null; description_ru: string | null;
     }[]).map(cat => ({
       id: cat.slug,
+      active: cat.active !== false,
       name: { ro: cat.name_ro, ru: cat.name_ru },
       description: {
         ro: cat.description_ro || '',
@@ -47,7 +54,7 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
         .map(s => ({ id: s.slug, name: { ro: s.name_ro, ru: s.name_ru } })),
     }));
 
-    setCategories(mapped);
+    setAllCategories(mapped);
   }, []);
 
   useEffect(() => {
@@ -67,7 +74,13 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
   }, [fetchCategories]);
 
   return (
-    <CategoriesContext.Provider value={{ categories, refetchCategories: fetchCategories }}>
+    <CategoriesContext.Provider
+      value={{
+        categories: allCategories.filter((category) => category.active !== false),
+        allCategories,
+        refetchCategories: fetchCategories,
+      }}
+    >
       {children}
     </CategoriesContext.Provider>
   );
