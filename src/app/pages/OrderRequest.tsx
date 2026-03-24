@@ -37,7 +37,7 @@ const emptyGuest: GuestForm = {
 
 export function OrderRequest() {
   const { language } = useLanguage();
-  const { user, isAuthenticated, login, register } = useAuth();
+  const { user, isAuthenticated, login, register, updateProfile } = useAuth();
   const {
     cart, removeFromCart, updateQuantity, clearCart,
     totalPrice, totalItems, isFreeDelivery, totalWithDelivery,
@@ -55,6 +55,15 @@ export function OrderRequest() {
   const [loginError, setLoginError] = useState('');
   const [notes, setNotes] = useState('');
   const [editingProfile, setEditingProfile] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [profileDraft, setProfileDraft] = useState({
+    name: '',
+    company: '',
+    phone: '',
+    email: '',
+    address: '',
+    clientType: 'company' as 'individual' | 'company',
+  });
 
   useEffect(() => {
     if (user) {
@@ -68,6 +77,14 @@ export function OrderRequest() {
         // ✅ FIX 1: подтягиваем адрес из профиля
         deliveryAddress: user.address ?? '',
       }));
+      setProfileDraft({
+        name: user.name ?? '',
+        company: user.company ?? '',
+        phone: user.phone ?? '',
+        email: user.email ?? '',
+        address: user.address ?? '',
+        clientType: user.clientType ?? 'company',
+      });
     }
   }, [user]);
 
@@ -75,6 +92,56 @@ export function OrderRequest() {
 
   const handleGuestChange = (k: keyof GuestForm, v: string | boolean) => {
     setGuest(g => ({ ...g, [k]: v }));
+  };
+
+  const handleProfileDraftChange = (
+    key: 'name' | 'company' | 'phone' | 'address' | 'clientType',
+    value: string,
+  ) => {
+    setProfileDraft((prev) => ({
+      ...prev,
+      [key]: value,
+      ...(key === 'clientType' && value === 'individual' ? { company: '' } : {}),
+    }));
+  };
+
+  const handleProfileSave = async () => {
+    if (!profileDraft.name.trim() || !profileDraft.phone.trim()) {
+      toast.error(L('Completează numele și telefonul', 'Заполните имя и телефон'));
+      return;
+    }
+
+    if (profileDraft.clientType === 'company' && !profileDraft.company.trim()) {
+      toast.error(L('Completează compania', 'Заполните компанию'));
+      return;
+    }
+
+    setSavingProfile(true);
+    try {
+      await updateProfile({
+        name: profileDraft.name.trim(),
+        company: profileDraft.clientType === 'company' ? profileDraft.company.trim() : '',
+        phone: profileDraft.phone.trim(),
+        address: profileDraft.address.trim(),
+        clientType: profileDraft.clientType,
+      });
+
+      setGuest((prev) => ({
+        ...prev,
+        name: profileDraft.name.trim(),
+        company: profileDraft.clientType === 'company' ? profileDraft.company.trim() : '',
+        phone: profileDraft.phone.trim(),
+        email: profileDraft.email.trim(),
+        deliveryAddress: profileDraft.address.trim(),
+        clientType: profileDraft.clientType,
+      }));
+      setEditingProfile(false);
+      toast.success(L('Datele au fost salvate', 'Данные сохранены'));
+    } catch {
+      toast.error(L('Nu am putut salva datele', 'Не удалось сохранить данные'));
+    } finally {
+      setSavingProfile(false);
+    }
   };
 
   const saveRequestToSupabase = async (clientData: {
@@ -451,7 +518,23 @@ export function OrderRequest() {
                     <h2 className="text-xs uppercase tracking-wider text-gray-900">
                       {L('Date contact', 'Данные контакта')}
                     </h2>
-                    <button type="button" onClick={() => setEditingProfile(!editingProfile)}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (editingProfile) {
+                          setEditingProfile(false);
+                          return;
+                        }
+                        setProfileDraft({
+                          name: user.name ?? '',
+                          company: user.company ?? '',
+                          phone: user.phone ?? '',
+                          email: user.email ?? '',
+                          address: user.address ?? '',
+                          clientType: user.clientType ?? 'company',
+                        });
+                        setEditingProfile(true);
+                      }}
                       className="text-gray-400 hover:text-black transition-colors">
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
@@ -471,14 +554,121 @@ export function OrderRequest() {
                     </span>
                   </div>
 
-                  {/* ✅ Всегда показываем все поля, пустые — с дефисом */}
-                  <div className="p-5 pt-3 space-y-3">
-                    <ProfileRow icon={<User     className="w-3.5 h-3.5" />} value={user.name    || '—'} />
-                    <ProfileRow icon={<Building2 className="w-3.5 h-3.5" />} value={user.company || '—'} />
-                    <ProfileRow icon={<Phone    className="w-3.5 h-3.5" />} value={user.phone   || '—'} />
-                    <ProfileRow icon={<Mail     className="w-3.5 h-3.5" />} value={user.email   || '—'} />
-                    <ProfileRow icon={<MapPin   className="w-3.5 h-3.5" />} value={user.address || '—'} />
-                  </div>
+                  {editingProfile ? (
+                    <div className="p-5 pt-3 space-y-3 border-b border-gray-100">
+                      <div className="flex border border-gray-200">
+                        <button
+                          type="button"
+                          onClick={() => handleProfileDraftChange('clientType', 'individual')}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] uppercase tracking-wider transition-colors ${
+                            profileDraft.clientType === 'individual'
+                              ? 'bg-black text-white'
+                              : 'text-gray-500 hover:text-black hover:bg-gray-50'
+                          }`}
+                        >
+                          <UserCircle className="w-3.5 h-3.5" />
+                          {L('Persoană fizică', 'Физлицо')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleProfileDraftChange('clientType', 'company')}
+                          className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-[10px] uppercase tracking-wider border-l border-gray-200 transition-colors ${
+                            profileDraft.clientType === 'company'
+                              ? 'bg-black text-white'
+                              : 'text-gray-500 hover:text-black hover:bg-gray-50'
+                          }`}
+                        >
+                          <Briefcase className="w-3.5 h-3.5" />
+                          {L('Persoană juridică', 'Юрлицо')}
+                        </button>
+                      </div>
+
+                      <FastField
+                        icon={<User className="w-3.5 h-3.5" />}
+                        placeholder={L('Nume și prenume *', 'Имя и фамилия *')}
+                        value={profileDraft.name}
+                        onChange={(v) => handleProfileDraftChange('name', v)}
+                        required
+                      />
+
+                      {profileDraft.clientType === 'company' && (
+                        <FastField
+                          icon={<Building2 className="w-3.5 h-3.5" />}
+                          placeholder={L('Companie / Organizație *', 'Компания / Организация *')}
+                          value={profileDraft.company}
+                          onChange={(v) => handleProfileDraftChange('company', v)}
+                          required
+                        />
+                      )}
+
+                      <FastField
+                        icon={<Phone className="w-3.5 h-3.5" />}
+                        placeholder={L('Telefon *', 'Телефон *')}
+                        value={profileDraft.phone}
+                        onChange={(v) => handleProfileDraftChange('phone', v)}
+                        type="tel"
+                        required
+                      />
+
+                      <div className="flex items-center border border-gray-200 bg-gray-50">
+                        <div className="pl-3 text-gray-400 flex-shrink-0"><Mail className="w-3.5 h-3.5" /></div>
+                        <input
+                          type="email"
+                          value={profileDraft.email}
+                          readOnly
+                          className="flex-1 h-9 px-2.5 text-xs text-gray-500 outline-none bg-transparent"
+                        />
+                      </div>
+
+                      <FastField
+                        icon={<MapPin className="w-3.5 h-3.5" />}
+                        placeholder={L('Adresa de livrare *', 'Адрес доставки *')}
+                        value={profileDraft.address}
+                        onChange={(v) => handleProfileDraftChange('address', v)}
+                        required
+                      />
+
+                      <div className="flex items-center gap-2 pt-1">
+                        <button
+                          type="button"
+                          onClick={handleProfileSave}
+                          disabled={savingProfile}
+                          className={`flex-1 h-9 text-[10px] uppercase tracking-widest transition-colors ${
+                            savingProfile
+                              ? 'bg-black text-white opacity-70'
+                              : 'bg-black text-white hover:bg-gray-800'
+                          }`}
+                        >
+                          {savingProfile ? L('Se salvează...', 'Сохранение...') : L('Salvează datele', 'Сохранить данные')}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingProfile(false);
+                            setProfileDraft({
+                              name: user.name ?? '',
+                              company: user.company ?? '',
+                              phone: user.phone ?? '',
+                              email: user.email ?? '',
+                              address: user.address ?? '',
+                              clientType: user.clientType ?? 'company',
+                            });
+                          }}
+                          className="h-9 px-4 border border-gray-200 text-[10px] uppercase tracking-widest text-gray-500 hover:text-black hover:border-black transition-colors"
+                        >
+                          {L('Anulează', 'Отмена')}
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="p-5 pt-3 space-y-3">
+                      <ProfileRow icon={<User     className="w-3.5 h-3.5" />} value={user.name    || '—'} />
+                      <ProfileRow icon={<Building2 className="w-3.5 h-3.5" />} value={user.company || '—'} />
+                      <ProfileRow icon={<Phone    className="w-3.5 h-3.5" />} value={user.phone   || '—'} />
+                      <ProfileRow icon={<Mail     className="w-3.5 h-3.5" />} value={user.email   || '—'} />
+                      <ProfileRow icon={<MapPin   className="w-3.5 h-3.5" />} value={user.address || '—'} />
+                    </div>
+                  )}
 
                   <div className="px-5 pb-3 border-t border-gray-100 pt-4">
                     <label className="text-[10px] text-gray-400 uppercase tracking-widest block mb-2">

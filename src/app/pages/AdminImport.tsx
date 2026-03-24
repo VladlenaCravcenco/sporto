@@ -11,6 +11,7 @@ import {
   Info,
   Tag,
 } from 'lucide-react';
+import { useAdminLang } from '../contexts/AdminLangContext';
 
 // ─── Brands ──────────────────────────────────────────────────────────────────
 const KNOWN_BRANDS = [
@@ -127,6 +128,7 @@ interface ParsedRow {
 
 // ─── Component ────────────────────────────────────────────────────────────────
 export function AdminImport() {
+  const { lang } = useAdminLang();
   const fileRef = useRef<HTMLInputElement>(null);
   const [rows, setRows] = useState<ParsedRow[]>([]);
   const [fileName, setFileName] = useState('');
@@ -135,6 +137,7 @@ export function AdminImport() {
   const [importResult, setImportResult] = useState<{ ok: number; failed: number } | null>(null);
   const [step, setStep] = useState<'upload' | 'preview' | 'done'>('upload');
   const [filterNoCat, setFilterNoCat] = useState(false);
+  const L = (ro: string, ru: string) => lang === 'ro' ? ro : ru;
 
   // ── Parse Excel ─────────────────────────────────────────────────────────────
   const handleFile = useCallback((file: File) => {
@@ -161,7 +164,7 @@ export function AdminImport() {
           }
         }
         if (headerIdx === -1) {
-          setParseError('Не найдена строка с заголовком "Cod". Убедись, что файл не изменён.');
+          setParseError(L('Nu s-a găsit rândul cu antetul "Cod". Verifică dacă fișierul nu a fost modificat.', 'Не найдена строка с заголовком "Cod". Убедись, что файл не изменён.'));
           return;
         }
 
@@ -175,7 +178,7 @@ export function AdminImport() {
         const cPrice = hdrs.findIndex(h => h.startsWith('pret'));
 
         if (cCod === -1 || cName === -1) {
-          setParseError('Не найдены колонки "Cod" и "Denumirea". Проверь заголовки файла.');
+          setParseError(L('Nu s-au găsit coloanele "Cod" și "Denumirea". Verifică anteturile fișierului.', 'Не найдены колонки "Cod" и "Denumirea". Проверь заголовки файла.'));
           return;
         }
 
@@ -248,14 +251,14 @@ export function AdminImport() {
         }
 
         if (results.length === 0) {
-          setParseError('Не найдено товаров. Убедись что в файле есть строки с числовым Cod и ценой > 0.');
+          setParseError(L('Nu au fost găsite produse. Verifică să existe rânduri cu Cod numeric și preț > 0.', 'Не найдено товаров. Убедись что в файле есть строки с числовым Cod и ценой > 0.'));
           return;
         }
 
         setRows(results);
         setStep('preview');
       } catch (err) {
-        setParseError('Ошибка чтения файла: ' + String(err));
+        setParseError(L('Eroare la citirea fișierului: ', 'Ошибка чтения файла: ') + String(err));
       }
     };
     reader.readAsArrayBuffer(file);
@@ -350,7 +353,10 @@ export function AdminImport() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <h1 className="text-2xl text-white">Import produse din Excel</h1>
           <p className="text-gray-500 text-sm mt-1">
-            Încarcă fișierul Excel — rândurile-separatoare și prețurile zero sunt ignorate automat
+            {L(
+              'Încarcă fișierul Excel — rândurile-separatoare și prețurile zero sunt ignorate automat',
+              'Загрузи Excel-файл — строки-разделители и нулевые цены будут автоматически проигнорированы',
+            )}
           </p>
         </div>
       </div>
@@ -367,8 +373,8 @@ export function AdminImport() {
               className="border-2 border-dashed border-gray-200 hover:border-black transition-colors cursor-pointer p-16 text-center"
             >
               <Upload className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-700 mb-1">Peretrece fișierul sau apasă pentru a selecta</p>
-              <p className="text-sm text-gray-400">Suportat: .xlsx, .xls</p>
+              <p className="text-gray-700 mb-1">{L('Перетащи файл или нажми для выбора', 'Перетащи файл или нажми для выбора')}</p>
+              <p className="text-sm text-gray-400">{L('Поддерживается: .xlsx, .xls', 'Поддерживается: .xlsx, .xls')}</p>
               <input
                 ref={fileRef}
                 type="file"
@@ -387,14 +393,14 @@ export function AdminImport() {
 
             <div className="mt-6 border border-gray-100 bg-gray-50 p-5">
               <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
-                <Info className="w-3.5 h-3.5" /> Ce se întâmplă automat
+                <Info className="w-3.5 h-3.5" /> {L('Ce se întâmplă automat', 'Что происходит автоматически')}
               </p>
               <ul className="text-sm text-gray-600 space-y-1.5 list-disc list-inside">
-                <li>Linii-separatoare (<em>Plase sportive, Volei, - TRENAJOARE…</em>) — ignorate</li>
-                <li>Linii cu preț = 0 — ignorate</li>
-                <li>Categoria este determinată după numele produsului și contextul secțiunii</li>
-                <li>Branduri (HMS, NILS, SUHS, TECHNOGYM…) sunt extrase din nume</li>
-                <li>Produsele fără categorie recunoscută — pot fi atribuite manual în tabel</li>
+                <li>{L('Linii-separatoare (Plase sportive, Volei, - TRENAJOARE…) — ignorate', 'Строки-разделители (Plase sportive, Volei, - TRENAJOARE…) — игнорируются')}</li>
+                <li>{L('Linii cu preț = 0 — ignorate', 'Строки с ценой = 0 — игнорируются')}</li>
+                <li>{L('Categoria este determinată după numele produsului și contextul secțiunii', 'Категория определяется по названию товара и контексту секции')}</li>
+                <li>{L('Branduri (HMS, NILS, SUHS, TECHNOGYM…) sunt extrase din nume', 'Бренды (HMS, NILS, SUHS, TECHNOGYM…) извлекаются из названия')}</li>
+                <li>{L('Produsele fără categorie recunoscută — pot fi atribuite manual în tabel', 'Товарам без распознанной категории можно назначить категорию вручную в таблице')}</li>
               </ul>
             </div>
           </div>
@@ -408,16 +414,16 @@ export function AdminImport() {
               <div className="flex items-center gap-3">
                 <div className="border border-gray-200 px-4 py-2 text-center min-w-[72px]">
                   <div className="text-xl text-gray-900">{rows.length}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">Produse</div>
+                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">{L('Produse', 'Товары')}</div>
                 </div>
                 <div className="border border-green-200 bg-green-50 px-4 py-2 text-center min-w-[72px]">
                   <div className="text-xl text-green-700">{readyCount}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">Gata</div>
+                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">{L('Gata', 'Готово')}</div>
                 </div>
                 {noCatCount > 0 && (
                   <div className="border border-amber-200 bg-amber-50 px-4 py-2 text-center min-w-[72px]">
                     <div className="text-xl text-amber-600">{noCatCount}</div>
-                    <div className="text-[10px] text-gray-400 uppercase tracking-wider">Fără cat.</div>
+                    <div className="text-[10px] text-gray-400 uppercase tracking-wider">{L('Fără cat.', 'Без кат.')}</div>
                   </div>
                 )}
                 <span className="text-xs text-gray-400 hidden sm:block">{fileName}</span>
@@ -432,7 +438,7 @@ export function AdminImport() {
                     }`}
                   >
                     <Tag className="w-3 h-3" />
-                    {filterNoCat ? 'Arată toate' : `Atribuie categorii (${noCatCount})`}
+                    {filterNoCat ? L('Arată toate', 'Показать все') : L(`Atribuie categorii (${noCatCount})`, `Назначить категории (${noCatCount})`)}
                   </button>
                 )}
                 <button
@@ -447,7 +453,7 @@ export function AdminImport() {
                   className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-black px-3 py-2 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
-                  Alt fișier
+                  {L('Alt fișier', 'Другой файл')}
                 </button>
               </div>
             </div>
@@ -459,13 +465,13 @@ export function AdminImport() {
                   <thead className="bg-black text-white sticky top-0 z-10">
                     <tr>
                       <th className="px-3 py-2.5 text-left font-normal tracking-wider">Cod</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider min-w-[280px]">Denumirea</th>
+                      <th className="px-3 py-2.5 text-left font-normal tracking-wider min-w-[280px]">{L('Denumirea', 'Наименование')}</th>
                       <th className="px-3 py-2.5 text-left font-normal tracking-wider">SKU</th>
                       <th className="px-3 py-2.5 text-left font-normal tracking-wider">Brand</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider min-w-[160px]">Categorie</th>
-                      <th className="px-3 py-2.5 text-right font-normal tracking-wider">Preț</th>
-                      <th className="px-3 py-2.5 text-right font-normal tracking-wider">Cant.</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider">Unit.</th>
+                      <th className="px-3 py-2.5 text-left font-normal tracking-wider min-w-[160px]">{L('Categorie', 'Категория')}</th>
+                      <th className="px-3 py-2.5 text-right font-normal tracking-wider">{L('Preț', 'Цена')}</th>
+                      <th className="px-3 py-2.5 text-right font-normal tracking-wider">{L('Cant.', 'Кол-во')}</th>
+                      <th className="px-3 py-2.5 text-left font-normal tracking-wider">{L('Unit.', 'Ед.')}</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -488,7 +494,7 @@ export function AdminImport() {
                                 : 'border-amber-300 bg-amber-50 text-amber-700'
                             }`}
                           >
-                            {!row.category && <option value="">— alege —</option>}
+                            {!row.category && <option value="">{L('— alege —', '— выбрать —')}</option>}
                             {CATEGORY_OPTIONS.map(c => (
                               <option key={c.slug} value={c.slug}>{c.label}</option>
                             ))}
@@ -517,10 +523,10 @@ export function AdminImport() {
                   ? <CheckCircle className="w-4 h-4 text-green-600 flex-shrink-0" />
                   : <AlertCircle className="w-4 h-4 text-amber-600 flex-shrink-0" />}
                 <p className="text-sm">
-                  Importat: <strong>{importResult.ok}</strong>
+                  {L('Importat: ', 'Импортировано: ')}<strong>{importResult.ok}</strong>
                   {importResult.failed > 0 && (
-                    <>, erori: <strong className="text-red-600">{importResult.failed}</strong>{' '}
-                    (detalii în consola browserului)</>
+                    <>, {L('erori: ', 'ошибок: ')}<strong className="text-red-600">{importResult.failed}</strong>{' '}
+                    {L('(detalii în consola browserului)', '(подробности в консоли браузера)')}</>
                   )}
                 </p>
               </div>
@@ -535,12 +541,15 @@ export function AdminImport() {
               >
                 {importing && <Loader2 className="w-4 h-4 animate-spin" />}
                 {importing
-                  ? 'Import...'
-                  : `Importă ${readyCount} produse în Supabase`}
+                  ? L('Import...', 'Импорт...')
+                  : L(`Importă ${readyCount} produse în Supabase`, `Импортировать ${readyCount} товаров в Supabase`)}
               </button>
               {noCatCount > 0 && (
                 <p className="self-center text-xs text-gray-400">
-                  {noCatCount} produs{noCatCount === 1 ? '' : 'e'} fără categorie — vor fi ignorate
+                  {L(
+                    `${noCatCount} produs${noCatCount === 1 ? '' : 'e'} fără categorie — vor fi ignorate`,
+                    `${noCatCount} товар${noCatCount === 1 ? '' : 'ов'} без категории — будут проигнорированы`,
+                  )}
                 </p>
               )}
             </div>
@@ -553,22 +562,25 @@ export function AdminImport() {
             <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-6">
               <CheckCircle className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-2xl text-gray-900 mb-2">Gata!</h2>
+            <h2 className="text-2xl text-gray-900 mb-2">{L('Gata!', 'Готово!')}</h2>
             <p className="text-gray-500 mb-8">
-              {importResult.ok} produse au fost încărcate în Supabase. Catalogul a fost actualizat.
+              {L(
+                `${importResult.ok} produse au fost încărcate în Supabase. Catalogul a fost actualizat.`,
+                `${importResult.ok} товаров загружено в Supabase. Каталог обновлен.`,
+              )}
             </p>
             <div className="flex gap-3 justify-center">
               <a
                 href="/catalog"
                 className="bg-black text-white px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-800 transition-colors"
               >
-                Deschide catalogul
+                {L('Deschide catalogul', 'Открыть каталог')}
               </a>
               <button
                 onClick={() => { setStep('upload'); setRows([]); setImportResult(null); setFileName(''); }}
                 className="border border-gray-200 hover:border-black px-6 py-3 text-sm transition-colors"
               >
-                Alt fișier
+                {L('Alt fișier', 'Другой файл')}
               </button>
             </div>
           </div>

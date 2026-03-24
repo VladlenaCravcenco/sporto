@@ -19,8 +19,8 @@ interface AuthContextType {
   isLoading: boolean;
   login:         (email: string, password: string) => Promise<boolean>;
   register:      (data: RegisterData) => Promise<boolean | 'already_exists' | 'server_error'>;
-  updateProfile: (data: Partial<UserProfile>) => void;
-  logout:        () => void;
+  updateProfile: (data: Partial<UserProfile>) => Promise<void>;
+  logout:        () => Promise<void>;
 }
 
 export interface RegisterData {

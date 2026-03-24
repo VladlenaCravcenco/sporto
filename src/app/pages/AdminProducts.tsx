@@ -1,8 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
 import { supabase, type ProductRow } from '../../lib/supabase';
-import { categories } from '../data/products';
 import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
+import { useCategories, useCategoriesContext } from '../contexts/CategoriesContext';
 import ExcelJS from 'exceljs';
 import {
   Search, Plus, X, Trash2, ArrowLeft, RefreshCw,
@@ -19,6 +19,21 @@ interface BrandComboboxProps {
   onChange: (val: string) => void;
   allProductBrands: string[]; // unique brand strings from loaded products
   supabaseBrandNames: string[]; // brand names from the brands table
+}
+
+interface CategoryComboboxProps {
+  value: string;
+  onChange: (val: string) => void;
+  categories: ReturnType<typeof useCategories>;
+  onCreate: (name: string) => Promise<string | null>;
+}
+
+interface SubcategoryComboboxProps {
+  value: string;
+  onChange: (val: string) => void;
+  subcategories: Array<{ id: string; name: { ro: string; ru: string } }>;
+  disabled?: boolean;
+  onCreate: (name: string) => Promise<string | null>;
 }
 
 function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames }: BrandComboboxProps) {
@@ -138,6 +153,254 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames }
   );
 }
 
+function CategoryCombobox({ value, onChange, categories, onCreate }: CategoryComboboxProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const selected = categories.find((c) => c.id === value);
+
+  useEffect(() => {
+    setQuery(selected?.name.ro || '');
+  }, [selected?.name.ro, value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = categories.filter((c) =>
+    c.name.ro.toLowerCase().includes(q)
+    || c.name.ru.toLowerCase().includes(q)
+    || c.id.toLowerCase().includes(q)
+  );
+  const isNew = q.length > 0 && !categories.some((c) =>
+    c.name.ro.toLowerCase() === q || c.name.ru.toLowerCase() === q || c.id.toLowerCase() === q
+  );
+
+  const select = (id: string) => {
+    onChange(id);
+    setOpen(false);
+  };
+
+  const createAndSelect = async () => {
+    const name = query.trim();
+    if (!name) return;
+    setCreating(true);
+    const id = await onCreate(name);
+    setCreating(false);
+    if (id) {
+      onChange(id);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => setOpen(true)}
+          placeholder="Cardio, Fitness..."
+          className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          onClick={() => setOpen(o => !o)}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+        >
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {query && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => { setQuery(''); onChange(''); setOpen(true); }}
+            className="absolute right-7 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      {open && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-white border border-gray-200 shadow-lg max-h-52 overflow-y-auto">
+          {isNew && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={createAndSelect}
+              disabled={creating}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition-colors border-b border-gray-100 text-left disabled:opacity-50"
+            >
+              <Plus className="w-3 h-3 text-black flex-shrink-0" />
+              <span>
+                <span className="text-gray-400">Adaugă categorie: </span>
+                <span className="text-black">{query.trim()}</span>
+              </span>
+            </button>
+          )}
+
+          {filtered.length > 0 ? (
+            filtered.map(cat => (
+              <button
+                key={cat.id}
+                type="button"
+                onMouseDown={() => select(cat.id)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors text-left ${cat.id === value ? 'bg-gray-50' : ''}`}
+              >
+                <span className="flex items-center gap-2">
+                  {cat.id === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
+                  <span className={cat.id === value ? 'text-black' : 'text-gray-700'}>{cat.name.ro}</span>
+                </span>
+                <span className="text-[9px] uppercase tracking-wider text-gray-300 flex-shrink-0 font-mono">
+                  {cat.id}
+                </span>
+              </button>
+            ))
+          ) : !isNew ? (
+            <div className="px-3 py-3 text-xs text-gray-400 text-center">Nicio categorie găsită</div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreate }: SubcategoryComboboxProps) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [creating, setCreating] = useState(false);
+  const ref = useRef<HTMLDivElement>(null);
+
+  const selected = subcategories.find((s) => s.id === value);
+
+  useEffect(() => {
+    setQuery(selected?.name.ro || '');
+  }, [selected?.name.ro, value]);
+
+  useEffect(() => {
+    if (!open) return;
+    const handler = (e: MouseEvent) => {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [open]);
+
+  const q = query.trim().toLowerCase();
+  const filtered = subcategories.filter((s) =>
+    s.name.ro.toLowerCase().includes(q)
+    || s.name.ru.toLowerCase().includes(q)
+    || s.id.toLowerCase().includes(q)
+  );
+  const isNew = q.length > 0 && !subcategories.some((s) =>
+    s.name.ro.toLowerCase() === q || s.name.ru.toLowerCase() === q || s.id.toLowerCase() === q
+  );
+
+  const select = (id: string) => {
+    onChange(id);
+    setOpen(false);
+  };
+
+  const createAndSelect = async () => {
+    const name = query.trim();
+    if (!name) return;
+    setCreating(true);
+    const id = await onCreate(name);
+    setCreating(false);
+    if (id) {
+      onChange(id);
+      setOpen(false);
+    }
+  };
+
+  return (
+    <div ref={ref} className="relative">
+      <div className="relative">
+        <input
+          type="text"
+          value={query}
+          onChange={e => { setQuery(e.target.value); setOpen(true); }}
+          onFocus={() => !disabled && setOpen(true)}
+          disabled={disabled}
+          placeholder={disabled ? 'Alege mai întâi categoria' : 'Benzi, Gantere...'}
+          className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors disabled:opacity-40"
+        />
+        <button
+          type="button"
+          tabIndex={-1}
+          disabled={disabled}
+          onClick={() => !disabled && setOpen(o => !o)}
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors disabled:opacity-30"
+        >
+          <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
+        </button>
+        {query && !disabled && (
+          <button
+            type="button"
+            tabIndex={-1}
+            onClick={() => { setQuery(''); onChange(''); setOpen(true); }}
+            className="absolute right-7 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </div>
+
+      {open && !disabled && (
+        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-white border border-gray-200 shadow-lg max-h-52 overflow-y-auto">
+          {isNew && (
+            <button
+              type="button"
+              onMouseDown={(e) => e.preventDefault()}
+              onClick={createAndSelect}
+              disabled={creating}
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition-colors border-b border-gray-100 text-left disabled:opacity-50"
+            >
+              <Plus className="w-3 h-3 text-black flex-shrink-0" />
+              <span>
+                <span className="text-gray-400">Adaugă subcategorie: </span>
+                <span className="text-black">{query.trim()}</span>
+              </span>
+            </button>
+          )}
+
+          {filtered.length > 0 ? (
+            filtered.map(sub => (
+              <button
+                key={sub.id}
+                type="button"
+                onMouseDown={() => select(sub.id)}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors text-left ${sub.id === value ? 'bg-gray-50' : ''}`}
+              >
+                <span className="flex items-center gap-2">
+                  {sub.id === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
+                  <span className={sub.id === value ? 'text-black' : 'text-gray-700'}>{sub.name.ro}</span>
+                </span>
+                <span className="text-[9px] uppercase tracking-wider text-gray-300 flex-shrink-0 font-mono">
+                  {sub.id}
+                </span>
+              </button>
+            ))
+          ) : !isNew ? (
+            <div className="px-3 py-3 text-xs text-gray-400 text-center">Nicio subcategorie găsită</div>
+          ) : null}
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SortKey = 'name_ro' | 'price' | 'qty' | 'id';
@@ -151,12 +414,21 @@ const EMPTY_FORM: Partial<ProductRow> = {
   image_url: '', images: [], youtube_url: '', active: true, featured: false,
 };
 
+function toSlug(value: string) {
+  const slug = value.toLowerCase().trim()
+    .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+    .replace(/[șş]/g, 's').replace(/[țţ]/g, 't')
+    .replace(/[ăâ]/g, 'a').replace(/[î]/g, 'i')
+    .replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+  return slug;
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-function catLabel(id: string) {
+function catLabel(categories: ReturnType<typeof useCategories>, id: string) {
   return categories.find(c => c.id === id)?.name.ro ?? id;
 }
-function subcatLabel(catId: string, subId: string) {
+function subcatLabel(categories: ReturnType<typeof useCategories>, catId: string, subId: string) {
   return categories.find(c => c.id === catId)?.subcategories.find(s => s.id === subId)?.name.ro ?? subId;
 }
 
@@ -164,6 +436,8 @@ function subcatLabel(catId: string, subId: string) {
 
 export function AdminProducts() {
   const { t } = useAdminLang();
+  const categories = useCategories();
+  const { refetchCategories } = useCategoriesContext();
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -320,8 +594,8 @@ export function AdminProducts() {
           name_ro: product.name_ro || '-',
           sku: product.sku || '-',
           brand: product.brand || '-',
-          category: catLabel(product.category),
-          subcategory: product.subcategory ? subcatLabel(product.category, product.subcategory) : '-',
+          category: catLabel(categories, product.category),
+          subcategory: product.subcategory ? subcatLabel(categories, product.category, product.subcategory) : '-',
           price: product.price || 0,
           sale_price: product.sale_price || '-',
           qty: product.qty || 0,
@@ -668,6 +942,64 @@ export function AdminProducts() {
 
   const selectedCatSubs = categories.find(c => c.id === form.category)?.subcategories ?? [];
 
+  const createCategory = async (name: string): Promise<string | null> => {
+    const baseSlug = toSlug(name);
+    const slug = baseSlug || `category-${Date.now()}`;
+    const exists = categories.some(c => c.id === slug);
+    if (exists) {
+      return slug;
+    }
+
+    const { error } = await supabase.from('categories').insert([{
+      slug,
+      name_ro: name.trim(),
+      name_ru: name.trim(),
+      description_ro: null,
+      description_ru: null,
+      sort_order: categories.length,
+    }]);
+
+    if (error) {
+      showToast(error.message, false);
+      return null;
+    }
+
+    await refetchCategories();
+    showToast('Categorie nouă creată');
+    return slug;
+  };
+
+  const createSubcategory = async (name: string): Promise<string | null> => {
+    if (!form.category) {
+      showToast('Selectați mai întâi categoria', false);
+      return null;
+    }
+
+    const baseSlug = toSlug(name);
+    const slug = baseSlug || `subcategory-${Date.now()}`;
+    const exists = selectedCatSubs.some(s => s.id === slug);
+    if (exists) {
+      return slug;
+    }
+
+    const { error } = await supabase.from('subcategories').insert([{
+      category_slug: form.category,
+      slug,
+      name_ro: name.trim(),
+      name_ru: name.trim(),
+      sort_order: selectedCatSubs.length,
+    }]);
+
+    if (error) {
+      showToast(error.message, false);
+      return null;
+    }
+
+    await refetchCategories();
+    showToast('Subcategoria a fost creată');
+    return slug;
+  };
+
   // ─── Unique brand list from loaded products ──────────────────────────────
   const allProductBrands = useMemo(() =>
     [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])],
@@ -837,7 +1169,7 @@ export function AdminProducts() {
                   </div>
 
                   {/* Category — hidden on small */}
-                  <div className="hidden lg:block text-xs text-gray-400 truncate">{catLabel(row.category)}</div>
+                  <div className="hidden lg:block text-xs text-gray-400 truncate">{catLabel(categories, row.category)}</div>
 
                   {/* Price */}
                   <div className="hidden lg:block text-xs text-gray-700 text-right tabular-nums font-mono">
@@ -1067,26 +1399,22 @@ export function AdminProducts() {
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">
                   Categorie <span className="text-red-400">*</span>
                 </label>
-                <select
+                <CategoryCombobox
                   value={form.category ?? ''}
-                  onChange={e => setForm(f => ({ ...f, category: e.target.value, subcategory: '' }))}
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
-                >
-                  <option value="">Selectează...</option>
-                  {categories.map(c => <option key={c.id} value={c.id}>{c.name.ro}</option>)}
-                </select>
+                  onChange={(val) => setForm(f => ({ ...f, category: val, subcategory: '' }))}
+                  categories={categories}
+                  onCreate={createCategory}
+                />
               </div>
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">Subcategorie</label>
-                <select
+                <SubcategoryCombobox
                   value={form.subcategory ?? ''}
-                  onChange={e => setForm(f => ({ ...f, subcategory: e.target.value }))}
+                  onChange={(val) => setForm(f => ({ ...f, subcategory: val }))}
+                  subcategories={selectedCatSubs}
                   disabled={!form.category}
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors disabled:opacity-40"
-                >
-                  <option value="">— niciuna —</option>
-                  {selectedCatSubs.map(s => <option key={s.id} value={s.id}>{s.name.ro}</option>)}
-                </select>
+                  onCreate={createSubcategory}
+                />
               </div>
             </div>
 

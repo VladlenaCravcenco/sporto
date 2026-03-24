@@ -54,6 +54,18 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     fetchCategories();
   }, [fetchCategories]);
 
+  useEffect(() => {
+    const channel = supabase
+      .channel('categories-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'categories' }, fetchCategories)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'subcategories' }, fetchCategories)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [fetchCategories]);
+
   return (
     <CategoriesContext.Provider value={{ categories, refetchCategories: fetchCategories }}>
       {children}
