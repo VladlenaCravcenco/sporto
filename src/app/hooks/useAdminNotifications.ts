@@ -58,6 +58,10 @@ export async function playNotificationSound() {
   });
 }
 
+export function dispatchClearAdminRequestUnread() {
+  window.dispatchEvent(new Event('admin:clear-request-unread'));
+}
+
 // ── Browser OS notification ───────────────────────────────────────────────────
 function showBrowserNotification(req: NewRequestNotification) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
@@ -166,15 +170,20 @@ export function useAdminNotifications() {
 
     // Unlock AudioContext on first user interaction in admin
     document.addEventListener('click', unlockAudio, { once: true });
+    const clearHandler = () => setUnreadCount(0);
+    window.addEventListener('admin:clear-request-unread', clearHandler);
 
     return () => {
       if (pollRef.current) clearInterval(pollRef.current);
       document.removeEventListener('click', unlockAudio);
-      supabase.removeChannel(supabase.channel('admin-order-inserts'));
+      window.removeEventListener('admin:clear-request-unread', clearHandler);
     };
   }, [init]);
 
-  const clearUnread = useCallback(() => setUnreadCount(0), []);
+  const clearUnread = useCallback(() => {
+    setUnreadCount(0);
+    dispatchClearAdminRequestUnread();
+  }, []);
 
   return { unreadCount, latestRequest, clearUnread };
 }

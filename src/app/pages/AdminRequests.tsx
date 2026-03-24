@@ -4,9 +4,10 @@ import {
   ShoppingCart, RefreshCw, Search, X, Check, Mail,
   Phone, Building2, AlertCircle, ChevronDown, ChevronUp,
   Package, Clock, CheckCircle, XCircle, Loader2,
-  Trash2, MapPin, User,
+  Trash2, MapPin, User, SendHorizonal, MessageSquare,
 } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
+import { dispatchClearAdminRequestUnread } from '../hooks/useAdminNotifications';
 
 const SQL_SETUP = `CREATE TABLE IF NOT EXISTS public.order_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -17,6 +18,7 @@ const SQL_SETUP = `CREATE TABLE IF NOT EXISTS public.order_requests (
   client_type text DEFAULT 'company',
   delivery_address text,
   notes text,
+  admin_comment text,
   cart_items jsonb DEFAULT '[]',
   total_price numeric DEFAULT 0,
   total_items integer DEFAULT 0,
@@ -34,6 +36,22 @@ END $$;`;
 
 type Status = 'new' | 'in_progress' | 'done' | 'cancelled';
 type StatusFilter = Status | 'all';
+const ADMIN_COMMENT_STORAGE_KEY = 'sporto_admin_request_comments';
+
+function readLocalAdminComments(): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(ADMIN_COMMENT_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+}
+
+function writeLocalAdminComments(next: Record<string, string>) {
+  try {
+    localStorage.setItem(ADMIN_COMMENT_STORAGE_KEY, JSON.stringify(next));
+  } catch {}
+}
 
 /* ─── status config is built in the component (needs t) ─── */
 
@@ -56,13 +74,15 @@ export function AdminRequests() {
   const [expandedId, setExpandedId]   = useState<string | null>(null);
   const [toast, setToast]             = useState<{ msg: string; ok: boolean } | null>(null);
   const [updatingId, setUpdatingId]   = useState<string | null>(null);
+  const [savingCommentId, setSavingCommentId] = useState<string | null>(null);
+  const [adminComments, setAdminComments] = useState<Record<string, string>>({});
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
     setTimeout(() => setToast(null), 3000);
   };
 
-  const load = useCallback(async () => {
+  const load = useCallback(async (): Promise<OrderRequestRow[]> => {
     setLoading(true);
     const { data, error } = await supabase
       .from('order_requests')
@@ -78,12 +98,23 @@ export function AdminRequests() {
       } else {
         showToast(error.message, false);
       }
+      setLoading(false);
+      return [];
     } else {
-      setRows(data as OrderRequestRow[]);
+      const nextRows = data as OrderRequestRow[];
+      setRows(nextRows);
       setNoTable(false);
+      setLoading(false);
+      return nextRows;
     }
-    setLoading(false);
   }, []);
+
+  useEffect(() => {
+    const localComments = readLocalAdminComments();
+    setAdminComments(Object.fromEntries(
+      rows.map(row => [row.id, row.admin_comment || localComments[row.id] || ''])
+    ));
+  }, [rows]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -113,6 +144,36 @@ export function AdminRequests() {
     setRows(r => r.filter(req => req.id !== id));
     if (expandedId === id) setExpandedId(null);
     showToast(t.requests.deleted ?? 'Заявка удалена');
+  };
+
+  const saveAdminComment = async (id: string) => {
+    setSavingCommentId(id);
+    const admin_comment = adminComments[id]?.trim() || null;
+    const { error } = await supabase.from('order_requests').update({ admin_comment }).eq('id', id);
+    if (error) {
+      if (error.message.includes('admin_comment')) {
+        const nextLocalComments = {
+          ...readLocalAdminComments(),
+          [id]: admin_comment || '',
+        };
+        writeLocalAdminComments(nextLocalComments);
+        setRows(r => r.map(req => req.id === id ? { ...req, admin_comment } : req));
+        showToast('Комментарий сохранён локально. Для Supabase нужно добавить колонку admin_comment.');
+      } else {
+        showToast(error.message, false);
+      }
+    } else {
+      setRows(r => r.map(req => req.id === id ? { ...req, admin_comment } : req));
+      showToast(t.requests.statusUpdated ?? 'Сохранено');
+    }
+    setSavingCommentId(null);
+  };
+
+  const showNewestRequests = async () => {
+    dispatchClearAdminRequestUnread();
+    const nextRows = await load();
+    setStatusFilter('new');
+    setExpandedId(nextRows.find(r => r.status === 'new')?.id ?? null);
   };
 
   const filtered = rows.filter(r => {
@@ -167,13 +228,13 @@ export function AdminRequests() {
               {rows.length}
             </span>
             {counts.new > 0 && (
-  <button
-    onClick={() => setStatusFilter('new')}
-    className="text-[11px] bg-black text-white px-2 py-0.5 tabular-nums animate-pulse flex-shrink-0 hover:bg-gray-800 transition-colors"
-  >
-    {counts.new} {t.requests.statusNew?.toLowerCase() ?? 'новых'}
-  </button>
-)}
+              <button
+                onClick={showNewestRequests}
+                className="text-[11px] bg-black text-white px-2 py-0.5 tabular-nums animate-pulse flex-shrink-0 hover:bg-gray-800 transition-colors"
+              >
+                {counts.new} {t.requests.statusNew?.toLowerCase() ?? 'новых'}
+              </button>
+            )}
             <div className="flex-1" />
             <button
               onClick={load}
@@ -284,6 +345,9 @@ export function AdminRequests() {
                 const expanded = expandedId === req.id;
                 const cfg = STATUS_CONFIG[req.status as Status] ?? STATUS_CONFIG.new;
                 const items = Array.isArray(req.cart_items) ? req.cart_items : [];
+                const clientComment = req.notes?.trim() || t.requests.noComment || '—';
+                const adminComment = adminComments[req.id] ?? req.admin_comment ?? '';
+                const isCommentChanged = adminComment !== (req.admin_comment || '');
 
                 return (
                   <div
@@ -382,17 +446,57 @@ export function AdminRequests() {
                     {expanded && (
                       <div className="border-t border-gray-100 bg-gray-50">
 
-                        {/* ── Client info strip ── */}
-                        <div className="px-3 sm:px-5 py-3 bg-white border-b border-gray-100">
-                          <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
-                            {t.requests.client ?? 'Клиент'}
-                          </p>
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-1.5">
-                            <InfoRow icon={<User className="w-3 h-3" />}     value={req.client_name} />
-                            <InfoRow icon={<Building2 className="w-3 h-3" />} value={req.client_company   || '—'} />
-                            <InfoRow icon={<Mail className="w-3 h-3" />}     value={req.client_email}  link={`mailto:${req.client_email}`} />
-                            <InfoRow icon={<Phone     className="w-3 h-3" />} value={req.client_phone     || '—'} link={req.client_phone ? `tel:${req.client_phone}` : undefined} />
-                            <InfoRow icon={<MapPin    className="w-3 h-3" />} value={req.delivery_address || '—'} />
+                        {/* ── Client + comments ── */}
+                        <div className="px-3 sm:px-5 py-4 bg-white border-b border-gray-100">
+                          <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1.3fr_1fr] gap-4">
+                            <div>
+                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                                {t.requests.client ?? 'Клиент'}
+                              </p>
+                              <div className="space-y-1.5">
+                                <InfoRow icon={<User className="w-3 h-3" />} value={req.client_name} />
+                                <InfoRow icon={<Mail className="w-3 h-3" />} value={req.client_email} link={`mailto:${req.client_email}`} />
+                                <InfoRow icon={<MapPin className="w-3 h-3" />} value={req.delivery_address || t.requests.noComment || '—'} />
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                                {t.requests.clientComment ?? 'Комментарий клиента'}
+                              </p>
+                              <div className="space-y-1.5">
+                                <InfoRow icon={<Building2 className="w-3 h-3" />} value={req.client_company || t.requests.noComment || '—'} />
+                                <InfoRow icon={<Phone className="w-3 h-3" />} value={req.client_phone || t.requests.noComment || '—'} link={req.client_phone ? `tel:${req.client_phone}` : undefined} />
+                                <InfoRow icon={<MessageSquare className="w-3 h-3" />} value={clientComment} multiline />
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                                {t.requests.adminComment ?? 'Комментарий администратора'}
+                              </p>
+                              <textarea
+                                value={adminComment}
+                                onChange={e => setAdminComments(prev => ({ ...prev, [req.id]: e.target.value }))}
+                                placeholder={t.requests.adminCommentPlaceholder ?? 'Добавить комментарий...'}
+                                rows={8}
+                                className="w-full h-44 border border-gray-200 bg-white px-4 py-3 text-[11px] text-gray-700 placeholder:text-gray-300 leading-relaxed align-top focus:outline-none focus:border-black transition-colors resize-none"
+                              />
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => saveAdminComment(req.id)}
+                                  disabled={savingCommentId === req.id || !isCommentChanged}
+                                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-[11px] uppercase tracking-widest transition-colors ${
+                                    savingCommentId === req.id || !isCommentChanged
+                                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-default'
+                                      : 'bg-black text-white hover:bg-gray-800'
+                                  }`}
+                                >
+                                  {savingCommentId === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SendHorizonal className="w-3.5 h-3.5" />}
+                                  {t.requests.saveComment ?? 'Добавить комментарий'}
+                                </button>
+                              </div>
+                            </div>
                           </div>
                         </div>
 
@@ -482,16 +586,6 @@ export function AdminRequests() {
                             </div>
                           )}
 
-                          {/* Notes */}
-                          {req.notes && (
-                            <div className="mt-2 bg-white border border-gray-100 px-3 py-2.5">
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-1">
-                                {t.requests.notes ?? 'Примечание'}
-                              </p>
-                              <p className="text-[11px] text-gray-700 leading-relaxed">{req.notes}</p>
-                            </div>
-                          )}
-
                           {/* Delete */}
                           <button
                             onClick={() => deleteRequest(req.id)}
@@ -514,13 +608,13 @@ export function AdminRequests() {
   );
 }
 
-function InfoRow({ icon, value, link }: { icon: React.ReactNode; value: string; link?: string }) {
+function InfoRow({ icon, value, link, multiline = false }: { icon: React.ReactNode; value: string; link?: string; multiline?: boolean }) {
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-gray-400 flex-shrink-0">{icon}</span>
+    <div className={`flex gap-2 ${multiline ? 'items-start' : 'items-center'}`}>
+      <span className={`text-gray-400 flex-shrink-0 ${multiline ? 'mt-0.5' : ''}`}>{icon}</span>
       {link
         ? <a href={link} className="text-[11px] text-gray-700 hover:text-black hover:underline truncate">{value}</a>
-        : <span className="text-[11px] text-gray-700 truncate">{value}</span>}
+        : <span className={`text-[11px] text-gray-700 ${multiline ? 'leading-relaxed whitespace-pre-wrap' : 'truncate'}`}>{value}</span>}
     </div>
   );
 }

@@ -121,6 +121,7 @@ export interface OrderRequestRow {
   client_type: 'individual' | 'company' | null;
   delivery_address: string | null;
   notes: string | null;
+  admin_comment?: string | null;
   cart_items: Array<{
     id: string;
     name_ro: string;
