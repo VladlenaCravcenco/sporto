@@ -33,6 +33,7 @@ import { useLanguage, Language } from '../contexts/LanguageContext';
 import { type Product } from '../data/products';
 import { useCategories } from '../contexts/CategoriesContext';
 import { ProductCard } from '../components/ProductCard';
+import { isProductInStock } from '../lib/productStock';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -59,12 +60,6 @@ function scoreProduct(product: Product, tokens: string[], lang: Language): numbe
   const expanded = expandTokens(tokens, tokens.join(' '));
   const result = engineScore(product, tokens, lang, expanded);
   return result?.score ?? -1;
-}
-
-/** ~80% in stock, deterministic from id (same logic as ProductCard) */
-function getInStock(product: Product): boolean {
-  if (product.inStock !== undefined) return product.inStock;
-  return Number(product.id) % 5 !== 0;
 }
 
 export function Catalog() {
@@ -173,7 +168,7 @@ export function Catalog() {
       if (saleOnly && !product.sale_price) return false;
       // Stock filter: в наличии или под заказ
       if (stockFilter !== 'all') {
-        const inStock = getInStock(product);
+        const inStock = isProductInStock(product);
         if (stockFilter === 'inStock' && !inStock) return false;
         if (stockFilter === 'onOrder' && inStock) return false;
       }

@@ -16,6 +16,7 @@ import { useRef, useEffect, useState, useCallback } from 'react';
 import type { Product } from '../data/products';
 import { SeoHead, buildProductJsonLd, buildBreadcrumbJsonLd } from '../components/SeoHead';
 import { ServicesBento } from '../components/ServicesBento';
+import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -90,13 +91,16 @@ function BrandCarousel({
         className="flex overflow-hidden gap-2 md:gap-3"
         style={{ scrollBehavior: 'smooth' }}
       >
-        {products.map(p => (
-          <Link
-            key={p.id}
-            to={`/product/${p.id}`}
-            className="group flex-shrink-0 border border-gray-100 bg-white hover:border-black transition-colors duration-200 flex flex-col"
-            style={{ width: `calc((100% - ${(visible - 1) * (window?.innerWidth < 640 ? 8 : 12)}px) / ${visible})` }}
-          >
+        {products.map(p => {
+          const currentPrice = getCurrentPrice(p);
+          const showSalePrice = hasSalePrice(p);
+          return (
+            <Link
+              key={p.id}
+              to={`/product/${p.id}`}
+              className="group flex-shrink-0 border border-gray-100 bg-white hover:border-black transition-colors duration-200 flex flex-col"
+              style={{ width: `calc((100% - ${(visible - 1) * (window?.innerWidth < 640 ? 8 : 12)}px) / ${visible})` }}
+            >
             {/* Image */}
             <div className="aspect-square bg-gray-50 overflow-hidden relative">
               {p.image ? (
@@ -125,14 +129,26 @@ function BrandCarousel({
                 <p className="text-[10px] text-gray-400 font-mono">{p.sku}</p>
               )}
               <div className="mt-auto pt-2 flex items-center justify-between">
-                <span className="text-sm text-gray-900 tabular-nums">
-                  {p.price.toLocaleString()} <span className="text-[10px] text-gray-400">MDL</span>
-                </span>
+                {showSalePrice ? (
+                  <div className="flex flex-col items-start gap-0.5">
+                    <span className="text-xs text-gray-400 tabular-nums line-through">
+                      {p.price.toLocaleString()} <span className="text-[10px] text-gray-300">MDL</span>
+                    </span>
+                    <span className="text-sm text-red-600 tabular-nums">
+                      {currentPrice.toLocaleString()} <span className="text-[10px] text-red-500">MDL</span>
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-sm text-gray-900 tabular-nums">
+                    {currentPrice.toLocaleString()} <span className="text-[10px] text-gray-400">MDL</span>
+                  </span>
+                )}
                 <ArrowUpRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-black transition-colors" />
               </div>
             </div>
-          </Link>
-        ))}
+            </Link>
+          );
+        })}
       </div>
 
       {/* Nav arrows — only if there's something to scroll */}
@@ -241,12 +257,14 @@ export function ProductDetail() {
 
   const category    = categories.find((c) => c.id === product.category);
   const subcategory = category?.subcategories.find((s) => s.id === product.subcategory);
+  const currentPrice = getCurrentPrice(product);
+  const showSalePrice = hasSalePrice(product);
 
   const handleAddToCart = () => {
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: currentPrice,
       image: product.image,
       category: product.category,
     });
@@ -415,12 +433,29 @@ export function ProductDetail() {
               <div className="text-xs text-gray-400 uppercase tracking-wider mb-1">
                 {t('products.price')}
               </div>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl text-gray-900">
-                  {product.price.toLocaleString()}
-                </span>
-                <span className="text-gray-400">MDL</span>
-              </div>
+              {showSalePrice ? (
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-lg text-gray-400 line-through tabular-nums">
+                      {product.price.toLocaleString()}
+                    </span>
+                    <span className="text-sm text-gray-300">MDL</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl text-red-600 tabular-nums">
+                      {currentPrice.toLocaleString()}
+                    </span>
+                    <span className="text-red-500">MDL</span>
+                  </div>
+                </div>
+              ) : (
+                <div className="flex items-baseline gap-2">
+                  <span className="text-3xl text-gray-900 tabular-nums">
+                    {currentPrice.toLocaleString()}
+                  </span>
+                  <span className="text-gray-400">MDL</span>
+                </div>
+              )}
               <p className="text-xs text-gray-400 mt-1">
                 {language === 'ro' ? 'Preț inclusiv TVA' : 'Цена включая НДС'}
               </p>

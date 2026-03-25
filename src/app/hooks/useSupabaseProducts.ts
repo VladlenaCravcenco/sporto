@@ -36,6 +36,8 @@ function rowToProduct(row: ProductRow): Product {
     specifications: { ro: {}, ru: {} },
     sku: row.sku || undefined,
     cod: String(row.id),
+    qty: row.qty ?? 0,
+    inStock: (row.qty ?? 0) > 0,
     brand: row.brand || undefined,
   };
 }

@@ -5,6 +5,8 @@ import { useCart } from '../contexts/CartContext';
 import { ShoppingCart, Check, Package, ArrowUpRight, Tag } from 'lucide-react';
 import { toast } from 'sonner';
 import { getBrandByName } from '../data/brands';
+import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
+import { isProductInStock } from '../lib/productStock';
 
 interface ProductCardProps {
   product: Product;
@@ -22,27 +24,6 @@ function getSku(product: Product): string {
   return `ART-${String(product.id).padStart(4, '0')}`;
 }
 
-/** ~80% in stock, deterministic from id */
-function getInStock(product: Product): boolean {
-  if (product.inStock !== undefined) return product.inStock;
-  return Number(product.id) % 5 !== 0;
-}
-
-/** Minimum order by price tier */
-function getMinOrder(product: Product): number {
-  if (product.minOrder !== undefined) return product.minOrder;
-  if (product.price >= 10000) return 1;
-  if (product.price >= 3000) return 2;
-  if (product.price >= 500) return 5;
-  return 10;
-}
-
-/** Price per set = unit price × min order */
-function getPricePerSet(product: Product, minOrder: number): number {
-  if (product.pricePerSet !== undefined) return product.pricePerSet;
-  return product.price * minOrder;
-}
-
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export function ProductCard({ product, listView = false, onBrandClick }: ProductCardProps) {
@@ -53,16 +34,13 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
 
   const isRu = language === 'ru';
   const sku = getSku(product);
-  const inStock = getInStock(product);
-  const minOrder = getMinOrder(product);
-  const pricePerSet = getPricePerSet(product, minOrder);
+  const inStock = isProductInStock(product);
+  const currentPrice = getCurrentPrice(product);
+  const showSalePrice = hasSalePrice(product);
 
   const L = {
     inStock:   isRu ? 'В наличии'  : 'Disponibil',
     onOrder:   isRu ? 'Под заказ'  : 'La comandă',
-    minOrder:  isRu ? 'Мин. заказ' : 'Min. comandă',
-    unit:      isRu ? 'шт'         : 'buc',
-    priceSet:  isRu ? 'Цена за сет' : 'Preț/set',
     addedMsg:  isRu
       ? `"${product.name.ru}" добавен в корзину`
       : `"${product.name.ro}" adăugat în coș`,
@@ -74,7 +52,7 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
     addToCart({
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: currentPrice,
       image: product.image,
       category: product.category,
     });
@@ -123,7 +101,7 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
         </div>
 
         {/* Sale badge — bottom left (if sale_price exists) */}
-        {product.sale_price && (
+        {showSalePrice && (
           <div className="absolute bottom-2 left-2 z-10">
             <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider px-1.5 py-0.5 bg-red-600 text-white">
               <Tag className="w-2.5 h-2.5" />
@@ -186,31 +164,28 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
         {/* Divider */}
         <div className="border-t border-gray-50 group-hover:border-gray-100 transition-colors" />
 
-        {/* Price per set + cart button */}
+        {/* Price + cart button */}
         <div className="flex items-end justify-between gap-2 mt-auto">
           <div className="min-w-0">
-            {!listView && <div className="text-[9px] uppercase tracking-wider text-gray-400 mb-0.5">{L.priceSet}</div>}
-            {product.sale_price ? (
-              // Акционная цена: старая перечёркнута, новая ярче
+            {showSalePrice ? (
               <div className="flex flex-col gap-0.5">
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-xs tabular-nums text-gray-400 line-through leading-none">
-                    {pricePerSet.toLocaleString()}
+                    {product.price.toLocaleString()}
                   </span>
                   <span className="text-[9px] text-gray-300">MDL</span>
                 </div>
                 <div className="flex items-baseline gap-0.5">
                   <span className="text-base tabular-nums text-red-600 font-medium leading-none">
-                    {(product.sale_price * minOrder).toLocaleString()}
+                    {currentPrice.toLocaleString()}
                   </span>
                   <span className="text-[10px] text-red-500">MDL</span>
                 </div>
               </div>
             ) : (
-              // Обычная цена
               <div className="flex items-baseline gap-0.5">
                 <span className="text-sm tabular-nums text-gray-900 leading-none">
-                  {pricePerSet.toLocaleString()}
+                  {currentPrice.toLocaleString()}
                 </span>
                 <span className="text-[10px] text-gray-400">MDL</span>
               </div>

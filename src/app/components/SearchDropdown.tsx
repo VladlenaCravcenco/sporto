@@ -9,6 +9,7 @@ import { useCart } from '../contexts/CartContext';
 import type { Product } from '../data/products';
 import { useCategories } from '../contexts/CategoriesContext';
 import { CONTACTS } from '../../lib/contacts';
+import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import {
   norm, searchProducts, getSuggestions,
   getSearchHistory, addToHistory, removeFromHistory, clearHistory,
@@ -81,7 +82,7 @@ function QuickAdd({ product }: { product: Product }) {
         addToCart({
           id: product.id,
           name: product.name,
-          price: product.price,
+          price: getCurrentPrice(product),
           image: product.image,
           category: product.category,
         });
@@ -441,8 +442,21 @@ export function SearchDropdown({
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <div className="text-right">
-                    <span className="text-xs tabular-nums text-gray-900">{product.price.toLocaleString()}</span>
-                    <span className="text-[10px] text-gray-400 ml-0.5">MDL</span>
+                    {hasSalePrice(product) ? (
+                      <div className="flex flex-col items-end">
+                        <span className="text-[10px] tabular-nums text-gray-400 line-through">
+                          {product.price.toLocaleString()} <span className="text-gray-300">MDL</span>
+                        </span>
+                        <span className="text-xs tabular-nums text-red-600">
+                          {getCurrentPrice(product).toLocaleString()} <span className="text-[10px] text-red-500">MDL</span>
+                        </span>
+                      </div>
+                    ) : (
+                      <>
+                        <span className="text-xs tabular-nums text-gray-900">{getCurrentPrice(product).toLocaleString()}</span>
+                        <span className="text-[10px] text-gray-400 ml-0.5">MDL</span>
+                      </>
+                    )}
                   </div>
                   <QuickAdd product={product} />
                 </div>

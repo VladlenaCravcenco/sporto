@@ -18,7 +18,8 @@ export interface Product {
   // B2B wholesale fields (optional — card computes fallbacks if absent)
   sku?: string;       // Catalog article code (e.g. 17-47-121) — from Supabase
   cod?: string;       // Internal warehouse code (e.g. 9459) — from Supabase
-  inStock?: boolean;  // undefined → auto-derived from id
+  inStock?: boolean;  // true = qty > 0, false = qty <= 0
+  qty?: number;       // Stock quantity from Supabase
   minOrder?: number;  // undefined → auto-derived from price tier
   pricePerSet?: number; // undefined → price × minOrder
   brand?: string;     // Brand name (e.g. "HMS", "Technogym") — from Supabase
