@@ -380,7 +380,7 @@ export function ProductDetail() {
                     <Hash className="w-3 h-3 text-gray-400 flex-shrink-0" />
                     <div>
                       <p className="text-[9px] uppercase tracking-widest text-gray-400 leading-none mb-0.5">
-                        {language === 'ro' ? 'Cod intern' : 'Внутренний код'}
+                        {language === 'ro' ? 'Cod articol' : 'Артикул'}
                       </p>
                       <p className="text-sm text-gray-800 font-mono">{product.cod}</p>
                     </div>

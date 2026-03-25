@@ -3,6 +3,8 @@ import { Link, useNavigate } from 'react-router';
 import { supabase, type ProductRow } from '../../lib/supabase';
 import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
 import { useCategories, useCategoriesContext } from '../contexts/CategoriesContext';
+import type { Product } from '../data/products';
+import type { Language } from '../contexts/LanguageContext';
 import ExcelJS from 'exceljs';
 import {
   Search, Plus, X, Trash2, ArrowLeft, RefreshCw,
@@ -11,6 +13,7 @@ import {
 } from 'lucide-react';
 import { logoutAdmin } from '../../lib/adminAuth';
 import { useAdminLang } from '../contexts/AdminLangContext';
+import { searchProducts } from '../../lib/searchEngine';
 
 // ─── Brand Combobox ───────────────────────────────────────────────────────────
 
@@ -442,7 +445,7 @@ function subcatLabel(categories: ReturnType<typeof useCategories>, catId: string
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AdminProducts() {
-  const { t } = useAdminLang();
+  const { t, lang } = useAdminLang();
   const { allCategories: categories, refetchCategories } = useCategoriesContext();
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -501,21 +504,7 @@ export function AdminProducts() {
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      // Data to export based on current filters
-      const dataToExport = rows.filter(p => {
-        const q = search.toLowerCase();
-        const matchQ = !q
-          || p.name_ro.toLowerCase().includes(q)
-          || (p.name_ru ?? '').toLowerCase().includes(q)
-          || (p.sku ?? '').toLowerCase().includes(q)
-          || (p.brand ?? '').toLowerCase().includes(q)
-          || p.id.includes(q);
-        const matchCat = !catFilter || p.category === catFilter;
-        const matchStatus = statusFilter === 'all'
-          || (statusFilter === 'active' && p.active)
-          || (statusFilter === 'inactive' && !p.active);
-        return matchQ && matchCat && matchStatus;
-      });
+      const dataToExport = filtered;
 
       console.log('Export data:', {
         total: rows.length,
@@ -941,16 +930,48 @@ export function AdminProducts() {
   const categoryFilterQuery = catFilter.trim().toLowerCase();
   const brandFilterQuery = brandFilter.trim().toLowerCase();
   const subcategoryFilterQuery = subcatFilter.trim().toLowerCase();
+  const searchQuery = search.trim();
+
+  const searchableProducts = useMemo<Product[]>(() => (
+    rows.map((row) => {
+      const categoryData = categories.find((category) => category.id === row.category);
+      const subcategoryData = categoryData?.subcategories.find((subcategory) => subcategory.id === row.subcategory);
+      return {
+        id: row.id,
+        name: {
+          ro: row.name_ro,
+          ru: row.name_ru || row.name_ro,
+        },
+        description: {
+          ro: row.description_ro || '',
+          ru: row.description_ru || row.description_ro || '',
+        },
+        category: [row.category, categoryData?.name.ro, categoryData?.name.ru].filter(Boolean).join(' '),
+        subcategory: [row.subcategory, subcategoryData?.name.ro, subcategoryData?.name.ru].filter(Boolean).join(' '),
+        price: Number(row.price) || 0,
+        sale_price: row.sale_price ? Number(row.sale_price) : null,
+        image: row.image_url || '',
+        images: row.images || [],
+        featured: row.featured ?? false,
+        specifications: { ro: {}, ru: {} },
+        sku: row.sku || undefined,
+        cod: row.id,
+        brand: row.brand || undefined,
+        qty: row.qty ?? 0,
+        inStock: (row.qty ?? 0) > 0,
+      };
+    })
+  ), [rows, categories]);
+
+  const searchScores = useMemo(() => {
+    if (!searchQuery) return null;
+    const result = searchProducts(searchableProducts, searchQuery, lang as Language, searchableProducts.length);
+    return new Map(result.hits.map((hit) => [hit.product.id, hit.score]));
+  }, [searchableProducts, searchQuery, lang]);
 
   const filtered = rows
     .filter(p => {
-      const q = search.toLowerCase();
-      const matchQ = !q
-        || p.name_ro.toLowerCase().includes(q)
-        || (p.name_ru ?? '').toLowerCase().includes(q)
-        || (p.sku ?? '').toLowerCase().includes(q)
-        || (p.brand ?? '').toLowerCase().includes(q)
-        || p.id.includes(q);
+      const matchQ = !searchScores || searchScores.has(p.id);
       const categoryName = catLabel(categories, p.category).toLowerCase();
       const subcategoryName = p.subcategory
         ? subcatLabel(categories, p.category, p.subcategory).toLowerCase()
@@ -969,6 +990,10 @@ export function AdminProducts() {
       return matchQ && matchCat && matchBrand && matchSubcategory && matchStatus;
     })
     .sort((a, b) => {
+      if (searchScores) {
+        const scoreDiff = (searchScores.get(b.id) || 0) - (searchScores.get(a.id) || 0);
+        if (scoreDiff !== 0) return scoreDiff;
+      }
       const av = a[sortKey] ?? '';
       const bv = b[sortKey] ?? '';
       const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
@@ -1280,7 +1305,6 @@ export function AdminProducts() {
                     <div className="flex items-center gap-3 mt-0.5">
                       {row.sku && <span className="text-[10px] text-gray-400 font-mono">{row.sku}</span>}
                       {row.brand && <span className="text-[10px] text-gray-400">{row.brand}</span>}
-                      <span className="text-[10px] text-gray-300 font-mono">#{row.id}</span>
                     </div>
                   </div>
 
