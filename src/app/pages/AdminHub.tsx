@@ -245,12 +245,6 @@ export function AdminHub() {
     }
   };
 
-  const alerts = stats ? [
-    stats.noImage > 0    && { icon: <AlertCircle className="w-3.5 h-3.5 text-amber-500" />, text: `${stats.noImage} ${t.hub.noImageLabel}` },
-    stats.outOfStock > 0 && { icon: <AlertCircle className="w-3.5 h-3.5 text-red-400" />,   text: `${stats.outOfStock} ${t.hub.outOfStockLabel}` },
-    stats.inactive > 0   && { icon: <Eye         className="w-3.5 h-3.5 text-gray-400" />,   text: `${stats.inactive} ${t.hub.inactiveLabel}` },
-  ].filter(Boolean) : [];
-
   const catLabel = exportCategory === 'all'
     ? (lang === 'ru' ? 'Все категории' : 'Toate categoriile')
     : (categories.find(c => c.id === exportCategory)?.name_ro || exportCategory);
@@ -313,18 +307,6 @@ export function AdminHub() {
             </div>
           ))}
         </div>
-
-        {/* Alerts */}
-        {alerts.length > 0 && (
-          <div className="mb-8 border border-white/10 bg-white/5 px-5 py-4 flex flex-col gap-2">
-            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">{t.common.error}</p>
-            {alerts.map((a: any, i) => (
-              <div key={i} className="flex items-center gap-2 text-xs text-gray-400">
-                {a.icon} {a.text}
-              </div>
-            ))}
-          </div>
-        )}
 
         {/* ── PRICE LIST EXPORT ─────────────────────────────────────────────── */}
         <div className="mb-8 border border-white/20 bg-white/5">
