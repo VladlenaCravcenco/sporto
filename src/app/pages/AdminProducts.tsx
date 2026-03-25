@@ -36,6 +36,13 @@ interface SubcategoryComboboxProps {
   onCreate: (name: string) => Promise<string | null>;
 }
 
+function generateProductId() {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
 function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames }: BrandComboboxProps) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState(value);
@@ -869,7 +876,27 @@ export function AdminProducts() {
       }
     } else {
       // Insert
-      const { data, error } = await supabase.from('products').insert(payload).select().single();
+      const insertPayload: ProductRow = {
+        id: generateProductId(),
+        name_ro: payload.name_ro || '',
+        name_ru: payload.name_ru || null,
+        sku: payload.sku || null,
+        brand: payload.brand || null,
+        category: payload.category || '',
+        subcategory: payload.subcategory || null,
+        price: payload.price || 0,
+        sale_price: payload.sale_price || null,
+        unit: payload.unit || null,
+        qty: payload.qty || 0,
+        description_ro: payload.description_ro || null,
+        description_ru: payload.description_ru || null,
+        image_url: payload.image_url || null,
+        images: payload.images || [],
+        youtube_url: payload.youtube_url || null,
+        featured: payload.featured ?? false,
+        active: payload.active ?? true,
+      };
+      const { data, error } = await supabase.from('products').insert(insertPayload).select().single();
       if (error) { showToast(error.message, false); }
       else {
         setRows(r => [...r, data as ProductRow]);
