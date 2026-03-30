@@ -332,7 +332,21 @@ export function SearchDropdown({
     );
   }
 
-  if (!results) return null;
+  if (!results) {
+    return (
+      <div className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999]"
+        style={{ top: '100%' }}>
+        <div className="px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Search className="w-4 h-4 text-gray-300" />
+            <span className="text-xs text-gray-500">
+              {L('Căutarea momentan este indisponibilă. Reîncercați mai târziu.', 'Поиск временно недоступен. Попробуйте позже.')}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Результаты ────────────────────────────────────────────────────────────
   return (

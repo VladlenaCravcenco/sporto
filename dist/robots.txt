@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Block admin area from indexing
+Disallow: /admin
+Disallow: /admin/
+
+# Block auth pages
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /verify
+Disallow: /account
+Disallow: /order-request
+
+# Sitemap
+Sitemap: https://sportosfera.md/sitemap.xml

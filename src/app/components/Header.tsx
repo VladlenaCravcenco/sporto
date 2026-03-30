@@ -37,7 +37,8 @@ export function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const closeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const blurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const desktopBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mobileBlurTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const mobileInputRef = useRef<HTMLInputElement>(null);
   const headerRef = useRef<HTMLElement>(null);
@@ -79,25 +80,36 @@ export function Header() {
   };
 
   const handleFocus = () => {
-    if (blurTimer.current) clearTimeout(blurTimer.current);
+    if (desktopBlurTimer.current) clearTimeout(desktopBlurTimer.current);
     setSearchOpen(true);
   };
 
   const handleBlur = () => {
-    blurTimer.current = setTimeout(() => setSearchOpen(false), 150);
+    desktopBlurTimer.current = setTimeout(() => setSearchOpen(false), 150);
+  };
+
+  const handleSearchClick = () => {
+    if (desktopBlurTimer.current) clearTimeout(desktopBlurTimer.current);
+    setSearchOpen(true);
   };
 
   const handleMobileFocus = () => {
-    if (blurTimer.current) clearTimeout(blurTimer.current);
+    if (mobileBlurTimer.current) clearTimeout(mobileBlurTimer.current);
     setMobileSearchOpen(true);
   };
 
   const handleMobileBlur = () => {
-    blurTimer.current = setTimeout(() => setMobileSearchOpen(false), 150);
+    mobileBlurTimer.current = setTimeout(() => setMobileSearchOpen(false), 150);
+  };
+
+  const handleMobileClick = () => {
+    if (mobileBlurTimer.current) clearTimeout(mobileBlurTimer.current);
+    setMobileSearchOpen(true);
   };
 
   const handleSelect = () => {
     setSearchOpen(false);
+    setMobileSearchOpen(false);
     setSearchQuery('');
   };
 
@@ -154,6 +166,7 @@ export function Header() {
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                   onFocus={handleFocus}
+                  onClick={handleSearchClick}
                   onBlur={handleBlur}
                   placeholder={language === 'ro' ? 'Caută produse, categorii...' : 'Поиск товаров, категорий...'}
                   className={`w-full h-9 pl-4 pr-20 text-sm border bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white transition-colors ${
@@ -399,6 +412,7 @@ export function Header() {
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             onFocus={handleMobileFocus}
+            onClick={handleMobileClick}
             onBlur={handleMobileBlur}
             placeholder={language === 'ro' ? 'Caută produse...' : 'Поиск товаров...'}
             className="flex-1 h-10 pl-4 text-sm bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none border-0 focus:bg-white transition-colors"
