@@ -1594,7 +1594,7 @@ export function AdminProducts() {
 
             {/* ── Sale Price (акционная цена) ── */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block flex items-center gap-2">
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 flex items-center gap-2">
                 <Tag className="w-3 h-3" />
                 Preț promoțional (opțional)
               </label>

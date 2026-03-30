@@ -152,7 +152,7 @@ export function OrderRequest() {
       id:        item.id,
       name_ro:   item.name.ro,
       name_ru:   item.name.ru,
-      sku:       null,
+      sku:       item.sku || null,
       price:     item.price,
       qty:       item.quantity,
       image_url: item.image || null,

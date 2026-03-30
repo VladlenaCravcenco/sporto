@@ -197,6 +197,11 @@ export function Catalog() {
       result = [...result].sort((a, b) => b.price - a.price);
     }
 
+    // Всегда помещаем товары "под заказ" вниз в каталоге по умолчанию.
+    const inStock = result.filter((product) => isProductInStock(product));
+    const onOrder = result.filter((product) => !isProductInStock(product));
+    result = [...inStock, ...onOrder];
+
     return result;
   }, [products, searchTerm, selectedCategory, selectedSubcategory, language, sortBy, selectedBrand, saleOnly, stockFilter]);
 

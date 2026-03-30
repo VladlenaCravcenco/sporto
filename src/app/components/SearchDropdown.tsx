@@ -85,6 +85,7 @@ function QuickAdd({ product }: { product: Product }) {
           price: getCurrentPrice(product),
           image: product.image,
           category: product.category,
+          sku: product.sku || undefined,
         });
       }}
       className={`flex-shrink-0 w-7 h-7 flex items-center justify-center border transition-all ${

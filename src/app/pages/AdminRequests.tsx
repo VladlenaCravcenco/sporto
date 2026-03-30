@@ -554,13 +554,8 @@ export function AdminRequests() {
                                   {/* Name + SKU */}
                                   <div className="flex-1 min-w-0">
                                     <p className="text-[11px] text-gray-900 leading-tight line-clamp-2">
-                                      {item.name_ru || item.name_ro}
+                                      {item.name_ru || item.name_ro}{item.sku ? ` [${item.sku}]` : ''}
                                     </p>
-                                    {item.sku && (
-                                      <p className="text-[10px] text-gray-400 font-mono mt-0.5">
-                                        {item.sku}
-                                      </p>
-                                    )}
                                   </div>
                                   {/* Qty × price */}
                                   <div className="flex-shrink-0 text-right">

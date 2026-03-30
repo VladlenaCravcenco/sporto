@@ -267,6 +267,7 @@ export function ProductDetail() {
       price: currentPrice,
       image: product.image,
       category: product.category,
+      sku: product.sku || undefined,
     });
     toast.success(
       language === 'ro'

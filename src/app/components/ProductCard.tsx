@@ -55,6 +55,7 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
       price: currentPrice,
       image: product.image,
       category: product.category,
+      sku: product.sku || undefined,
     });
     toast.success(L.addedMsg);
   };

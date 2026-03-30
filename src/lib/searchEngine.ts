@@ -488,6 +488,7 @@ export function scoreProduct(
 
   for (const token of rawTokens) {
     let tokenMatched = false;
+    const isNumericToken = /^\d+$/.test(token);
 
     // ── 1. SKU / артикул — наивысший приоритет ──
     if (sku === token || cod === token)          { return { product, score: 1000, matchType: 'exact' }; }
@@ -512,7 +513,7 @@ export function scoreProduct(
     else if (cat.includes(token) || sub.includes(token))        { score += 6; tokenMatched = true; }
 
     // ── 6. Нечёткий матч (опечатки) ──
-    else {
+    else if (!isNumericToken) {
       const fName = fuzzyFieldScore(token, name);
       if (fName > 0) { score += fName + 2; matchType = 'fuzzy'; tokenMatched = true; }
       else {
