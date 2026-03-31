@@ -88,7 +88,7 @@ export function Register() {
                 <button
                   type="button"
                   onClick={() => { setClientType('individual'); setFormData(p => ({ ...p, company: '' })); }}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider transition-colors ${
+                  className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider whitespace-normal break-words transition-colors ${
                     clientType === 'individual'
                       ? 'bg-black text-white'
                       : 'text-gray-500 hover:text-black hover:bg-gray-50'
@@ -100,7 +100,7 @@ export function Register() {
                 <button
                   type="button"
                   onClick={() => setClientType('company')}
-                  className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider border-l border-gray-200 transition-colors ${
+                  className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider whitespace-normal break-words border-l border-gray-200 transition-colors ${
                     clientType === 'company'
                       ? 'bg-black text-white'
                       : 'text-gray-500 hover:text-black hover:bg-gray-50'

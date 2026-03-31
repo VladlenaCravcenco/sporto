@@ -701,13 +701,13 @@ export function OrderRequest() {
                   {/* Tabs */}
                   <div className="flex border-b border-gray-200">
                     <button type="button" onClick={() => setAuthTab('new')}
-                      className={`flex-1 py-3.5 text-xs uppercase tracking-wider transition-colors ${
+                      className={`flex-1 min-w-0 py-3.5 text-xs uppercase tracking-wider whitespace-normal break-words transition-colors ${
                         authTab === 'new' ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-50'
                       }`}>
                       {L('Client nou', 'Новый клиент')}
                     </button>
                     <button type="button" onClick={() => setAuthTab('login')}
-                      className={`flex-1 py-3.5 text-xs uppercase tracking-wider transition-colors border-l border-gray-200 ${
+                      className={`flex-1 min-w-0 py-3.5 text-xs uppercase tracking-wider whitespace-normal break-words transition-colors border-l border-gray-200 ${
                         authTab === 'login' ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-50'
                       }`}>
                       {L('Autentificare', 'Войти')}
@@ -724,7 +724,7 @@ export function OrderRequest() {
                           <button
                             type="button"
                             onClick={() => setGuest(g => ({ ...g, clientType: 'individual', company: '' }))}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider transition-colors ${
+                            className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider whitespace-normal break-words transition-colors ${
                               guest.clientType === 'individual'
                                 ? 'bg-black text-white'
                                 : 'text-gray-500 hover:text-black hover:bg-gray-50'
@@ -736,7 +736,7 @@ export function OrderRequest() {
                           <button
                             type="button"
                             onClick={() => setGuest(g => ({ ...g, clientType: 'company' }))}
-                            className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider border-l border-gray-200 transition-colors ${
+                            className={`flex-1 min-w-0 flex items-center justify-center gap-1.5 py-2.5 text-xs uppercase tracking-wider whitespace-normal break-words border-l border-gray-200 transition-colors ${
                               guest.clientType === 'company'
                                 ? 'bg-black text-white'
                                 : 'text-gray-500 hover:text-black hover:bg-gray-50'
@@ -847,7 +847,7 @@ export function OrderRequest() {
 
                       <div className="px-5 pb-5">
                         <button type="submit" disabled={loading}
-                          className="w-full bg-black text-white text-xs uppercase tracking-wider py-3.5 hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                          className="w-full bg-black text-white text-xs uppercase tracking-wider py-3.5 hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 whitespace-normal break-words">
                           {loading
                             ? <><span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />{L('Se trimite...', 'Отправка...')}</>
                             : <>{guest.saveProfile ? L('Trimite și salvează profilul', 'Отправить и сохранить профиль') : L('Trimite cererea', 'Отправить запрос')}<ChevronRight className="w-3.5 h-3.5" /></>
@@ -899,7 +899,7 @@ export function OrderRequest() {
 
                       <div className="px-5 pb-5">
                         <button type="submit" disabled={loading}
-                          className="w-full bg-black text-white text-xs uppercase tracking-wider py-3.5 hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2">
+                          className="w-full bg-black text-white text-xs uppercase tracking-wider py-3.5 hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 whitespace-normal break-words">
                           {loading
                             ? <><span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />{L('Autentificare...', 'Вход...')}</>
                             : <>{L('Intră și trimite cererea', 'Войти и отправить')}<ChevronRight className="w-3.5 h-3.5" /></>
