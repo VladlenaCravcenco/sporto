@@ -28,6 +28,7 @@ import {
   Package,
 } from 'lucide-react';
 import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react';
+import { getCategoryIcon } from '../lib/category-icons';
 import { useSearchParams } from 'react-router';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { type Product } from '../data/products';
@@ -38,21 +39,6 @@ import { isProductInStock } from '../lib/productStock';
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
 const PAGE_SIZE = 24;
-
-const categoryIcons: Record<string, ReactNode> = {
-  'aparate-cardio':      <Activity className="w-4 h-4" />,
-  'aparate-forta':       <Dumbbell className="w-4 h-4" />,
-  'greutati':            <Weight className="w-4 h-4" />,
-  'fitness-yoga':        <Zap className="w-4 h-4" />,
-  'sporturi-colective':  <Users className="w-4 h-4" />,
-  'sporturi-individuale':<Trophy className="w-4 h-4" />,
-  'arte-martiale':       <Swords className="w-4 h-4" />,
-  'inot':                <Waves className="w-4 h-4" />,
-  'tenis-masa':          <Target className="w-4 h-4" />,
-  'jocuri':              <Gamepad2 className="w-4 h-4" />,
-  'forta-exterior':      <TreePine className="w-4 h-4" />,
-  'inventar-institutii': <Building2 className="w-4 h-4" />,
-};
 
 /** Score a product against search tokens. Higher = better match. */
 function scoreProduct(product: Product, tokens: string[], lang: Language): number {
@@ -326,7 +312,7 @@ export function Catalog() {
                       : 'text-gray-500 hover:text-black hover:bg-gray-50'
                   }`}
                 >
-                  <span className="flex-shrink-0">{categoryIcons[cat.id]}</span>
+                  <span className="flex-shrink-0">{getCategoryIcon(cat.icon)}</span>
                   <span>{cat.name[language as Language]}</span>
                 </button>
               ))}
@@ -835,7 +821,7 @@ export function Catalog() {
                   >
                     <span className="flex items-center gap-2.5">
                       <span className={selectedCategory === cat.id ? 'opacity-60' : 'text-gray-400'}>
-                        {categoryIcons[cat.id]}
+                        {getCategoryIcon(cat.icon)}
                       </span>
                       <span className="uppercase tracking-wider">{cat.name[language as Language]}</span>
                     </span>

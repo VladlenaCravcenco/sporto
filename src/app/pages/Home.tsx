@@ -13,6 +13,7 @@ import { ServicesBento } from '../components/ServicesBento';
 import { ConsultationModal } from '../components/ConsultationModal';
 import { YinYang } from '../components/icons/YinYang';
 import { TableTennis } from '../components/icons/TableTennis';
+import { getCategoryIcon } from '../lib/category-icons';
 import {
   Dumbbell,
   Bike,
@@ -40,21 +41,6 @@ import {
   Target,
   Sparkles,
 } from 'lucide-react';
-
-const categoryIcons: Record<string, ReactNode> = {
-  'aparate-cardio': <Heart className="w-5 h-5" />,          // Кардио - сердце
-  'aparate-forta': <Dumbbell className="w-5 h-5" />,        // Силовые тренажёры - гантель
-  'greutati': <Weight className="w-5 h-5" />,               // Грузы - гиря
-  'fitness-yoga': <YinYang className="w-5 h-5" />,          // Фитнес/йога - инь-янь
-  'sporturi-colective': <Users className="w-5 h-5" />,      // Командные виды - люди
-  'sporturi-individuale': <Trophy className="w-5 h-5" />,   // Индивидуальные - трофей
-  'arte-martiale': <Swords className="w-5 h-5" />,          // Боевые искусства - мечи
-  'inot': <Waves className="w-5 h-5" />,                    // Плавание - волны
-  'tenis-masa': <TableTennis className="w-5 h-5" />,        // Настольный теннис - ракетка с мячом
-  'jocuri': <Gamepad2 className="w-5 h-5" />,               // Игры - геймпад
-  'forta-exterior': <TreePine className="w-5 h-5" />,       // Уличные тренажёры - дерево
-  'inventar-institutii': <Building2 className="w-5 h-5" />, // Оборудование для учреждений - здание
-};
 
 export function Home() {
   const { language, t } = useLanguage();
@@ -232,7 +218,7 @@ export function Home() {
                   /* ── First card: full-width horizontal layout ── */
                   <>
                     <div className="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-white/10 text-white">
-                      {categoryIcons[category.id]}
+                      {getCategoryIcon(category.icon)}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="text-sm uppercase tracking-wider text-white">
@@ -252,7 +238,7 @@ export function Home() {
                   <>
                     <div className="flex items-start justify-between">
                       <div className="w-9 h-9 flex items-center justify-center bg-gray-100 text-gray-500 group-hover:bg-white/10 group-hover:text-white transition-colors">
-                        {categoryIcons[category.id]}
+                        {getCategoryIcon(category.icon)}
                       </div>
                       <ArrowUpRight className="w-3.5 h-3.5 text-gray-300 group-hover:text-white transition-all" />
                     </div>

@@ -5,7 +5,7 @@ import { logoutAdmin } from '../lib/adminAuth';
 import {
   Package, Star, Upload, LogOut, ExternalLink,
   LayoutDashboard, Layers, Bookmark, Users, ShoppingCart,
-  Tag, Bell, Globe, ChevronDown, Phone, Megaphone, HelpCircle, Wrench, FileText, Settings,
+  Tag, Bell, Globe, ChevronDown, Phone, Megaphone, HelpCircle, Wrench, FileText, Settings, Menu,
 } from 'lucide-react';
 import { useAdminNotifications } from './hooks/useAdminNotifications';
 import { toast } from 'sonner';
@@ -19,6 +19,7 @@ function AdminLayoutInner() {
   const { unreadCount, latestRequest, clearUnread } = useAdminNotifications();
   const { lang, setLang, t } = useAdminLang();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navRef = useRef<HTMLDivElement>(null);
 
   // ── Navigation groups ───────────────────────────────────────────────────────
@@ -73,14 +74,18 @@ function AdminLayoutInner() {
     const handler = (e: MouseEvent) => {
       if (navRef.current && !navRef.current.contains(e.target as Node)) {
         setOpenGroup(null);
+        setMobileMenuOpen(false);
       }
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, []);
 
-  // Close dropdown on route change
-  useEffect(() => { setOpenGroup(null); }, [location.pathname]);
+  // Close dropdowns and mobile menu on route change
+  useEffect(() => {
+    setOpenGroup(null);
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
 
   // New request toast
   useEffect(() => {
@@ -217,6 +222,15 @@ function AdminLayoutInner() {
             {/* ── Mobile spacer ── */}
             <div className="flex-1 lg:hidden" />
 
+            {/* ── Mobile menu button ── */}
+            <button
+              onClick={() => setMobileMenuOpen(open => !open)}
+              className="flex items-center justify-center w-9 h-12 text-white/50 hover:text-white transition-colors lg:hidden"
+              aria-label="Open admin menu"
+            >
+              <Menu className="w-4 h-4" />
+            </button>
+
             {/* ── Right side ── */}
             <div className="flex items-center gap-0.5 flex-shrink-0">
 
@@ -278,6 +292,39 @@ function AdminLayoutInner() {
             </div>
           </div>
         </div>
+
+        {mobileMenuOpen && (
+          <div className="absolute inset-x-0 top-full bg-black text-white border-t border-white/10 z-40">
+            <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
+              {GROUPS.map(group => (
+                <div key={group.key}>
+                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60 mb-2">
+                    {group.icon}
+                    <span>{group.label}</span>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2">
+                    {group.items.map(item => (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className={`rounded-xl border border-white/10 px-3 py-2 text-xs text-left transition-colors ${
+                          isActive(item.to)
+                            ? 'bg-white/10 text-white'
+                            : 'text-white/70 hover:text-white hover:bg-white/5'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {item.icon}
+                          <span>{item.label}</span>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* ── PAGE CONTENT ─────────────────────────────────────────────────────── */}

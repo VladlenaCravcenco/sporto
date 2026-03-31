@@ -8,6 +8,10 @@ import {
   FolderOpen, Folder, Tag, RefreshCw,
 } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
+import {
+  categoryIconOptions,
+  getCategoryIcon,
+} from '../lib/category-icons';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 interface CatRow {
@@ -18,6 +22,7 @@ interface CatRow {
   name_ru: string;
   description_ro: string | null;
   description_ru: string | null;
+  icon?: string | null;
   sort_order: number;
 }
 
@@ -48,6 +53,7 @@ function toSlug(s: string): string {
 
 // ─── SQL setup string ─────────────────────────────────────────────────────────
 const SQL_SETUP = `ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS active boolean DEFAULT true;
+ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS icon text;
 NOTIFY pgrst, 'reload schema';
 
 -- Categorii
@@ -59,6 +65,7 @@ CREATE TABLE IF NOT EXISTS public.categories (
   name_ru text NOT NULL,
   description_ro text,
   description_ru text,
+  icon text,
   sort_order integer DEFAULT 0,
   created_at timestamptz DEFAULT now()
 );
@@ -106,8 +113,10 @@ export function AdminCategories() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [panel, setPanel] = useState<PanelMode>(null);
 
-  const [form, setForm] = useState({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '' });
+  const [form, setForm] = useState({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '', icon: '' });
   const [slugManual, setSlugManual] = useState(false);
+  const [iconSearch, setIconSearch] = useState('');
+  const [isIconPickerOpen, setIsIconPickerOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveErr, setSaveErr] = useState<string | null>(null);
 
@@ -171,29 +180,44 @@ export function AdminCategories() {
 
   // ── Open panel helpers ─────────────────────────────────────────────────────
   const openNewCat = () => {
-    setForm({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '' });
+    setForm({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '', icon: 'sporto' });
     setSlugManual(false);
+    setIconSearch('');
+    setIsIconPickerOpen(false);
     setSaveErr(null);
     setPanel({ type: 'new-cat' });
   };
 
   const openEditCat = (row: CatRow) => {
-    setForm({ name_ro: row.name_ro, name_ru: row.name_ru, slug: row.slug, description_ro: row.description_ro || '', description_ru: row.description_ru || '' });
+    setForm({
+      name_ro: row.name_ro,
+      name_ru: row.name_ru,
+      slug: row.slug,
+      description_ro: row.description_ro || '',
+      description_ru: row.description_ru || '',
+      icon: row.icon || '',
+    });
     setSlugManual(true);
+    setIconSearch('');
+    setIsIconPickerOpen(false);
     setSaveErr(null);
     setPanel({ type: 'edit-cat', row });
   };
 
   const openNewSub = (catSlug: string, catName: string) => {
-    setForm({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '' });
+    setForm({ name_ro: '', name_ru: '', slug: '', description_ro: '', description_ru: '', icon: '' });
     setSlugManual(false);
+    setIconSearch('');
+    setIsIconPickerOpen(false);
     setSaveErr(null);
     setPanel({ type: 'new-sub', catSlug, catName });
   };
 
   const openEditSub = (row: SubRow, catName: string) => {
-    setForm({ name_ro: row.name_ro, name_ru: row.name_ru, slug: row.slug, description_ro: '', description_ru: '' });
+    setForm({ name_ro: row.name_ro, name_ru: row.name_ru, slug: row.slug, description_ro: '', description_ru: '', icon: '' });
     setSlugManual(true);
+    setIconSearch('');
+    setIsIconPickerOpen(false);
     setSaveErr(null);
     setPanel({ type: 'edit-sub', row, catName });
   };
@@ -214,6 +238,7 @@ export function AdminCategories() {
         name_ru: form.name_ru.trim(),
         description_ro: form.description_ro.trim() || null,
         description_ru: form.description_ru.trim() || null,
+        icon: form.icon.trim() || null,
         sort_order: cats.length,
       }]);
       if (error) { setSaveErr(error.message); setSaving(false); return; }
@@ -226,6 +251,7 @@ export function AdminCategories() {
         name_ru: form.name_ru.trim(),
         description_ro: form.description_ro.trim() || null,
         description_ru: form.description_ru.trim() || null,
+        icon: form.icon.trim() || null,
       };
       // If slug changed → batch update products + subcategories
       if (form.slug.trim() !== old.slug) {
@@ -276,6 +302,21 @@ export function AdminCategories() {
     refetchCategories();
   };
 
+  const visibleIconOptions = categoryIconOptions.filter(option => {
+    const term = iconSearch.trim().toLowerCase();
+    if (!term) return true;
+    return option.label.toLowerCase().includes(term) || option.theme.toLowerCase().includes(term);
+  });
+
+  const iconSections = visibleIconOptions.reduce<Record<string, typeof categoryIconOptions>>((groups, option) => {
+    const section = groups[option.theme] ?? [];
+    section.push(option);
+    groups[option.theme] = section;
+    return groups;
+  }, {});
+
+  const selectedIcon = getCategoryIcon(form.icon);
+
   // ── Delete ─────────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!deleteTarget) return;
@@ -305,6 +346,7 @@ export function AdminCategories() {
         name_ru: cat.name.ru,
         description_ro: cat.description.ro || null,
         description_ru: cat.description.ru || null,
+        icon: null,
         sort_order: i,
       }], { onConflict: 'slug' });
       if (catErr) continue;
@@ -343,7 +385,11 @@ export function AdminCategories() {
   };
 
   const isCatPanel = panel?.type === 'new-cat' || panel?.type === 'edit-cat';
-
+  
+console.log('categoryIconOptions:', categoryIconOptions.length);
+console.log('first 3:', categoryIconOptions.slice(0, 3).map(o => o.key));
+console.log('visible:', visibleIconOptions.length);
+console.log('sections:', Object.keys(iconSections));
   return (
     <div className="max-w-[1600px] mx-auto px-4 sm:px-6 py-8">
 
@@ -393,9 +439,8 @@ export function AdminCategories() {
               <div className="flex items-center gap-3 mt-3">
                 <button
                   onClick={copySQL}
-                  className={`flex items-center gap-2 text-xs px-4 py-2 transition-colors ${
-                    sqlCopied ? 'bg-green-500 text-white' : 'bg-orange-600 text-white hover:bg-orange-700'
-                  }`}
+                  className={`flex items-center gap-2 text-xs px-4 py-2 transition-colors ${sqlCopied ? 'bg-green-500 text-white' : 'bg-orange-600 text-white hover:bg-orange-700'
+                    }`}
                 >
                   {sqlCopied ? <Check className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
                   {sqlCopied ? 'Copiat!' : 'Copiază SQL'}
@@ -427,9 +472,8 @@ export function AdminCategories() {
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 h-8 text-xs transition-colors border-r last:border-0 border-gray-100 ${
-                    statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
-                  }`}
+                  className={`px-3 h-8 text-xs transition-colors border-r last:border-0 border-gray-100 ${statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
+                    }`}
                 >
                   {s === 'all' ? 'Toate' : s === 'active' ? 'Active' : 'Inactive'}
                 </button>
@@ -479,9 +523,8 @@ export function AdminCategories() {
                     <div key={cat.id}>
                       {/* ── Category row ── */}
                       <div
-                        className={`flex items-center gap-3 px-3 py-3 bg-white border transition-colors ${
-                          isActive ? 'border-black' : 'border-transparent hover:border-gray-200'
-                        }`}
+                        className={`flex items-center gap-3 px-3 py-3 bg-white border transition-colors ${isActive ? 'border-black' : 'border-transparent hover:border-gray-200'
+                          }`}
                       >
                         {/* Expand toggle */}
                         <button
@@ -515,9 +558,8 @@ export function AdminCategories() {
 
                         {/* Product count */}
                         <div className="flex-shrink-0 text-center">
-                          <div className={`text-xs tabular-nums px-2 py-0.5 ${
-                            prodCount > 0 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'
-                          }`}>
+                          <div className={`text-xs tabular-nums px-2 py-0.5 ${prodCount > 0 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'
+                            }`}>
                             {prodCount}
                           </div>
                           <div className="text-[9px] text-gray-400 mt-0.5">produse</div>
@@ -574,9 +616,8 @@ export function AdminCategories() {
                               return (
                                 <div
                                   key={sub.id}
-                                  className={`flex items-center gap-3 px-3 py-2.5 bg-white border transition-colors ${
-                                    isSubActive ? 'border-black' : 'border-transparent hover:border-gray-100'
-                                  }`}
+                                  className={`flex items-center gap-3 px-3 py-2.5 bg-white border transition-colors ${isSubActive ? 'border-black' : 'border-transparent hover:border-gray-100'
+                                    }`}
                                 >
                                   <Tag className="w-3 h-3 text-gray-200 flex-shrink-0" />
                                   <div className="flex-1 min-w-0">
@@ -693,26 +734,107 @@ export function AdminCategories() {
                 </p>
               </div>
 
-              {/* Descriptions — only for categories */}
+              {/* Иконка — заменяет весь блок от <div> с "Iconă categorie" до конца isIconPickerOpen */}
               {isCatPanel && (
                 <>
                   <div>
-                    <label className="text-[10px] uppercase tracking-widest text-gray-400 block mb-1">Descriere RO</label>
-                    <textarea
-                      value={form.description_ro}
-                      onChange={e => setForm(f => ({ ...f, description_ro: e.target.value }))}
-                      rows={2}
-                      className="w-full px-3 py-2 text-xs border border-gray-200 focus:outline-none focus:border-black resize-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[10px] uppercase tracking-widest text-gray-400 block mb-1">Описание RU</label>
-                    <textarea
-                      value={form.description_ru}
-                      onChange={e => setForm(f => ({ ...f, description_ru: e.target.value }))}
-                      rows={2}
-                      className="w-full px-3 py-2 text-xs border border-gray-200 focus:outline-none focus:border-black resize-none"
-                    />
+                    <label className="text-[10px] uppercase tracking-widest text-gray-400 block mb-2">
+                      Iconă categorie
+                    </label>
+
+                    {/* Trigger кнопка */}
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsIconPickerOpen(v => !v)}
+                        className={`flex items-center gap-2.5 px-3 h-9 border text-xs transition-colors w-full ${isIconPickerOpen
+                            ? 'border-black text-black'
+                            : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'
+                          }`}
+                      >
+                        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0">
+                          {selectedIcon || <Tag className="w-4 h-4" />}
+                        </span>
+                        <span className="flex-1 text-left truncate">
+                          {form.icon || 'Alege iconița...'}
+                        </span>
+                        <ChevronDown className={`w-3.5 h-3.5 flex-shrink-0 transition-transform ${isIconPickerOpen ? 'rotate-180' : ''}`} />
+                      </button>
+
+                      {/* Дропдаун */}
+                      {isIconPickerOpen && (
+                        <>
+                          {/* Backdrop */}
+                          <div
+                            className="fixed inset-0 z-40"
+                            onClick={() => setIsIconPickerOpen(false)}
+                          />
+
+                          <div className="absolute left-0 top-full mt-1 z-50 w-72 bg-white border border-black shadow-lg">
+                            {/* Поиск */}
+                            <div className="p-2 border-b border-gray-200">
+                              <input
+                                autoFocus
+                                value={iconSearch}
+                                onChange={e => setIconSearch(e.target.value)}
+                                placeholder="Caută iconițe..."
+                                className="w-full h-8 px-2.5 text-xs border border-gray-200 focus:outline-none focus:border-black"
+                              />
+                            </div>
+
+                            {/* Сетка */}
+                            <div className="max-h-64 overflow-y-auto p-2 space-y-3">
+                              {Object.entries(iconSections).length === 0 ? (
+                                <p className="text-[11px] text-gray-400 text-center py-4">Nu s-au găsit iconițe</p>
+                              ) : (
+                                Object.entries(iconSections).map(([section, options]) => (
+                                  <div key={section}>
+                                    <div className="text-[9px] uppercase tracking-widest text-gray-300 mb-1.5 px-0.5">
+                                      {section}
+                                    </div>
+                                    <div className="grid grid-cols-7 gap-1">
+                                      {options.map(option => {
+                                        const selected = form.icon === option.key;
+                                        return (
+                                          <button
+                                            key={option.key}
+                                            type="button"
+                                            title={option.label}
+                                            onClick={() => {
+                                              setForm(f => ({ ...f, icon: option.key }));
+                                              setIsIconPickerOpen(false);
+                                            }}
+                                            className={`flex h-8 w-8 items-center justify-center border transition-colors ${selected
+                                                ? 'border-black bg-black text-white'
+                                                : 'border-transparent text-gray-400 hover:border-gray-300 hover:text-black'
+                                              }`}
+                                          >
+                                            {option.icon}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                ))
+                              )}
+                            </div>
+
+                            {/* Footer — сброс */}
+                            {form.icon && (
+                              <div className="border-t border-gray-100 p-2">
+                                <button
+                                  type="button"
+                                  onClick={() => { setForm(f => ({ ...f, icon: '' })); setIsIconPickerOpen(false); }}
+                                  className="w-full text-[10px] text-gray-400 hover:text-red-500 transition-colors py-1"
+                                >
+                                  Elimină iconița
+                                </button>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </>
               )}
@@ -791,5 +913,6 @@ export function AdminCategories() {
         </div>
       )}
     </div>
+
   );
 }

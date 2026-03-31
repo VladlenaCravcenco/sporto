@@ -41,9 +41,11 @@ export function CategoriesProvider({ children }: { children: ReactNode }) {
     const mapped: CategoryWithActive[] = (catData as {
       slug: string; active?: boolean; name_ro: string; name_ru: string;
       description_ro: string | null; description_ru: string | null;
+      icon?: string | null;
     }[]).map(cat => ({
       id: cat.slug,
       active: cat.active !== false,
+      icon: cat.icon ?? undefined,
       name: { ro: cat.name_ro, ru: cat.name_ru },
       description: {
         ro: cat.description_ro || '',

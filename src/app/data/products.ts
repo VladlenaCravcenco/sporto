@@ -31,6 +31,7 @@ export interface Category {
   name: { ro: string; ru: string };
   description: { ro: string; ru: string };
   subcategories: { id: string; name: { ro: string; ru: string } }[];
+  icon?: string;
 }
 
 export const categories: Category[] = [
