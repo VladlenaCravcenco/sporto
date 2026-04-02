@@ -251,19 +251,45 @@ const translations: Record<Language, Record<string, string>> = {
 
 const LanguageContext = createContext<LanguageContextType | undefined>(undefined);
 
+function getLanguageFromUrl(): Language | null {
+  if (typeof window === 'undefined') return null;
+  const lang = new URLSearchParams(window.location.search).get('lang');
+  return lang === 'ro' || lang === 'ru' ? lang : null;
+}
+
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
-  const [language, setLanguageState] = useState<Language>('ro');
+  const [language, setLanguageState] = useState<Language>(() => {
+    const urlLang = getLanguageFromUrl();
+    if (urlLang) return urlLang;
+    if (typeof window !== 'undefined') {
+      const storedLang = localStorage.getItem('language') as Language | null;
+      if (storedLang === 'ro' || storedLang === 'ru') return storedLang;
+    }
+    return 'ro';
+  });
 
   useEffect(() => {
-    const storedLang = localStorage.getItem('language') as Language;
-    if (storedLang && (storedLang === 'ro' || storedLang === 'ru')) {
-      setLanguageState(storedLang);
-    }
+    const syncLangFromUrl = () => {
+      const urlLang = getLanguageFromUrl();
+      if (urlLang) {
+        setLanguageState(urlLang);
+        localStorage.setItem('language', urlLang);
+      }
+    };
+
+    syncLangFromUrl();
+    window.addEventListener('popstate', syncLangFromUrl);
+    return () => window.removeEventListener('popstate', syncLangFromUrl);
   }, []);
 
   const setLanguage = (lang: Language) => {
     setLanguageState(lang);
     localStorage.setItem('language', lang);
+    if (typeof window !== 'undefined') {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', lang);
+      window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
+    }
   };
 
   const t = (key: string): string => {

@@ -304,16 +304,16 @@ export function ProductDetail() {
         jsonLd={[
           buildProductJsonLd({
             ...product,
-            url: `https://www.sporto.md${buildProductPath(product)}`,
+            url: `https://www.sporto.md${buildProductPath(product)}?lang=${language}`,
             availability: isProductInStock(product)
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
           }),
           buildBreadcrumbJsonLd([
-            { name: language === 'ro' ? 'Acasă' : 'Главная', url: 'https://www.sporto.md/' },
-            { name: language === 'ro' ? 'Catalog' : 'Каталог', url: 'https://www.sporto.md/catalog' },
-            ...(category ? [{ name: category.name[language as Language], url: `https://www.sporto.md/catalog?category=${category.id}` }] : []),
-            { name: product.name[language as Language], url: `https://www.sporto.md${buildProductPath(product)}` },
+            { name: language === 'ro' ? 'Acasă' : 'Главная', url: `https://www.sporto.md/?lang=${language}` },
+            { name: language === 'ro' ? 'Catalog' : 'Каталог', url: `https://www.sporto.md/catalog?lang=${language}` },
+            ...(category ? [{ name: category.name[language as Language], url: `https://www.sporto.md/catalog?category=${category.id}&lang=${language}` }] : []),
+            { name: product.name[language as Language], url: `https://www.sporto.md${buildProductPath(product)}?lang=${language}` },
           ]),
         ]}
       />

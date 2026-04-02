@@ -1,5 +1,5 @@
 import { useLanguage } from '../contexts/LanguageContext';
-import { SeoHead } from '../components/SeoHead';
+import { SeoHead, buildFaqJsonLd } from '../components/SeoHead';
 import { Link } from 'react-router';
 import { ArrowRight, ChevronDown } from 'lucide-react';
 import { useState } from 'react';
@@ -106,6 +106,7 @@ export function About() {
           : 'Sporto, SPORTOSFERA о нас, итальянское спортивное оборудование Молдова 2023, дистрибьютор спорт Кишинёв, B2B B2C B2G спорт Молдова'}
         canonical="/about"
         lang={language as 'ro' | 'ru'}
+        jsonLd={buildFaqJsonLd(faqItems)}
       />
 
       {/* ── PAGE HEADER ── */}

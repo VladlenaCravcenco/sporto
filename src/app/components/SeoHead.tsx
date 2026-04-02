@@ -81,6 +81,12 @@ const DEFAULT_SEO: Record<'ro' | 'ru', { title: string; description: string; key
   },
 };
 
+function withLangQuery(path: string, lang: 'ro' | 'ru') {
+  const url = new URL(`${SITE_URL}${path}`);
+  url.searchParams.set('lang', lang);
+  return url.toString();
+}
+
 export function SeoHead({
   title,
   description,
@@ -96,7 +102,10 @@ export function SeoHead({
   const finalDesc  = description || defaults.description;
   const finalKw    = keywords    || defaults.keywords;
   const finalOg    = ogImage     || DEFAULT_OG;
-  const pageUrl    = canonical ? `${SITE_URL}${canonical}` : SITE_URL;
+  const pagePath   = canonical || '/';
+  const pageUrl    = withLangQuery(pagePath, lang);
+  const alternateRo = withLangQuery(pagePath, 'ro');
+  const alternateRu = withLangQuery(pagePath, 'ru');
 
   useEffect(() => {
     // ── Title ──────────────────────────────────────────────────────────────
@@ -119,11 +128,15 @@ export function SeoHead({
     };
 
     // ── Helper: upsert <link> ──────────────────────────────────────────────
-    const setLink = (rel: string, href: string) => {
-      let el = document.querySelector(`link[rel="${rel}"]`) as HTMLLinkElement | null;
+    const setLink = (rel: string, href: string, hreflang?: string) => {
+      const selector = hreflang
+        ? `link[rel="${rel}"][hreflang="${hreflang}"]`
+        : `link[rel="${rel}"]:not([hreflang])`;
+      let el = document.querySelector(selector) as HTMLLinkElement | null;
       if (!el) {
         el = document.createElement('link');
         el.rel = rel;
+        if (hreflang) el.hreflang = hreflang;
         document.head.appendChild(el);
       }
       el.href = href;
@@ -155,6 +168,11 @@ export function SeoHead({
 
     // ── Canonical ──────────────────────────────────────────────────────────
     if (canonical) setLink('canonical', pageUrl);
+    if (canonical && !noIndex) {
+      setLink('alternate', alternateRo, 'ro-MD');
+      setLink('alternate', alternateRu, 'ru-MD');
+      setLink('alternate', alternateRo, 'x-default');
+    }
 
     // ── JSON-LD Structured Data ────────────────────────────────────────────
     // Remove existing injected scripts to avoid duplicates on navigation
@@ -176,7 +194,7 @@ export function SeoHead({
     return () => {
       document.querySelectorAll('script[data-seohead]').forEach(el => el.remove());
     };
-  }, [finalTitle, finalDesc, finalKw, canonical, finalOg, lang, noIndex, pageUrl, jsonLd]);
+  }, [finalTitle, finalDesc, finalKw, canonical, finalOg, lang, noIndex, pageUrl, alternateRo, alternateRu, jsonLd]);
 
   return null;
 }
@@ -379,6 +397,21 @@ export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {
       position: i + 1,
       name: item.name,
       item: item.url,
+    })),
+  };
+}
+
+export function buildFaqJsonLd(items: { q: string; a: string }[]) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: items.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
     })),
   };
 }
