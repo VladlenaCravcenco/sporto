@@ -108,6 +108,7 @@ function CardList<T>({
   onMove: (index: number, dir: -1 | 1) => void;
   renderCard: (item: T, index: number, update: (value: T) => void) => React.ReactNode;
 }) {
+  const { lang } = useAdminLang();
   return (
     <div className="space-y-2">
       {items.map((item, index) => (
@@ -135,7 +136,7 @@ function CardList<T>({
       ))}
       <button onClick={onAdd} className="w-full border border-dashed border-white/15 py-2 text-[10px] text-gray-600 hover:text-gray-400 hover:border-white/30 transition-colors flex items-center justify-center gap-1.5">
         <Plus className="w-3 h-3" />
-        Добавить
+        {lang === 'ru' ? 'Добавить' : 'Adaugă'}
       </button>
     </div>
   );
@@ -260,6 +261,7 @@ const SECTION_TITLES: Record<SectionKey, string> = {
 export function AdminMaintenance() {
   const { lang } = useAdminLang();
   const isRu = lang === 'ru';
+  const l = (ro: string, ru: string) => (isRu ? ru : ro);
   const [data, setData] = useState<PageData>({ ...DEFAULTS });
   const [published, setPublished] = useState<PageData>({ ...DEFAULTS });
   const [previewLang, setPreviewLang] = useState<'ro' | 'ru'>('ro');
@@ -341,7 +343,7 @@ export function AdminMaintenance() {
         <div className="sticky top-0 z-10 bg-black border-b border-white/10 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">Страница</p>
+              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">{l('Pagină', 'Страница')}</p>
               <h1 className="text-base text-white">/maintenance-service</h1>
             </div>
             <div className="flex items-center gap-2">

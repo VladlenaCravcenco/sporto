@@ -45,7 +45,8 @@ function Label({ children }: { children: React.ReactNode }) {
 }
 
 export function AdminBanners() {
-  const { t } = useAdminLang();
+  const { t, lang } = useAdminLang();
+  const l = (ro: string, ru: string) => (lang === 'ru' ? ru : ro);
   const [rows, setRows]           = useState<BannerRow[]>([]);
   const [loading, setLoading]     = useState(true);
   const [noTable, setNoTable]     = useState(false);
@@ -100,8 +101,8 @@ export function AdminBanners() {
   const closePanel = () => { setPanelOpen(false); setEditId(null); setForm(EMPTY); };
 
   const handleUpload = async (file: File) => {
-    if (!file.type.startsWith('image/')) { showToast('Selectați o imagine', false); return; }
-    if (file.size > 8 * 1024 * 1024) { showToast('Imaginea trebuie să fie < 8 MB', false); return; }
+    if (!file.type.startsWith('image/')) { showToast(l('Selectați o imagine', 'Выберите изображение'), false); return; }
+    if (file.size > 8 * 1024 * 1024) { showToast(l('Imaginea trebuie să fie < 8 MB', 'Изображение должно быть меньше 8 MB'), false); return; }
     setUploading(true);
     const ext  = file.name.split('.').pop();
     const path = `banners/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
@@ -111,7 +112,7 @@ export function AdminBanners() {
       setUploading(false);
       if (error.message.includes('Bucket not found') || error.message.includes('bucket')) {
         setStorageNote(true);
-        showToast('Bucket "product-images" не существует', false);
+        showToast(l('Bucket-ul "product-images" nu există', 'Bucket "product-images" не существует'), false);
       } else {
         showToast(error.message, false);
       }
@@ -120,11 +121,11 @@ export function AdminBanners() {
     const { data: urlData } = supabase.storage.from('product-images').getPublicUrl(data.path);
     setForm(f => ({ ...f, image_url: urlData.publicUrl }));
     setUploading(false);
-    showToast('Изображение загружено!');
+    showToast(l('Imagine încărcată!', 'Изображение загружено!'));
   };
 
   const handleSave = async () => {
-    if (!form.title_ro?.trim()) { showToast('Введите заголовок (RO)', false); return; }
+    if (!form.title_ro?.trim()) { showToast(l('Introduceți titlul (RO)', 'Введите заголовок (RO)'), false); return; }
     setSaving(true);
     const payload: Partial<BannerRow> = {
       title_ro:    form.title_ro?.trim()    || null,
@@ -204,7 +205,7 @@ export function AdminBanners() {
               className={`w-8 h-8 flex items-center justify-center border transition-colors ${
                 showInfo ? 'border-black text-black' : 'border-gray-200 text-gray-400 hover:text-black hover:border-gray-400'
               }`}
-              title="Справка"
+              title={l('Ajutor', 'Справка')}
             >
               <Info className="w-3.5 h-3.5" />
             </button>
@@ -242,9 +243,10 @@ export function AdminBanners() {
         {showInfo && (
           <div className="border-t border-gray-100 bg-gray-50 px-4 sm:px-6 lg:px-8 py-3">
             <p className="text-[11px] text-gray-500 leading-relaxed">
-              Баннеры отображаются в слайдере Hero на главной. Авто-прокрутка каждые 5 сек.
-              Порядок — стрелками ↑↓. Банер с индексом 0 — первый.
-              Если нет активных — показывается дефолтный контент сайта.
+              {l(
+                'Bannerele se afișează în sliderul Hero de pe pagina principală. Derulare automată la fiecare 5 secunde. Ordinea se schimbă cu săgețile ↑↓. Bannerul cu index 0 este primul. Dacă nu există bannere active, se afișează conținutul implicit al site-ului.',
+                'Баннеры отображаются в слайдере Hero на главной. Авто-прокрутка каждые 5 сек. Порядок меняется стрелками ↑↓. Баннер с индексом 0 показывается первым. Если активных нет, отображается дефолтный контент сайта.'
+              )}
             </p>
           </div>
         )}
@@ -262,11 +264,11 @@ export function AdminBanners() {
               <AlertCircle className="w-4 h-4 text-amber-500 flex-shrink-0 mt-0.5" />
               <div className="flex-1 min-w-0">
                 <p className="text-xs text-amber-800 mb-2">
-                  Таблица <code className="bg-amber-100 px-1">banners</code> не существует в Supabase.
+                  {l('Tabelul ', 'Таблица ')}<code className="bg-amber-100 px-1">banners</code>{l(' nu există în Supabase.', ' не существует в Supabase.')}
                 </p>
                 <button onClick={() => setShowSql(v => !v)}
                   className="text-xs text-amber-700 border border-amber-300 px-3 py-1.5 hover:bg-amber-100 mb-2">
-                  {showSql ? 'Скрыть SQL' : 'Показать SQL'}
+                  {showSql ? t.banners.hideSql : t.banners.showSql}
                 </button>
                 {showSql && (
                   <pre className="bg-amber-100/50 border border-amber-200 p-3 text-[10px] text-amber-900 overflow-x-auto leading-relaxed mt-1 whitespace-pre-wrap break-all">
@@ -294,10 +296,10 @@ export function AdminBanners() {
         ) : !noTable && rows.length === 0 ? (
           <div className="bg-white border border-gray-100 py-14 text-center">
             <Layers className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-            <p className="text-sm text-gray-400 mb-4">Баннеров пока нет</p>
+            <p className="text-sm text-gray-400 mb-4">{t.banners.noData}</p>
             <button onClick={openNew}
               className="text-xs border border-black px-5 py-2 uppercase tracking-wider hover:bg-black hover:text-white transition-colors">
-              Добавить первый баннер
+              {l('Adaugă primul banner', 'Добавить первый баннер')}
             </button>
           </div>
         ) : (
@@ -334,7 +336,7 @@ export function AdminBanners() {
                   {/* Title overlay */}
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-3">
                     <p className="text-xs text-white truncate leading-tight">
-                      {row.title_ro || <span className="text-gray-400 italic">Без заголовка</span>}
+                      {row.title_ro || <span className="text-gray-400 italic">{l('Fără titlu', 'Без заголовка')}</span>}
                     </p>
                     {row.subtitle_ro && (
                       <p className="text-[10px] text-gray-300 truncate mt-0.5">{row.subtitle_ro}</p>
@@ -376,7 +378,7 @@ export function AdminBanners() {
                       {row.active
                         ? <Eye className="w-3 h-3" />
                         : <EyeOff className="w-3 h-3" />}
-                      {row.active ? 'Activ' : 'Inactiv'}
+                      {row.active ? l('Activ', 'Активен') : l('Inactiv', 'Скрыт')}
                     </button>
 
                     {/* Edit */}
@@ -384,7 +386,7 @@ export function AdminBanners() {
                       onClick={() => openEdit(row)}
                       className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 border border-gray-200 text-gray-500 hover:border-black hover:text-black transition-colors uppercase tracking-wider"
                     >
-                      Edit
+                      {l('Editează', 'Редактировать')}
                     </button>
                   </div>
 
@@ -442,7 +444,7 @@ export function AdminBanners() {
             {/* ── Image upload ── */}
             <div>
               <Label>
-                Изображение <span className="normal-case text-gray-300 tracking-normal">· рек. 1600×700px</span>
+                {l('Imagine', 'Изображение')} <span className="normal-case text-gray-300 tracking-normal">· {l('recomandat 1600×700px', 'рек. 1600×700px')}</span>
               </Label>
 
               {form.image_url ? (
@@ -452,22 +454,22 @@ export function AdminBanners() {
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                     <button type="button" onClick={() => fileRef.current?.click()}
                       className="flex items-center gap-1.5 bg-white text-black text-xs px-3 py-2 hover:bg-gray-100">
-                      <ImageIcon className="w-3.5 h-3.5" />Заменить
+                      <ImageIcon className="w-3.5 h-3.5" />{l('Înlocuiește', 'Заменить')}
                     </button>
                     <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))}
                       className="flex items-center gap-1.5 bg-white text-red-500 text-xs px-3 py-2 hover:bg-red-50">
-                      <X className="w-3.5 h-3.5" />Удалить
+                      <X className="w-3.5 h-3.5" />{l('Șterge', 'Удалить')}
                     </button>
                   </div>
                   {/* Mobile tap buttons below image */}
                   <div className="sm:hidden absolute bottom-0 inset-x-0 flex">
                     <button type="button" onClick={() => fileRef.current?.click()}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-black/70 text-white text-xs py-2">
-                      <ImageIcon className="w-3 h-3" />Заменить
+                      <ImageIcon className="w-3 h-3" />{l('Înlocuiește', 'Заменить')}
                     </button>
                     <button type="button" onClick={() => setForm(f => ({ ...f, image_url: '' }))}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-red-600/80 text-white text-xs py-2">
-                      <X className="w-3 h-3" />Удалить
+                      <X className="w-3 h-3" />{l('Șterge', 'Удалить')}
                     </button>
                   </div>
                 </div>
@@ -478,7 +480,7 @@ export function AdminBanners() {
                     ? <RefreshCw className="w-6 h-6 text-gray-400 animate-spin" />
                     : <>
                         <ImageIcon className="w-6 h-6 text-gray-300" />
-                        <span className="text-xs text-gray-400">Нажмите или перетащите</span>
+                        <span className="text-xs text-gray-400">{l('Apăsați sau trageți aici', 'Нажмите или перетащите')}</span>
                         <span className="text-[10px] text-gray-300">JPG, PNG, WebP · max 8 MB</span>
                       </>
                   }
@@ -492,14 +494,14 @@ export function AdminBanners() {
                 <div className="mt-2 bg-amber-50 border border-amber-200 p-3 flex gap-2">
                   <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
                   <p className="text-[10px] text-amber-700">
-                    Создайте bucket <code className="bg-amber-100 px-1">product-images</code> в Supabase Storage → Public: ON
+                    {l('Creați bucket-ul ', 'Создайте bucket ')}<code className="bg-amber-100 px-1">product-images</code>{l(' în Supabase Storage → Public: ON', ' в Supabase Storage → Public: ON')}
                   </p>
                 </div>
               )}
 
               {/* URL input */}
               <div className="mt-2">
-                <label className="text-[10px] text-gray-400 mb-1 block">или URL изображения</label>
+                <label className="text-[10px] text-gray-400 mb-1 block">{l('sau URL imagine', 'или URL изображения')}</label>
                 <input type="text" value={form.image_url ?? ''}
                   onChange={e => setForm(f => ({ ...f, image_url: e.target.value }))}
                   placeholder="https://…"
@@ -510,14 +512,14 @@ export function AdminBanners() {
             {/* ── Titles ── */}
             <div className="space-y-3">
               <div>
-                <Label>Заголовок RO <span className="text-red-400">*</span></Label>
+                <Label>{l('Titlu RO', 'Заголовок RO')} <span className="text-red-400">*</span></Label>
                 <input type="text" value={form.title_ro ?? ''}
                   onChange={e => setForm(f => ({ ...f, title_ro: e.target.value }))}
                   placeholder="Ex: Prețuri speciale pentru cluburi"
                   className={inp} />
               </div>
               <div>
-                <Label>Заголовок RU</Label>
+                <Label>{l('Titlu RU', 'Заголовок RU')}</Label>
                 <input type="text" value={form.title_ru ?? ''}
                   onChange={e => setForm(f => ({ ...f, title_ru: e.target.value }))}
                   placeholder="Спец. цены для клубов"
@@ -528,14 +530,14 @@ export function AdminBanners() {
             {/* ── Subtitles ── */}
             <div className="space-y-3">
               <div>
-                <Label>Подзаголовок RO</Label>
+                <Label>{l('Subtitlu RO', 'Подзаголовок RO')}</Label>
                 <textarea value={form.subtitle_ro ?? ''}
                   onChange={e => setForm(f => ({ ...f, subtitle_ro: e.target.value }))}
                   rows={2} placeholder="Descriere scurtă…"
                   className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black resize-none" />
               </div>
               <div>
-                <Label>Подзаголовок RU</Label>
+                <Label>{l('Subtitlu RU', 'Подзаголовок RU')}</Label>
                 <textarea value={form.subtitle_ru ?? ''}
                   onChange={e => setForm(f => ({ ...f, subtitle_ru: e.target.value }))}
                   rows={2} placeholder="Краткое описание…"
@@ -546,25 +548,25 @@ export function AdminBanners() {
             {/* ── CTA ── */}
             <div className="space-y-3">
               <div>
-                <Label>Ссылка кнопки CTA</Label>
+                <Label>{l('Link buton CTA', 'Ссылка кнопки CTA')}</Label>
                 <input type="text" value={form.cta_link ?? ''}
                   onChange={e => setForm(f => ({ ...f, cta_link: e.target.value }))}
                   placeholder="/order-request"
                   className={inpMono} />
                 <p className="text-[9px] text-gray-400 mt-0.5">
-                  <code className="bg-gray-100 px-1">#modal</code> — форма · <code className="bg-gray-100 px-1">/catalog</code> · <code className="bg-gray-100 px-1">/order-request</code>
+                  <code className="bg-gray-100 px-1">#modal</code> {l('— formular', '— форма')} · <code className="bg-gray-100 px-1">/catalog</code> · <code className="bg-gray-100 px-1">/order-request</code>
                 </p>
               </div>
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <Label>Кнопка RO</Label>
+                  <Label>{l('Buton RO', 'Кнопка RO')}</Label>
                   <input type="text" value={form.cta_text_ro ?? ''}
                     onChange={e => setForm(f => ({ ...f, cta_text_ro: e.target.value }))}
                     placeholder="Solicită Ofertă"
                     className={inp} />
                 </div>
                 <div>
-                  <Label>Кнопка RU</Label>
+                  <Label>{l('Buton RU', 'Кнопка RU')}</Label>
                   <input type="text" value={form.cta_text_ru ?? ''}
                     onChange={e => setForm(f => ({ ...f, cta_text_ru: e.target.value }))}
                     placeholder="Запросить предложение"
@@ -576,14 +578,14 @@ export function AdminBanners() {
             {/* ── Sort + Active ── */}
             <div className="flex items-center gap-4 py-1">
               <div>
-                <Label>Порядок</Label>
+                <Label>{l('Ordine', 'Порядок')}</Label>
                 <input type="number" min="0" step="1" value={form.sort_order ?? 0}
                   onChange={e => setForm(f => ({ ...f, sort_order: Number(e.target.value) }))}
                   className="w-20 h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black font-mono text-center" />
               </div>
 
               <div className="flex-1">
-                <Label>Статус</Label>
+                <Label>{l('Status', 'Статус')}</Label>
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, active: !f.active }))}
@@ -598,8 +600,8 @@ export function AdminBanners() {
                     <span className={`w-3.5 h-3.5 rounded-full shadow transition-transform mx-0.5 ${form.active ? 'bg-white translate-x-3' : 'bg-white translate-x-0'}`} />
                   </span>
                   {form.active
-                    ? <><Eye className="w-3.5 h-3.5" /> Активен</>
-                    : <><EyeOff className="w-3.5 h-3.5 opacity-50" /> Скрыт</>
+                    ? <><Eye className="w-3.5 h-3.5" /> {l('Activ', 'Активен')}</>
+                    : <><EyeOff className="w-3.5 h-3.5 opacity-50" /> {l('Ascuns', 'Скрыт')}</>
                   }
                 </button>
               </div>
@@ -617,19 +619,19 @@ export function AdminBanners() {
               <button onClick={handleDelete} disabled={deleting || saving}
                 className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-40">
                 <Trash2 className="w-3.5 h-3.5" />
-                {deleting ? '…' : t.banners.deleteConfirm ? 'Удалить' : 'Удалить'}
+                {deleting ? '…' : l('Șterge', 'Удалить')}
               </button>
             ) : <div />}
 
             <div className="flex items-center gap-2">
               <button onClick={closePanel}
                 className="px-4 py-2 text-xs text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-black transition-colors">
-                Отмена
+                {l('Anulează', 'Отмена')}
               </button>
               <button onClick={handleSave} disabled={saving || uploading}
                 className="flex items-center gap-2 px-5 py-2 bg-black text-white text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:opacity-50">
                 {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
-                {saving ? 'Сохранение…' : t.banners.saved ? 'Сохранить' : 'Сохранить'}
+                {saving ? l('Salvare…', 'Сохранение…') : l('Salvează', 'Сохранить')}
               </button>
             </div>
           </div>

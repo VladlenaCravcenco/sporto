@@ -12,12 +12,13 @@ import {
 function bi(ro = '', ru = ''): BiText { return { ro, ru }; }
 
 function SectionHeader({ title, visible, onToggle }: { title: string; visible: boolean; onToggle: () => void }) {
+  const { lang } = useAdminLang();
   return (
     <div className="flex items-center justify-between mb-2 pb-1.5 border-b border-white/10">
       <span className="text-[9px] uppercase tracking-widest text-gray-600">{title}</span>
       <button onClick={onToggle} className={`flex items-center gap-1 text-[9px] uppercase tracking-wider transition-colors ${visible ? 'text-green-400' : 'text-gray-600'}`}>
         {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
-        {visible ? 'Вкл' : 'Выкл'}
+        {visible ? (lang === 'ru' ? 'Вкл' : 'On') : (lang === 'ru' ? 'Выкл' : 'Off')}
       </button>
     </div>
   );
@@ -63,6 +64,7 @@ function CardList<T>({
   onMove: (i: number, dir: -1 | 1) => void;
   renderCard: (item: T, i: number, update: (v: T) => void) => React.ReactNode;
 }) {
+  const { lang } = useAdminLang();
   return (
     <div className="space-y-2">
       {items.map((item, i) => (
@@ -92,7 +94,7 @@ function CardList<T>({
       <button onClick={onAdd}
         className="w-full border border-dashed border-white/15 py-2 text-[10px] text-gray-600 hover:text-gray-400 hover:border-white/30 transition-colors flex items-center justify-center gap-1.5">
         <Plus className="w-3 h-3" />
-        Добавить
+        {lang === 'ru' ? 'Добавить' : 'Adaugă'}
       </button>
     </div>
   );
@@ -230,6 +232,7 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
 export function AdminServices() {
   const { lang } = useAdminLang();
   const isRu = lang === 'ru';
+  const l = (ro: string, ru: string) => (isRu ? ru : ro);
 
   const [data, setData]           = useState<PageData>({ ...DEFAULTS });
   const [published, setPublished] = useState<PageData>({ ...DEFAULTS });
@@ -366,7 +369,7 @@ export function AdminServices() {
         <div className="sticky top-0 z-10 bg-black border-b border-white/10 px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">Страница</p>
+              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">{l('Pagină', 'Страница')}</p>
               <h1 className="text-base text-white">/turnkey-solutions</h1>
             </div>
             <div className="flex items-center gap-2">
@@ -399,7 +402,7 @@ export function AdminServices() {
             <div className="space-y-3">
               <BiField label={isRu ? 'Заголовок' : 'Titlu'} value={data.hero_title} onChange={v => set('hero_title', v)} textarea placeholder={DEFAULTS.hero_title} />
               <BiField label={isRu ? 'Описание' : 'Descriere'} value={data.hero_body} onChange={v => set('hero_body', v)} textarea placeholder={DEFAULTS.hero_body} />
-              <BiField label="CTA кнопка" value={data.hero_cta} onChange={v => set('hero_cta', v)} placeholder={DEFAULTS.hero_cta} />
+              <BiField label={l('Buton CTA', 'CTA кнопка')} value={data.hero_cta} onChange={v => set('hero_cta', v)} placeholder={DEFAULTS.hero_cta} />
               <BiField label={isRu ? 'Подпись под кнопкой' : 'Text sub buton'} value={data.hero_sub} onChange={v => set('hero_sub', v)} placeholder={DEFAULTS.hero_sub} />
             </div>
           </div>
@@ -537,7 +540,7 @@ export function AdminServices() {
                     <div className="space-y-2">
                       <div>
                         <div className="flex items-center justify-between gap-2 mb-1">
-                          <div className="text-[9px] uppercase tracking-widest text-gray-600">Баннер кейса</div>
+                          <div className="text-[9px] uppercase tracking-widest text-gray-600">{l('Banner caz', 'Баннер кейса')}</div>
                           <label className="inline-flex items-center gap-1.5 px-2 py-1 border border-white/20 text-[9px] uppercase tracking-widest text-gray-400 hover:text-white hover:border-white/40 cursor-pointer transition-colors">
                             {uploadingCaseIndex === index ? <span className="w-2.5 h-2.5 border border-gray-500 border-t-white rounded-full animate-spin" /> : <Upload className="w-3 h-3" />}
                             {isRu ? 'Загрузить' : 'Încarcă'}
@@ -573,20 +576,20 @@ export function AdminServices() {
                       </div>
                       <div className="grid grid-cols-2 gap-2">
                         <div>
-                          <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">Подпись RO</div>
+                          <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">{l('Etichetă RO', 'Подпись RO')}</div>
                           <input value={c.label_ro} onChange={e => upd({ ...c, label_ro: e.target.value })}
                             placeholder="Sala fitness..."
                             className="w-full h-8 bg-black border border-white/20 px-2.5 text-xs text-white focus:border-white/60 focus:outline-none" />
                         </div>
                         <div>
-                          <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">Подпись RU</div>
+                          <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">{l('Etichetă RU', 'Подпись RU')}</div>
                           <input value={c.label_ru} onChange={e => upd({ ...c, label_ru: e.target.value })}
-                            placeholder="Фитнес-зал..."
+                            placeholder={l('Sală de fitness...', 'Фитнес-зал...')}
                             className="w-full h-8 bg-black border border-white/20 px-2.5 text-xs text-white focus:border-white/60 focus:outline-none" />
                         </div>
                       </div>
                       <div>
-                        <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">Год</div>
+                        <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{l('An', 'Год')}</div>
                         <input value={c.year} onChange={e => upd({ ...c, year: e.target.value })}
                           placeholder="2024"
                           className="w-20 h-8 bg-black border border-white/20 px-2.5 text-xs text-white focus:border-white/60 focus:outline-none" />
@@ -600,7 +603,7 @@ export function AdminServices() {
 
           {/* CTA */}
           <div ref={registerField('cta')} className={activeFieldId === 'cta' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <SectionHeader title="CTA блок" visible={data.show_cta} onToggle={() => set('show_cta', !data.show_cta)} />
+            <SectionHeader title={l('Bloc CTA', 'CTA блок')} visible={data.show_cta} onToggle={() => set('show_cta', !data.show_cta)} />
             {data.show_cta && (
               <div className="space-y-3">
                 <BiField label={isRu ? 'Заголовок' : 'Titlu'} value={data.cta_title} onChange={v => set('cta_title', v)} placeholder={DEFAULTS.cta_title} />
