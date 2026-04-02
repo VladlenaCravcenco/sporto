@@ -50,6 +50,14 @@
       ]
     },
     {
+      "routes": [
+        {
+          "src": "/sitemap.xml",
+          "dest": "/api/sitemap"
+        }
+      ]
+    },
+    {
       "source": "/sitemap.xml",
       "headers": [
         {
