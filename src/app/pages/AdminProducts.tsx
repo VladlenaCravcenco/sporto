@@ -14,6 +14,7 @@ import {
 import { logoutAdmin } from '../../lib/adminAuth';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { searchProducts } from '../../lib/searchEngine';
+import { buildProductPath } from '../lib/product-url';
 
 // ─── Brand Combobox ───────────────────────────────────────────────────────────
 
@@ -1371,7 +1372,16 @@ export function AdminProducts() {
           </div>
           <div className="flex items-center gap-2">
             {editId && (
-              <a href={`/product/${editId}`} target="_blank" rel="noopener noreferrer"
+              <a
+                href={buildProductPath({
+                  id: editId,
+                  name: {
+                    ro: form.name_ro || editId,
+                    ru: form.name_ru || form.name_ro || editId,
+                  },
+                })}
+                target="_blank"
+                rel="noopener noreferrer"
                 className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors px-2 py-1.5 border border-gray-100 hover:border-gray-300"
               >
                 <ExternalLink className="w-3 h-3" />

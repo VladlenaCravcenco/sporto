@@ -14,6 +14,7 @@ import { ConsultationModal } from '../components/ConsultationModal';
 import { YinYang } from '../components/icons/YinYang';
 import { TableTennis } from '../components/icons/TableTennis';
 import { getCategoryIcon } from '../lib/category-icons';
+import { buildProductPath } from '../lib/product-url';
 import {
   Dumbbell,
   Bike,
@@ -307,7 +308,7 @@ export function Home() {
                 {featuredProducts[0] && (
                   <div className="col-span-2 row-span-1 md:row-span-2">
                     <Link
-                      to={`/product/${featuredProducts[0].id}`}
+                      to={buildProductPath(featuredProducts[0])}
                       className="group block bg-black text-white h-full min-h-[240px] overflow-hidden relative flex flex-col"
                     >
                       <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">

@@ -7,6 +7,7 @@ import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
 import { supabase, type BrandRow } from '../../lib/supabase';
 import { ArrowLeft, ArrowRight, Globe, MapPin, Tag, Loader2, LayoutGrid, List, ShoppingCart, Package } from 'lucide-react';
 import { SeoHead } from '../components/SeoHead';
+import { buildProductPath } from '../lib/product-url';
 
 // ─── Fetch single brand by slug ───────────────────────────────────────────────
 function useBrandBySlug(slug: string | undefined) {
@@ -444,7 +445,7 @@ export function BrandPage() {
               {visibleProducts.map(product => (
                 <Link
                   key={product.id}
-                  to={`/product/${product.id}`}
+                  to={buildProductPath(product)}
                   className="group flex items-center gap-3 bg-white hover:bg-gray-50 py-2.5 px-3 transition-colors"
                 >
                   <div className="w-14 h-14 flex-shrink-0 bg-gray-50 border border-gray-100 overflow-hidden">

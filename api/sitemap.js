@@ -22,6 +22,22 @@ const STATIC_PAGES = [
   { path: '/privacy-policy', priority: '0.3', changefreq: 'yearly' },
 ];
 
+function slugify(input) {
+  return String(input)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .replace(/-{2,}/g, '-');
+}
+
+function buildProductSlug(product) {
+  const baseName = product.name_ro || product.name_ru || product.id;
+  const slug = slugify(baseName);
+  return slug ? `${slug}--${product.id}` : product.id;
+}
+
 function escapeXml(value) {
   return String(value)
     .replaceAll('&', '&amp;')
@@ -78,7 +94,7 @@ export default async function handler(req, res) {
     const [productsResult, brandsResult] = await Promise.all([
       supabase
         .from('products')
-        .select('id, updated_at')
+        .select('id, updated_at, name_ro, name_ru')
         .eq('active', true)
         .order('id', { ascending: true })
         .limit(10000),
@@ -100,7 +116,7 @@ export default async function handler(req, res) {
     const productEntries = (productsResult.data ?? [])
       .filter((product) => product.id)
       .map((product) => ({
-        loc: absoluteUrl(baseUrl, `/product/${product.id}`),
+        loc: absoluteUrl(baseUrl, `/product/${buildProductSlug(product)}`),
         lastmod: product.updated_at || generatedAt,
         changefreq: 'weekly',
         priority: '0.7',

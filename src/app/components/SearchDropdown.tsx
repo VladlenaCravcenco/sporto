@@ -16,6 +16,7 @@ import {
   POPULAR_QUERIES,
   type SearchResult,
 } from '../../lib/searchEngine';
+import { buildProductPath } from '../lib/product-url';
 
 // ── Props — products приходят снаружи (из Header), грузятся один раз ────────
 interface SearchDropdownProps {
@@ -176,7 +177,7 @@ export function SearchDropdown({
           goTo(`/catalog?category=${catMatches[activeIdx].id}`);
         } else {
           const prod = results?.hits[activeIdx - catMatches.length]?.product;
-          if (prod) goTo(`/product/${prod.id}`);
+          if (prod) goTo(buildProductPath(prod));
         }
       }
     };
@@ -432,7 +433,7 @@ export function SearchDropdown({
             return (
               <div key={product.id} data-idx={idx}
                 onMouseDown={e => e.preventDefault()}
-                onClick={() => goTo(`/product/${product.id}`)}
+                onClick={() => goTo(buildProductPath(product))}
                 onMouseEnter={() => setActiveIdx(idx)}
                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${isActive ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
                 <Thumb product={product} />

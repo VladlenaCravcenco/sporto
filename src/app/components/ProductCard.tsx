@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import { getBrandByName } from '../data/brands';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
+import { buildProductPath } from '../lib/product-url';
 
 interface ProductCardProps {
   product: Product;
@@ -62,7 +63,7 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
 
   return (
     <Link
-      to={`/product/${product.id}`}
+      to={buildProductPath(product)}
       className={`group bg-white border border-gray-100 overflow-hidden hover:border-black transition-all duration-200 flex ${listView ? 'flex-row' : 'flex-col'}`}
     >
       {/* ── Image / Wireframe area ── */}

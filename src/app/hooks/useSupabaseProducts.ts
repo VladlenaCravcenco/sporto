@@ -3,6 +3,7 @@ import { supabase, type ProductRow } from '../../lib/supabase';
 import { cacheGet, cacheSet, cacheInvalidate, TTL_DEFAULT } from '../../lib/queryCache';
 import type { Product } from '../data/products';
 import { categories } from '../data/products';
+import { extractProductIdFromParam } from '../lib/product-url';
 
 // Extract YouTube video ID from any YouTube URL
 function extractYouTubeId(url: string | null): string | undefined {
@@ -151,12 +152,13 @@ export function useSupabaseProduct(id: string | undefined) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const resolvedId = extractProductIdFromParam(id);
 
   useEffect(() => {
-    if (!id) { setLoading(false); return; }
+    if (!resolvedId) { setLoading(false); return; }
     let cancelled = false;
 
-    const CACHE_KEY = `products:id:${id}`;
+    const CACHE_KEY = `products:id:${resolvedId}`;
     const cached = cacheGet<Product>(CACHE_KEY);
     if (cached) {
       setProduct(cached);
@@ -171,7 +173,7 @@ export function useSupabaseProduct(id: string | undefined) {
         supabase
           .from('products')
           .select('*')
-          .eq('id', id)
+          .eq('id', resolvedId)
           .single()
       );
 
@@ -188,7 +190,7 @@ export function useSupabaseProduct(id: string | undefined) {
     })();
 
     return () => { cancelled = true; };
-  }, [id]);
+  }, [resolvedId]);
 
   return { product, loading, error };
 }

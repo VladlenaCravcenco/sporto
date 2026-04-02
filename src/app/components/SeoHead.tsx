@@ -340,7 +340,9 @@ export function buildProductJsonLd(product: {
   sku?: string;
   brand?: string;
   availability?: 'https://schema.org/InStock' | 'https://schema.org/OutOfStock';
+  url?: string;
 }) {
+  const productUrl = product.url || `${SITE_URL}/product/${product.id}`;
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -348,7 +350,7 @@ export function buildProductJsonLd(product: {
     description: product.description.ro || product.description.ru,
     image: product.image || DEFAULT_OG,
     sku: product.sku,
-    url: `${SITE_URL}/product/${product.id}`,
+    url: productUrl,
     ...(product.brand && {
       brand: { '@type': 'Brand', name: product.brand },
     }),
@@ -357,7 +359,7 @@ export function buildProductJsonLd(product: {
       price: product.price,
       priceCurrency: 'MDL',
       availability: product.availability || 'https://schema.org/InStock',
-      url: `${SITE_URL}/product/${product.id}`,
+      url: productUrl,
       seller: {
         '@type': 'Organization',
         name: LEGAL_NAME,

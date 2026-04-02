@@ -3,6 +3,7 @@ import { Link } from 'react-router';
 import { supabase, type ProductRow } from '../../lib/supabase';
 import { Search, Star, X, Check, RefreshCw, ExternalLink, SlidersHorizontal } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
+import { buildProductPath } from '../lib/product-url';
 
 type Row = Pick<ProductRow, 'id' | 'name_ro' | 'name_ru' | 'category' | 'price' | 'sku' | 'image_url' | 'featured' | 'brand'>;
 
@@ -346,7 +347,10 @@ export function AdminFeatured() {
                       </span>
                     </button>
                     <Link
-                      to={`/product/${product.id}`}
+                      to={buildProductPath({
+                        id: product.id,
+                        name: { ro: product.name_ro, ru: product.name_ru || product.name_ro },
+                      })}
                       target="_blank"
                       className="flex items-center justify-center w-9 border-l border-gray-100 text-gray-300 hover:text-black transition-colors"
                     >

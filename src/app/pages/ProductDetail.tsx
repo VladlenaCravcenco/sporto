@@ -18,6 +18,7 @@ import { SeoHead, buildProductJsonLd, buildBreadcrumbJsonLd } from '../component
 import { ServicesBento } from '../components/ServicesBento';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
+import { buildProductPath, extractProductIdFromParam } from '../lib/product-url';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -98,7 +99,7 @@ function BrandCarousel({
           return (
             <Link
               key={p.id}
-              to={`/product/${p.id}`}
+              to={buildProductPath(p)}
               className="group flex-shrink-0 border border-gray-100 bg-white hover:border-black transition-colors duration-200 flex flex-col"
               style={{ width: `calc((100% - ${(visible - 1) * (window?.innerWidth < 640 ? 8 : 12)}px) / ${visible})` }}
             >
@@ -211,15 +212,24 @@ function ServicesBentoSection({ t }: { t: (k: string) => string }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function ProductDetail() {
   const { id } = useParams();
+  const resolvedProductId = extractProductIdFromParam(id);
   const navigate = useNavigate();
   const { language, t } = useLanguage();
   const { addToCart, isInCart } = useCart();
 
   // ── All hooks at top level ──
   const { product, loading, error } = useSupabaseProduct(id);
-  const { products: brandProducts } = useBrandProducts(product?.brand, id);
+  const { products: brandProducts } = useBrandProducts(product?.brand, product?.id ?? resolvedProductId);
   const { brand: brandData } = useBrandByName(product?.brand);
   const inCart = product ? isInCart(product.id) : false;
+
+  useEffect(() => {
+    if (!product || !id) return;
+    const canonicalSlug = buildProductPath(product).replace('/product/', '');
+    if (id !== canonicalSlug) {
+      navigate(buildProductPath(product), { replace: true });
+    }
+  }, [product, id, navigate]);
 
   if (loading) {
     return (
@@ -288,12 +298,13 @@ export function ProductDetail() {
             : `Купить ${product.name.ru} по оптовым ценам. ${product.brand ? `Бренд: ${product.brand}.` : ''} Доставка по Молдове.`)
         }
         keywords={`${product.name.ro}, ${product.name.ru}${product.brand ? `, ${product.brand}` : ''}${product.sku ? `, ${product.sku}` : ''}, echipament sportiv Moldova, спортивное оборудование Молдова`}
-        canonical={`/product/${product.id}`}
+        canonical={buildProductPath(product)}
         ogImage={product.image || undefined}
         lang={language as 'ro' | 'ru'}
         jsonLd={[
           buildProductJsonLd({
             ...product,
+            url: `https://www.sporto.md${buildProductPath(product)}`,
             availability: isProductInStock(product)
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
@@ -302,7 +313,7 @@ export function ProductDetail() {
             { name: language === 'ro' ? 'Acasă' : 'Главная', url: 'https://www.sporto.md/' },
             { name: language === 'ro' ? 'Catalog' : 'Каталог', url: 'https://www.sporto.md/catalog' },
             ...(category ? [{ name: category.name[language as Language], url: `https://www.sporto.md/catalog?category=${category.id}` }] : []),
-            { name: product.name[language as Language], url: `https://www.sporto.md/product/${product.id}` },
+            { name: product.name[language as Language], url: `https://www.sporto.md${buildProductPath(product)}` },
           ]),
         ]}
       />
