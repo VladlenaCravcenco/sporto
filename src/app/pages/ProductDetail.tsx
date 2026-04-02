@@ -293,10 +293,10 @@ export function ProductDetail() {
         jsonLd={[
           buildProductJsonLd(product),
           buildBreadcrumbJsonLd([
-            { name: language === 'ro' ? 'Acasă' : 'Главная', url: 'https://sportosfera.md/' },
-            { name: language === 'ro' ? 'Catalog' : 'Каталог', url: 'https://sportosfera.md/catalog' },
-            ...(category ? [{ name: category.name[language as Language], url: `https://sportosfera.md/catalog?category=${category.id}` }] : []),
-            { name: product.name[language as Language], url: `https://sportosfera.md/product/${product.id}` },
+            { name: language === 'ro' ? 'Acasă' : 'Главная', url: 'https://www.sporto.md/' },
+            { name: language === 'ro' ? 'Catalog' : 'Каталог', url: 'https://www.sporto.md/catalog' },
+            ...(category ? [{ name: category.name[language as Language], url: `https://www.sporto.md/catalog?category=${category.id}` }] : []),
+            { name: product.name[language as Language], url: `https://www.sporto.md/product/${product.id}` },
           ]),
         ]}
       />

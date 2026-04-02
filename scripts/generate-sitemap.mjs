@@ -9,7 +9,7 @@ const rootDir = path.resolve(__dirname, '..');
 const publicDir = path.join(rootDir, 'public');
 const sitemapPath = path.join(publicDir, 'sitemap.xml');
 
-const siteUrl = 'https://sportosfera.md';
+const siteUrl = 'https://www.sporto.md';
 const generatedAt = new Date().toISOString();
 
 const supabaseUrl =

@@ -14,7 +14,7 @@ interface SeoHeadProps {
 
 const SITE_NAME    = 'Sporto';               // городское / торговое название
 const LEGAL_NAME   = 'SPORTOSFERA S.R.L.';   // юридическое название
-const SITE_URL     = 'https://sportosfera.md';
+const SITE_URL     = 'https://www.sporto.md';
 const DEFAULT_OG   = `${SITE_URL}/og-image.jpg`;
 
 // ── Base JSON-LD schemas injected on every page ───────────────────────────────

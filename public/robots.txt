@@ -14,4 +14,4 @@ Disallow: /account
 Disallow: /order-request
 
 # Sitemap
-Sitemap: https://sportosfera.md/sitemap.xml
+Sitemap: https://www.sporto.md/sitemap.xml
