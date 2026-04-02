@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
@@ -46,25 +50,6 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=86400"
-        }
-      ]
-    },
-    {
-      "routes": [
-        {
-          "src": "/sitemap.xml",
-          "dest": "/api/sitemap"
-        }
-      ],
-      "headers": [
-        {
-          "source": "/(.*)",
-          "headers": [
-            {
-              "key": "X-Frame-Options",
-              "value": "DENY"
-            }
-          ]
         }
       ]
     },
