@@ -602,7 +602,7 @@ export function AdminCategories() {
 
                       {/* Actions */}
                       <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                        <button onClick={() => toggleActive(cat)} className={`w-8 h-5 rounded-full flex items-center flex-shrink-0 transition-colors hidden sm:flex ${(cat.active ?? true) ? 'bg-black' : 'bg-gray-200'}`}>
+                        <button onClick={() => toggleActive(cat)} className={`w-8 h-5 rounded-full items-center flex-shrink-0 transition-colors hidden sm:flex ${(cat.active ?? true) ? 'bg-black' : 'bg-gray-200'}`}>
                           <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${(cat.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
                         </button>
                         <button onClick={() => { setExpandedCat(cat.id); openEdit({ type: 'new-sub', catSlug: cat.slug, catName: cat.name_ro }); }} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-black hover:bg-gray-100 transition-colors" title="Adaugă subcategorie">
