@@ -55,6 +55,17 @@
           "src": "/sitemap.xml",
           "dest": "/api/sitemap"
         }
+      ],
+      "headers": [
+        {
+          "source": "/(.*)",
+          "headers": [
+            {
+              "key": "X-Frame-Options",
+              "value": "DENY"
+            }
+          ]
+        }
       ]
     },
     {
