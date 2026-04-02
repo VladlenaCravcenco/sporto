@@ -339,6 +339,7 @@ export function buildProductJsonLd(product: {
   image: string;
   sku?: string;
   brand?: string;
+  availability?: 'https://schema.org/InStock' | 'https://schema.org/OutOfStock';
 }) {
   return {
     '@context': 'https://schema.org',
@@ -355,7 +356,7 @@ export function buildProductJsonLd(product: {
       '@type': 'Offer',
       price: product.price,
       priceCurrency: 'MDL',
-      availability: 'https://schema.org/InStock',
+      availability: product.availability || 'https://schema.org/InStock',
       url: `${SITE_URL}/product/${product.id}`,
       seller: {
         '@type': 'Organization',

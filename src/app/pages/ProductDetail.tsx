@@ -17,6 +17,7 @@ import type { Product } from '../data/products';
 import { SeoHead, buildProductJsonLd, buildBreadcrumbJsonLd } from '../components/SeoHead';
 import { ServicesBento } from '../components/ServicesBento';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
+import { isProductInStock } from '../lib/productStock';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -291,7 +292,12 @@ export function ProductDetail() {
         ogImage={product.image || undefined}
         lang={language as 'ro' | 'ru'}
         jsonLd={[
-          buildProductJsonLd(product),
+          buildProductJsonLd({
+            ...product,
+            availability: isProductInStock(product)
+              ? 'https://schema.org/InStock'
+              : 'https://schema.org/OutOfStock',
+          }),
           buildBreadcrumbJsonLd([
             { name: language === 'ro' ? 'Acasă' : 'Главная', url: 'https://www.sporto.md/' },
             { name: language === 'ro' ? 'Catalog' : 'Каталог', url: 'https://www.sporto.md/catalog' },

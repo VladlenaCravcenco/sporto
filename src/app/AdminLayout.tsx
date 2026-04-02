@@ -11,6 +11,7 @@ import { useAdminNotifications } from './hooks/useAdminNotifications';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import { AdminLangProvider, useAdminLang } from './contexts/AdminLangContext';
+import { SeoHead } from './components/SeoHead';
 
 function AdminLayoutInner() {
   const navigate   = useNavigate();
@@ -132,7 +133,9 @@ function AdminLayoutInner() {
   if (!authed) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <>
+      <SeoHead title="Admin | Sporto" canonical="/admin" noIndex />
+      <div className="min-h-screen bg-gray-50 flex flex-col">
 
       {/* ── TOP NAV ─────────────────────────────────────────────────────────── */}
       <nav ref={navRef} className="bg-black text-white sticky top-0 z-50 flex-shrink-0">
@@ -390,7 +393,8 @@ function AdminLayoutInner() {
       </div>
 
       <Toaster position="bottom-right" />
-    </div>
+      </div>
+    </>
   );
 }
 

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { sendAdminOrderNotification, sendOrderConfirmation } from '../../lib/emailService';
+import { SeoHead } from '../components/SeoHead';
 
 type AuthTab = 'new' | 'login';
 type Step = 'cart' | 'success';
@@ -334,6 +335,7 @@ export function OrderRequest() {
   // ── Cart screen ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-white">
+      <SeoHead title="Order Request | Sporto" canonical="/order-request" noIndex lang={language as Language} />
       {/* Header */}
       <div className="bg-black text-white">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">

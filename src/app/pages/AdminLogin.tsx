@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router';
 import { loginAdmin, isAdminLoggedIn } from '../../lib/adminAuth';
 import { Lock, Eye, EyeOff, AlertCircle, Mail } from 'lucide-react';
 import { Logo } from '../components/Logo';
+import { SeoHead } from '../components/SeoHead';
 
 export function AdminLogin() {
   const [email, setEmail]       = useState('');
@@ -36,6 +37,7 @@ export function AdminLogin() {
 
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
+      <SeoHead title="Admin Login | Sporto" canonical="/admin/login" noIndex />
 
       {/* Grid pattern */}
       <svg className="absolute inset-0 w-full h-full opacity-[0.03]" xmlns="http://www.w3.org/2000/svg">

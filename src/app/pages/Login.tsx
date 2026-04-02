@@ -5,6 +5,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Label } from '../components/ui/label';
+import { SeoHead } from '../components/SeoHead';
 import { toast } from 'sonner';
 
 export function Login() {
@@ -38,6 +39,7 @@ export function Login() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+      <SeoHead title="Login | Sporto" canonical="/login" noIndex lang={language as 'ro' | 'ru'} />
       <div className="max-w-md w-full">
         <div className="bg-white border border-gray-200 p-8">
           <div className="mb-8">

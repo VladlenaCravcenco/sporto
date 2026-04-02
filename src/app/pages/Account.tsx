@@ -4,6 +4,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
 import { supabase } from '../../lib/supabase';
+import { SeoHead } from '../components/SeoHead';
 import {
   User, Building2, Phone, Mail, MapPin, Lock,
   LogOut, ShoppingCart, ArrowRight, Check, AlertCircle,
@@ -245,6 +246,7 @@ export function Account() {
 
   return (
     <div className="min-h-screen bg-white text-black">
+      <SeoHead title="Account | Sporto" canonical="/account" noIndex lang={lang} />
       <div className="max-w-[1600px] mx-auto px-6 lg:px-16 py-16">
 
         {/* ── PAGE HEADER ───────────────────────────────────────────────────── */}

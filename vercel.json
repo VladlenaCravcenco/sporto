@@ -5,7 +5,79 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/((?!.*\\.).*)",
+      "source": "/",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/catalog",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/product/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/brands/(.*)",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/register",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/forgot-password",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/verify",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/account",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/turnkey-solutions",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/maintenance-service",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/order-request",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/contacts",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/about",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terms-of-cooperation",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/delivery-terms",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/privacy-policy",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/admin/(.*)",
       "destination": "/index.html"
     }
   ],

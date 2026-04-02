@@ -2,6 +2,7 @@ import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { useLanguage } from '../contexts/LanguageContext';
 import { supabase } from '../../lib/supabase';
+import { SeoHead } from '../components/SeoHead';
 import { ArrowRight, ArrowLeft, Mail, Check, AlertCircle } from 'lucide-react';
 
 type Lang = 'ro' | 'ru';
@@ -70,6 +71,7 @@ export function ForgotPassword() {
 
   return (
     <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16">
+      <SeoHead title="Forgot Password | Sporto" canonical="/forgot-password" noIndex lang={lang} />
       <div className="w-full max-w-md">
 
         <div className="border border-gray-100">

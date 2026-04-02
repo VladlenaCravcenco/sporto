@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { supabase } from '../../lib/supabase';
+import { SeoHead } from '../components/SeoHead';
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 
 type State = 'loading' | 'success' | 'already' | 'invalid';
@@ -36,6 +37,7 @@ export function EmailVerify() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex items-center justify-center p-6">
+      <SeoHead title="Email Verification | Sporto" canonical="/verify" noIndex />
       <div className="max-w-sm w-full bg-white border border-gray-200 p-8 text-center">
 
         {/* Brand */}
