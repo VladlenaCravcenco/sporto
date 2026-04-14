@@ -270,6 +270,15 @@ export function ProductDetail() {
   const subcategory = category?.subcategories.find((s) => s.id === product.subcategory);
   const currentPrice = getCurrentPrice(product);
   const showSalePrice = hasSalePrice(product);
+  const productPath = buildProductPath(product);
+  const productUrl = `https://www.sporto.md${productPath}`;
+  const productDescription =
+    product.description[language as Language] ||
+    product.description.ro ||
+    product.description.ru ||
+    (language === 'ro'
+      ? `Descoperă ${product.name.ro} disponibil la comandă în Moldova.`
+      : `Ознакомьтесь с ${product.name.ru} с доставкой по Молдове.`);
 
   const handleAddToCart = () => {
     addToCart({
@@ -291,20 +300,18 @@ export function ProductDetail() {
     <div className="min-h-screen bg-white">
       <SeoHead
         title={`${product.name[language as Language]} | SPORTOSFERA`}
-        description={
-          product.description[language as Language] ||
-          (language === 'ro'
-            ? `Cumpărați ${product.name.ro} la prețuri angro. ${product.brand ? `Brand: ${product.brand}.` : ''} Disponibil în Moldova.`
-            : `Купить ${product.name.ru} по оптовым ценам. ${product.brand ? `Бренд: ${product.brand}.` : ''} Доставка по Молдове.`)
-        }
+        description={productDescription}
         keywords={`${product.name.ro}, ${product.name.ru}${product.brand ? `, ${product.brand}` : ''}${product.sku ? `, ${product.sku}` : ''}, echipament sportiv Moldova, спортивное оборудование Молдова`}
-        canonical={buildProductPath(product)}
+        canonical={productPath}
         ogImage={product.image || undefined}
         lang={language as 'ro' | 'ru'}
         jsonLd={[
           buildProductJsonLd({
             ...product,
-            url: `https://www.sporto.md${buildProductPath(product)}?lang=${language}`,
+            price: currentPrice,
+            image: product.image || undefined,
+            images: product.images,
+            url: productUrl,
             availability: isProductInStock(product)
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
@@ -313,7 +320,7 @@ export function ProductDetail() {
             { name: language === 'ro' ? 'Acasă' : 'Главная', url: `https://www.sporto.md/?lang=${language}` },
             { name: language === 'ro' ? 'Catalog' : 'Каталог', url: `https://www.sporto.md/catalog?lang=${language}` },
             ...(category ? [{ name: category.name[language as Language], url: `https://www.sporto.md/catalog?category=${category.id}&lang=${language}` }] : []),
-            { name: product.name[language as Language], url: `https://www.sporto.md${buildProductPath(product)}?lang=${language}` },
+            { name: product.name[language as Language], url: productUrl },
           ]),
         ]}
       />

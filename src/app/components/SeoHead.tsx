@@ -87,6 +87,13 @@ function withLangQuery(path: string, lang: 'ro' | 'ru') {
   return url.toString();
 }
 
+function buildCanonicalUrl(path: string) {
+  const url = new URL(path, SITE_URL);
+  url.search = '';
+  url.hash = '';
+  return url.toString();
+}
+
 export function SeoHead({
   title,
   description,
@@ -103,6 +110,7 @@ export function SeoHead({
   const finalKw    = keywords    || defaults.keywords;
   const finalOg    = ogImage     || DEFAULT_OG;
   const pagePath   = canonical || '/';
+  const canonicalUrl = buildCanonicalUrl(pagePath);
   const pageUrl    = withLangQuery(pagePath, lang);
   const alternateRo = withLangQuery(pagePath, 'ro');
   const alternateRu = withLangQuery(pagePath, 'ru');
@@ -167,7 +175,7 @@ export function SeoHead({
     setMeta('meta[name="twitter:image"]',       finalOg);
 
     // ── Canonical ──────────────────────────────────────────────────────────
-    if (canonical) setLink('canonical', pageUrl);
+    if (canonical) setLink('canonical', canonicalUrl);
     if (canonical && !noIndex) {
       setLink('alternate', alternateRo, 'ro-MD');
       setLink('alternate', alternateRu, 'ru-MD');
@@ -194,7 +202,7 @@ export function SeoHead({
     return () => {
       document.querySelectorAll('script[data-seohead]').forEach(el => el.remove());
     };
-  }, [finalTitle, finalDesc, finalKw, canonical, finalOg, lang, noIndex, pageUrl, alternateRo, alternateRu, jsonLd]);
+  }, [finalTitle, finalDesc, finalKw, canonical, canonicalUrl, finalOg, lang, noIndex, pageUrl, alternateRo, alternateRu, jsonLd]);
 
   return null;
 }
@@ -354,23 +362,73 @@ export function buildProductJsonLd(product: {
   name: { ro: string; ru: string };
   description: { ro: string; ru: string };
   price: number;
-  image: string;
+  image?: string;
+  images?: string[];
   sku?: string;
   brand?: string;
   availability?: 'https://schema.org/InStock' | 'https://schema.org/OutOfStock';
   url?: string;
+  aggregateRating?: {
+    ratingValue: number;
+    reviewCount: number;
+    bestRating?: number;
+    worstRating?: number;
+  };
+  review?: Array<{
+    author: string;
+    reviewBody: string;
+    reviewRating?: {
+      ratingValue: number;
+      bestRating?: number;
+      worstRating?: number;
+    };
+    datePublished?: string;
+  }>;
 }) {
-  const productUrl = product.url || `${SITE_URL}/product/${product.id}`;
+  const productUrl = buildCanonicalUrl(product.url || `/product/${product.id}`);
+  const productDescription =
+    product.description.ro ||
+    product.description.ru ||
+    `Echipament sportiv disponibil la comandă prin ${SITE_NAME}.`;
+  const productBrand = product.brand || SITE_NAME;
+  const productImages = [...new Set([...(product.images || []), product.image || DEFAULT_OG].filter(Boolean))];
+
   return {
     '@context': 'https://schema.org',
     '@type': 'Product',
     name: product.name.ro,
-    description: product.description.ro || product.description.ru,
-    image: product.image || DEFAULT_OG,
+    image: productImages,
+    description: productDescription,
     sku: product.sku,
     url: productUrl,
-    ...(product.brand && {
-      brand: { '@type': 'Brand', name: product.brand },
+    brand: { '@type': 'Brand', name: productBrand },
+    ...(product.aggregateRating && {
+      aggregateRating: {
+        '@type': 'AggregateRating',
+        ratingValue: product.aggregateRating.ratingValue,
+        reviewCount: product.aggregateRating.reviewCount,
+        ...(product.aggregateRating.bestRating && { bestRating: product.aggregateRating.bestRating }),
+        ...(product.aggregateRating.worstRating && { worstRating: product.aggregateRating.worstRating }),
+      },
+    }),
+    ...(product.review?.length && {
+      review: product.review.map((item) => ({
+        '@type': 'Review',
+        author: {
+          '@type': 'Person',
+          name: item.author,
+        },
+        reviewBody: item.reviewBody,
+        ...(item.datePublished && { datePublished: item.datePublished }),
+        ...(item.reviewRating && {
+          reviewRating: {
+            '@type': 'Rating',
+            ratingValue: item.reviewRating.ratingValue,
+            ...(item.reviewRating.bestRating && { bestRating: item.reviewRating.bestRating }),
+            ...(item.reviewRating.worstRating && { worstRating: item.reviewRating.worstRating }),
+          },
+        }),
+      })),
     }),
     offers: {
       '@type': 'Offer',
@@ -378,6 +436,41 @@ export function buildProductJsonLd(product: {
       priceCurrency: 'MDL',
       availability: product.availability || 'https://schema.org/InStock',
       url: productUrl,
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'MD',
+        },
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: '0',
+          currency: 'MDL',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 0,
+            maxValue: 2,
+            unitCode: 'DAY',
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 1,
+            maxValue: 5,
+            unitCode: 'DAY',
+          },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'MD',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+      },
       seller: {
         '@type': 'Organization',
         name: LEGAL_NAME,
