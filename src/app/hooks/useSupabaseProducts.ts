@@ -155,17 +155,24 @@ export function useSupabaseProduct(id: string | undefined) {
   const resolvedId = extractProductIdFromParam(id);
 
   useEffect(() => {
-    if (!resolvedId) { setLoading(false); return; }
+    if (!resolvedId) {
+      setProduct(null);
+      setError(null);
+      setLoading(false);
+      return;
+    }
     let cancelled = false;
 
     const CACHE_KEY = `products:id:${resolvedId}`;
     const cached = cacheGet<Product>(CACHE_KEY);
+    setError(null);
     if (cached) {
       setProduct(cached);
       setLoading(false);
       return;
     }
 
+    setProduct(null);
     setLoading(true);
 
     (async () => {
