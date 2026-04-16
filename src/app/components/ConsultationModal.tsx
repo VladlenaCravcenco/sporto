@@ -5,6 +5,7 @@ import emailjs from '@emailjs/browser';
 import { PhoneInput } from './PhoneInput';
 import { supabase } from '../../lib/supabase';
 import { isEmailConfigured, EMAILJS } from '../../lib/emailService';
+import { trackGoogleAdsLead } from '../../lib/googleAds';
 
 interface ConsultationModalProps {
   open: boolean;
@@ -237,6 +238,7 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
       }
     } catch { /* silent */ }
 
+    trackGoogleAdsLead();
     setSubmitting(false);
     setDone(true);
   };

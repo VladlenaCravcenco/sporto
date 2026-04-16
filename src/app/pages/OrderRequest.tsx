@@ -13,6 +13,7 @@ import {
 import { toast } from 'sonner';
 import { sendAdminOrderNotification, sendOrderConfirmation } from '../../lib/emailService';
 import { SeoHead } from '../components/SeoHead';
+import { trackGoogleAdsLead } from '../../lib/googleAds';
 
 type AuthTab = 'new' | 'login';
 type Step = 'cart' | 'success';
@@ -231,6 +232,7 @@ export function OrderRequest() {
       notes:           guest.notes,
     });
     clearCart();
+    trackGoogleAdsLead();
     setLoading(false);
     setStep('success');
   };
@@ -253,6 +255,7 @@ export function OrderRequest() {
     }
     clearCart();
     setNotes('');
+    trackGoogleAdsLead();
     setLoading(false);
     setStep('success');
   };
@@ -286,6 +289,7 @@ export function OrderRequest() {
       notes:           '',
     });
     clearCart();
+    trackGoogleAdsLead();
     setLoading(false);
     setStep('success');
   };

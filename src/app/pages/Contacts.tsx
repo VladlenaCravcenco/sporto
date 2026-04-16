@@ -24,6 +24,7 @@ import emailjs from '@emailjs/browser';
 import { PhoneInput } from '../components/PhoneInput';
 import { SeoHead, SEO_PAGES, LOCAL_BUSINESS_JSON_LD } from '../components/SeoHead';
 import { supabase } from '../../lib/supabase';
+import { trackGoogleAdsLead } from '../../lib/googleAds';
 
 type Lang = 'ro' | 'ru';
 
@@ -289,6 +290,7 @@ export function Contacts() {
       }
     } catch {}
 
+    trackGoogleAdsLead();
     setSubmitting(false);
     setDone(true);
   };
