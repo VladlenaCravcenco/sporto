@@ -398,8 +398,16 @@ export function OrderRequest() {
               <div className="divide-y divide-gray-100">
                 {cart.map((item) => (
                   <div key={item.id} className="flex gap-4 p-5">
-                    <div className="w-16 h-16 flex-shrink-0 bg-gray-50 border border-gray-100 flex items-center justify-center">
-                      <Package className="w-6 h-6 text-gray-300" />
+                    <div className="w-16 h-16 flex-shrink-0 bg-gray-50 border border-gray-100 overflow-hidden rounded-sm flex items-center justify-center">
+                      {item.image ? (
+                        <img
+                          src={item.image}
+                          alt={item.name[language as Language]}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <Package className="w-6 h-6 text-gray-300" />
+                      )}
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 mb-2 leading-snug">
