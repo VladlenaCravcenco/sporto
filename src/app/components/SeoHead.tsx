@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { Helmet } from 'react-helmet-async';
 
 interface SeoHeadProps {
   title?: string;
@@ -115,96 +115,52 @@ export function SeoHead({
   const alternateRo = withLangQuery(pagePath, 'ro');
   const alternateRu = withLangQuery(pagePath, 'ru');
 
-  useEffect(() => {
-    // ── Title ──────────────────────────────────────────────────────────────
-    document.title = finalTitle;
-    document.documentElement.lang = lang;
-
-    // ── Helper: upsert <meta> ──────────────────────────────────────────────
-    const setMeta = (selector: string, content: string) => {
-      let el = document.querySelector(selector) as HTMLMetaElement | null;
-      if (!el) {
-        el = document.createElement('meta');
-        const attr = selector.includes('[name')     ? 'name'
-                   : selector.includes('[property') ? 'property'
-                   : 'name';
-        const val = selector.match(/["']([^"']+)["']/)?.[1] || '';
-        el.setAttribute(attr, val);
-        document.head.appendChild(el);
-      }
-      el.setAttribute('content', content);
-    };
-
-    // ── Helper: upsert <link> ──────────────────────────────────────────────
-    const setLink = (rel: string, href: string, hreflang?: string) => {
-      const selector = hreflang
-        ? `link[rel="${rel}"][hreflang="${hreflang}"]`
-        : `link[rel="${rel}"]:not([hreflang])`;
-      let el = document.querySelector(selector) as HTMLLinkElement | null;
-      if (!el) {
-        el = document.createElement('link');
-        el.rel = rel;
-        if (hreflang) el.hreflang = hreflang;
-        document.head.appendChild(el);
-      }
-      el.href = href;
-    };
-
-    // ── Standard meta ──────────────────────────────────────────────────────
-    setMeta('meta[name="description"]',   finalDesc);
-    setMeta('meta[name="keywords"]',      finalKw);
-    setMeta('meta[name="robots"]',        noIndex ? 'noindex,nofollow' : 'index,follow');
-    setMeta('meta[name="author"]',        `${SITE_NAME} / ${LEGAL_NAME}`);
-    setMeta('meta[name="geo.region"]',    'MD');
-    setMeta('meta[name="geo.placename"]', 'Chișinău, Moldova');
-
-    // ── Open Graph ─────────────────────────────────────────────────────────
-    setMeta('meta[property="og:title"]',         finalTitle);
-    setMeta('meta[property="og:description"]',   finalDesc);
-    setMeta('meta[property="og:image"]',         finalOg);
-    setMeta('meta[property="og:url"]',           pageUrl);
-    setMeta('meta[property="og:type"]',          'website');
-    setMeta('meta[property="og:site_name"]',     SITE_NAME);
-    setMeta('meta[property="og:locale"]',        lang === 'ro' ? 'ro_MD' : 'ru_MD');
-    setMeta('meta[property="og:locale:alternate"]', lang === 'ro' ? 'ru_MD' : 'ro_MD');
-
-    // ── Twitter / X Card ───────────────────────────────────────────────────
-    setMeta('meta[name="twitter:card"]',        'summary_large_image');
-    setMeta('meta[name="twitter:title"]',       finalTitle);
-    setMeta('meta[name="twitter:description"]', finalDesc);
-    setMeta('meta[name="twitter:image"]',       finalOg);
-
-    // ── Canonical ──────────────────────────────────────────────────────────
-    if (canonical) setLink('canonical', canonicalUrl);
-    if (canonical && !noIndex) {
-      setLink('alternate', alternateRo, 'ro-MD');
-      setLink('alternate', alternateRu, 'ru-MD');
-      setLink('alternate', alternateRo, 'x-default');
+  // Combine base schemas with any additional ones
+  const allJsonLd = [...BASE_JSON_LD];
+  if (jsonLd) {
+    if (Array.isArray(jsonLd)) {
+      allJsonLd.push(...jsonLd);
+    } else {
+      allJsonLd.push(jsonLd);
     }
+  }
 
-    // ── JSON-LD Structured Data ────────────────────────────────────────────
-    // Remove existing injected scripts to avoid duplicates on navigation
-    document.querySelectorAll('script[data-seohead]').forEach(el => el.remove());
+  return (
+    <Helmet
+      htmlAttributes={{ lang }}
+      title={finalTitle}
+      meta={[
+        { name: 'description', content: finalDesc },
+        { name: 'keywords', content: finalKw },
+        { name: 'robots', content: noIndex ? 'noindex,nofollow' : 'index,follow' },
 
-    const schemas = [
-      ...BASE_JSON_LD,
-      ...(jsonLd ? (Array.isArray(jsonLd) ? jsonLd : [jsonLd]) : []),
-    ];
+        // Open Graph
+        { property: 'og:title', content: finalTitle },
+        { property: 'og:description', content: finalDesc },
+        { property: 'og:image', content: finalOg },
+        { property: 'og:url', content: pageUrl },
+        { property: 'og:type', content: 'website' },
+        { property: 'og:site_name', content: SITE_NAME },
 
-    schemas.forEach((schema) => {
-      const script = document.createElement('script');
-      script.type = 'application/ld+json';
-      script.setAttribute('data-seohead', 'true');
-      script.textContent = JSON.stringify(schema);
-      document.head.appendChild(script);
-    });
-
-    return () => {
-      document.querySelectorAll('script[data-seohead]').forEach(el => el.remove());
-    };
-  }, [finalTitle, finalDesc, finalKw, canonical, canonicalUrl, finalOg, lang, noIndex, pageUrl, alternateRo, alternateRu, jsonLd]);
-
-  return null;
+        // Twitter Card
+        { name: 'twitter:card', content: 'summary_large_image' },
+        { name: 'twitter:title', content: finalTitle },
+        { name: 'twitter:description', content: finalDesc },
+        { name: 'twitter:image', content: finalOg },
+      ]}
+      link={[
+        { rel: 'canonical', href: canonicalUrl },
+        { rel: 'alternate', href: alternateRo, hrefLang: 'ro' },
+        { rel: 'alternate', href: alternateRu, hrefLang: 'ru' },
+      ]}
+      script={[
+        {
+          type: 'application/ld+json',
+          innerHTML: JSON.stringify(allJsonLd),
+        },
+      ]}
+    />
+  );
 }
 
 // ── Page-specific SEO configs ─────────────────────────────────────────────────
