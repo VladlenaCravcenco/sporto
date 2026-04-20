@@ -14,7 +14,7 @@
     },
     {
       "source": "/product/:slug",
-      "destination": "/api/product?slug=:slug"
+      "destination": "/product/:slug.html"
     },
     {
       "source": "/brands/(.*)",

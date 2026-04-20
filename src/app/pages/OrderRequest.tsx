@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { sendAdminOrderNotification, sendOrderConfirmation } from '../../lib/emailService';
 import { SeoHead } from '../components/SeoHead';
 import { trackGoogleAdsLead } from '../../lib/googleAds';
+import { productImages } from '../data/images';
 
 type AuthTab = 'new' | 'login';
 type Step = 'cart' | 'success';
@@ -398,9 +399,11 @@ export function OrderRequest() {
               <div className="divide-y divide-gray-100">
                 {cart.map((item) => (
                   <div key={item.id} className="flex gap-4 p-5">
-                    <div className="w-16 h-16 flex-shrink-0 bg-gray-50 border border-gray-100 flex items-center justify-center">
-                      <Package className="w-6 h-6 text-gray-300" />
-                    </div>
+                    <img
+                      src={productImages[item.image] || 'https://via.placeholder.com/64x64'}
+                      alt={item.name[language as Language]}
+                      className="w-16 h-16 object-cover border border-gray-100 flex-shrink-0"
+                    />
                     <div className="flex-1 min-w-0">
                       <p className="text-sm text-gray-900 mb-2 leading-snug">
                         {item.name[language as Language]}
