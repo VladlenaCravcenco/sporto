@@ -1,39 +1,35 @@
 import type { Product } from '../data/products';
 
-function slugify(input: string): string {
-  return input
-    .toLowerCase()
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '-');
+function decodePathSegment(value: string): string {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return value;
+  }
 }
 
-/**
- * Extracts the product identifier (SKU or ID) from URL param.
- * URL format: "название-товара-sku" or "название-товара-id" (for fallback)
- * Returns the last part after final dash: SKU or UUID
- */
+function normalizeKey(value: string): string {
+  return value.trim();
+}
+
+export function getProductRouteKey(product: Pick<Product, 'id' | 'sku'>): string {
+  const sku = normalizeKey(product.sku || '');
+  return sku || String(product.id);
+}
+
 export function extractProductIdFromParam(value: string | undefined): string | undefined {
   if (!value) return undefined;
-  // Get the last part after the final dash — this is either SKU or UUID
-  const parts = value.split('-');
-  return parts[parts.length - 1] || value;
+  const decoded = normalizeKey(decodePathSegment(value));
+  if (!decoded) return undefined;
+
+  const legacyParts = decoded.split('--');
+  return legacyParts[legacyParts.length - 1] || decoded;
 }
 
-/**
- * Builds URL slug: "название-товара-sku" (short & beautiful)
- * Falls back to ID only if no SKU available
- */
-export function buildProductSlug(product: Pick<Product, 'id' | 'name' | 'sku'>): string {
-  const baseName = product.name.ro || product.name.ru || product.id;
-  const slug = slugify(baseName);
-  // Use SKU if available (shorter & better for SEO), fallback to ID
-  const identifier = product.sku || product.id;
-  return slug ? `${slug}-${identifier}` : identifier;
+export function buildProductSlug(product: Pick<Product, 'id' | 'sku'>): string {
+  return encodeURIComponent(getProductRouteKey(product));
 }
 
-export function buildProductPath(product: Pick<Product, 'id' | 'name' | 'sku'>): string {
+export function buildProductPath(product: Pick<Product, 'id' | 'sku'>): string {
   return `/product/${buildProductSlug(product)}`;
 }

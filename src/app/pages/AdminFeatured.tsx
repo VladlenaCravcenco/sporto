@@ -349,7 +349,6 @@ export function AdminFeatured() {
                     <Link
                       to={buildProductPath({
                         id: product.id,
-                        sku: product.sku || undefined,
                         name: { ro: product.name_ro, ru: product.name_ru || product.name_ro },
                       })}
                       target="_blank"

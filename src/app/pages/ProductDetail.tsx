@@ -224,12 +224,12 @@ export function ProductDetail() {
   const inCart = product ? isInCart(product.id) : false;
 
   useEffect(() => {
-    if (!product || !id || product.id !== resolvedProductId) return;
+    if (!product || !id) return;
     const canonicalSlug = buildProductPath(product).replace('/product/', '');
-    if (id !== canonicalSlug) {
+    if (decodeURIComponent(id) !== decodeURIComponent(canonicalSlug)) {
       navigate(buildProductPath(product), { replace: true });
     }
-  }, [product, id, navigate, resolvedProductId]);
+  }, [product, id, navigate]);
 
   if (loading) {
     return (

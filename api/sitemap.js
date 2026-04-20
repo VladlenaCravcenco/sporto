@@ -33,9 +33,8 @@ function slugify(input) {
 }
 
 function buildProductSlug(product) {
-  const baseName = product.name_ro || product.name_ru || product.id;
-  const slug = slugify(baseName);
-  return slug ? `${slug}--${product.id}` : product.id;
+  const routeKey = String(product.sku || product.id || '').trim();
+  return encodeURIComponent(routeKey);
 }
 
 function escapeXml(value) {
@@ -94,7 +93,7 @@ export default async function handler(req, res) {
     const [productsResult, brandsResult] = await Promise.all([
       supabase
         .from('products')
-        .select('id, updated_at, name_ro, name_ru')
+        .select('id, sku, updated_at, name_ro, name_ru')
         .eq('active', true)
         .order('id', { ascending: true })
         .limit(10000),

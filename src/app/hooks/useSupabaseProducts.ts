@@ -176,17 +176,33 @@ export function useSupabaseProduct(id: string | undefined) {
     setLoading(true);
 
     (async () => {
-      // Try to find by SKU first (new short URLs), then fallback to ID (old URLs & direct ID lookups)
-      const { data, error: err } = await withRetry<ProductRow>(() =>
+      const fetchBySku = () =>
         supabase
           .from('products')
           .select('*')
-          .or(`sku.eq.${resolvedId},id.eq.${resolvedId}`)
-          .single()
-      );
+          .eq('sku', resolvedId)
+          .eq('active', true)
+          .limit(1)
+          .maybeSingle();
+
+      const fetchById = () =>
+        supabase
+          .from('products')
+          .select('*')
+          .eq('id', resolvedId)
+          .eq('active', true)
+          .maybeSingle();
+
+      const { data: skuData, error: skuErr } = await withRetry<ProductRow>(fetchBySku);
+      const { data, error: err } = skuData
+        ? { data: skuData, error: null }
+        : await withRetry<ProductRow>(fetchById);
 
       if (cancelled) return;
-      if (err || !data) {
+      if (skuErr && !skuData) {
+        setError(skuErr.message);
+        setProduct(null);
+      } else if (err || !data) {
         setError(err?.message || 'Not found');
         setProduct(null);
       } else {
