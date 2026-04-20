@@ -13,10 +13,6 @@
       "destination": "/index.html"
     },
     {
-      "source": "/product/(.*)",
-      "destination": "/index.html"
-    },
-    {
       "source": "/brands/(.*)",
       "destination": "/index.html"
     },
