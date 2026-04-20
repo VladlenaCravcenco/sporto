@@ -176,11 +176,12 @@ export function useSupabaseProduct(id: string | undefined) {
     setLoading(true);
 
     (async () => {
+      // Try to find by SKU first (new short URLs), then fallback to ID (old URLs & direct ID lookups)
       const { data, error: err } = await withRetry<ProductRow>(() =>
         supabase
           .from('products')
           .select('*')
-          .eq('id', resolvedId)
+          .or(`sku.eq.${resolvedId},id.eq.${resolvedId}`)
           .single()
       );
 

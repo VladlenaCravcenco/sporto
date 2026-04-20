@@ -1381,6 +1381,7 @@ export function AdminProducts() {
               <a
                 href={buildProductPath({
                   id: editId,
+                  sku: form.sku || undefined,
                   name: {
                     ro: form.name_ro || editId,
                     ru: form.name_ru || form.name_ro || editId,
