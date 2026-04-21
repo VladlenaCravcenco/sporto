@@ -60,6 +60,16 @@ function truncateText(value: string, limit: number): string {
   return `${value.slice(0, Math.max(0, limit - 1)).trim()}…`;
 }
 
+function sanitizeMetaText(value: string | null | undefined): string {
+  if (!value) return '';
+
+  return value
+    .replace(/<[^>]*>/g, ' ')
+    .replace(/[\r\n\t]+/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 function normalizeImageUrl(value: string | null | undefined): string {
   if (!value) return DEFAULT_OG_IMAGE;
   if (value.startsWith('http://') || value.startsWith('https://')) return value;
@@ -75,10 +85,12 @@ function getPrice(product: ProductRow): number | null {
 }
 
 function buildDescription(product: ProductRow): string {
+  const cleanDescription = sanitizeMetaText(product.description_ro || product.description_ru);
+  const price = getPrice(product);
   const parts = [
-    product.description_ro || product.description_ru || '',
-    product.brand ? `Brand: ${product.brand}.` : '',
-    getPrice(product) != null ? `Preț: ${getPrice(product)?.toLocaleString('ro-RO')} MDL.` : '',
+    cleanDescription,
+    product.brand ? `Brand: ${sanitizeMetaText(product.brand)}.` : '',
+    price != null ? `Preț: ${price.toLocaleString('ro-RO')} MDL.` : '',
   ]
     .filter(Boolean)
     .join(' ');
@@ -147,7 +159,7 @@ function renderHtml(slug: string, product: ProductRow | null): string {
 </html>`;
   }
 
-  const name = product.name_ro || product.name_ru || 'Produs Sporto';
+  const name = sanitizeMetaText(product.name_ro || product.name_ru || 'Produs Sporto');
   const title = `${name} | Sporto`;
   const description = buildDescription(product);
   const imageUrl = normalizeImageUrl(product.images?.[0] || product.image_url);
