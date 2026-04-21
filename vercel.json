@@ -5,6 +5,17 @@
       "destination": "/api/sitemap"
     },
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+        }
+      ],
+      "destination": "/api/site-meta"
+    },
+    {
       "source": "/product/:slug/:sku",
       "has": [
         {

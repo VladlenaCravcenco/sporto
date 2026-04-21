@@ -15,7 +15,7 @@ interface SeoHeadProps {
 const SITE_NAME    = 'Sporto';               // городское / торговое название
 const LEGAL_NAME   = 'SPORTOSFERA S.R.L.';   // юридическое название
 const SITE_URL     = 'https://www.sporto.md';
-const DEFAULT_OG   = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_OG   = `${SITE_URL}/favicon.svg`;
 
 // ── Base JSON-LD schemas injected on every page ───────────────────────────────
 const BASE_JSON_LD = [
@@ -68,14 +68,14 @@ const DEFAULT_SEO: Record<'ro' | 'ru', { title: string; description: string; key
   ro: {
     title: 'Sporto — Echipamente Sportive Italiene & Fitness | Chișinău, Moldova',
     description:
-      'Sporto (SPORTOSFERA S.R.L.) — distribuitor B2B, B2C și B2G de echipamente sportive și fitness din Italia și Europa în Moldova. Fondată în 2023 în Chișinău. Aparate cardio, forță, greutăți, echipamente profesionale pentru cluburi și instituții.',
+      'Sporto (SPORTOSFERA S.R.L.) fondată în 2023 în Chișinău. Distribuitor B2C, B2B și B2G de echipamente sportive și fitness din Italia și Europa.',
     keywords:
       'Sporto, Sporto Chisinau, echipament sportiv italian Moldova, aparate fitness italiene Chisinau, SPORTOSFERA, distribuitor sport angro Moldova, echipament fitness profesional, aparate sala fitness, echipament sport B2B, echipamente sportive angro, fitness club echipament italian',
   },
   ru: {
     title: 'Sporto — Итальянское спортивное оборудование & Fitness | Кишинёв, Молдова',
     description:
-      'Sporto (SPORTOSFERA S.R.L.) — дистрибьютор B2B, B2C и B2G итальянского и европейского спортивного и фитнес-оборудования в Молдове. Основана в 2023 году в Кишинёве. Кардио, силовые тренажёры, гантели, профессиональное оборудование для клубов и учреждений.',
+      'Sporto (SPORTOSFERA S.R.L.) основана в 2023 году в Кишинёве. Дистрибьютор B2C, B2B и B2G итальянского и европейского спортивного и фитнес-оборудования.',
     keywords:
       'Sporto, Sporto Кишинёв, итальянское спортивное оборудование Молдова, тренажёры итальянские Кишинёв, SPORTOSFERA, спортивный инвентарь оптом, фитнес оборудование из Италии, тренажёры для фитнес клуба, Sporto Moldova',
   },
@@ -170,14 +170,14 @@ export const SEO_PAGES = {
     ro: {
       title: 'Sporto — Echipamente Sportive Italiene & Fitness | Chișinău Moldova',
       description:
-        'Sporto (SPORTOSFERA S.R.L.) — distribuitor B2B, B2C și B2G de echipamente sportive și fitness din Italia și Europa. Fondată în 2023 în Chișinău. Aparate cardio, forță, greutăți, soluții la cheie pentru cluburi, școli și instituții. Prețuri wholesale, livrare în toată Moldova.',
+        'Sporto (SPORTOSFERA S.R.L.) fondată în 2023 în Chișinău. Distribuitor B2C, B2B și B2G de echipamente sportive și fitness din Italia și Europa.',
       keywords:
         'Sporto, Sporto Chisinau, echipament sportiv italian Moldova, aparate fitness italiene, SPORTOSFERA, distribuitor sport angro, aparate sala fitness Chisinau, echipament club fitness, sport B2B Moldova, aparate cardio italian, greutati profesionale, sala de sport utilaj Chisinau 2023',
     },
     ru: {
       title: 'Sporto — Итальянское спортивное оборудование & Fitness | Кишинёв Молдова',
       description:
-        'Sporto (SPORTOSFERA S.R.L.) — дистрибьютор B2B, B2C и B2G итальянского и европейского спортивного и фитнес-оборудования. Основана в 2023 году в Кишинёве. Кардио, силовые тренажёры, гантели, решения под ключ для клубов, школ и учреждений. Оптовые цены, доставка по всей Молдове.',
+        'Sporto (SPORTOSFERA S.R.L.) основана в 2023 году в Кишинёве. Дистрибьютор B2C, B2B и B2G итальянского и европейского спортивного и фитнес-оборудования.',
       keywords:
         'Sporto, Sporto Кишинёв, итальянские тренажёры Молдова, спортивное оборудование из Италии, SPORTOSFERA, оптом спорт Молдова, фитнес клуб оборудование итальянское, кардио тренажёры итальянские, силовые тренажёры Кишинёв',
     },
