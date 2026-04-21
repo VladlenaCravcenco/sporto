@@ -55,6 +55,7 @@ export function Home() {
 
   const lang = language as Language;
   const seo = SEO_PAGES.home[lang];
+  const canonicalPath = lang === 'ru' ? '/ru' : '/';
 
   const stats = [
     { value: '2023', label: language === 'ro' ? 'Fondată în' : 'Год основания' },
@@ -71,7 +72,7 @@ export function Home() {
         title={seo.title}
         description={seo.description}
         keywords={seo.keywords}
-        canonical="/"
+        canonical={canonicalPath}
         lang={lang}
       />
 

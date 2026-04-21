@@ -15,7 +15,7 @@ interface SeoHeadProps {
 const SITE_NAME    = 'Sporto';               // городское / торговое название
 const LEGAL_NAME   = 'SPORTOSFERA S.R.L.';   // юридическое название
 const SITE_URL     = 'https://www.sporto.md';
-const DEFAULT_OG   = `${SITE_URL}/favicon.svg`;
+const DEFAULT_OG   = `${SITE_URL}/og-site.png`;
 
 // ── Base JSON-LD schemas injected on every page ───────────────────────────────
 const BASE_JSON_LD = [
@@ -81,8 +81,14 @@ const DEFAULT_SEO: Record<'ro' | 'ru', { title: string; description: string; key
   },
 };
 
-function withLangQuery(path: string, lang: 'ro' | 'ru') {
-  const url = new URL(`${SITE_URL}${path}`);
+function buildLocalizedUrl(path: string, lang: 'ro' | 'ru') {
+  const normalizedPath = path === '/ru' ? '/ru' : path || '/';
+
+  if (normalizedPath === '/' || normalizedPath === '/ru') {
+    return `${SITE_URL}${lang === 'ru' ? '/ru' : '/'}`;
+  }
+
+  const url = new URL(`${SITE_URL}${normalizedPath}`);
   url.searchParams.set('lang', lang);
   return url.toString();
 }
@@ -109,11 +115,11 @@ export function SeoHead({
   const finalDesc  = description || defaults.description;
   const finalKw    = keywords    || defaults.keywords;
   const finalOg    = ogImage     || DEFAULT_OG;
-  const pagePath   = canonical || '/';
+  const pagePath   = canonical || (lang === 'ru' ? '/ru' : '/');
   const canonicalUrl = buildCanonicalUrl(pagePath);
-  const pageUrl    = withLangQuery(pagePath, lang);
-  const alternateRo = withLangQuery(pagePath, 'ro');
-  const alternateRu = withLangQuery(pagePath, 'ru');
+  const pageUrl    = buildLocalizedUrl(pagePath, lang);
+  const alternateRo = buildLocalizedUrl(pagePath, 'ro');
+  const alternateRu = buildLocalizedUrl(pagePath, 'ru');
 
   // Combine base schemas with any additional ones
   const allJsonLd = [...BASE_JSON_LD];

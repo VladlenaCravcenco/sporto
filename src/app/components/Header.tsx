@@ -45,6 +45,7 @@ export function Header() {
 
   const showDropdown = searchOpen;
   const showMobileDropdown = mobileSearchOpen;
+  const homePath = language === 'ru' ? '/ru' : '/';
 
   const isActive = (path: string) => location.pathname === path;
 
@@ -153,7 +154,7 @@ export function Header() {
           <div className="flex items-center h-16 gap-6">
 
             {/* Logo */}
-            <Link to="/" className="flex items-center flex-shrink-0">
+            <Link to={homePath} className="flex items-center flex-shrink-0">
               <Logo className="h-8 w-auto" color="#111111" />
             </Link>
 
@@ -300,7 +301,7 @@ export function Header() {
           <nav className="flex items-center h-10">
 
             <Link
-              to="/"
+              to={homePath}
               className={`relative px-4 h-10 flex items-center text-xs uppercase tracking-wider transition-colors ${
                 isActive('/')
                   ? 'text-black after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-black'
@@ -525,7 +526,7 @@ export function Header() {
                 </button>
 
                 {/* Nav links */}
-                <Link to="/" onClick={closeMobileMenu}
+                <Link to={homePath} onClick={closeMobileMenu}
                   className={`flex items-center justify-between px-5 py-4 border-b border-gray-100 hover:bg-gray-50 transition-colors ${isActive('/') ? 'text-black' : 'text-gray-500'}`}>
                   <span className="text-xs uppercase tracking-wider">{t('nav.home')}</span>
                   {isActive('/') && <span className="w-1.5 h-1.5 bg-black rounded-full" />}

@@ -253,8 +253,22 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 
 function getLanguageFromUrl(): Language | null {
   if (typeof window === 'undefined') return null;
-  const lang = new URLSearchParams(window.location.search).get('lang');
-  return lang === 'ro' || lang === 'ru' ? lang : null;
+  const url = new URL(window.location.href);
+  const queryLang = url.searchParams.get('lang');
+
+  if (queryLang === 'ro' || queryLang === 'ru') {
+    return queryLang;
+  }
+
+  if (url.pathname === '/ru') {
+    return 'ru';
+  }
+
+  if (url.pathname === '/') {
+    return 'ro';
+  }
+
+  return null;
 }
 
 export function LanguageProvider({ children }: { children: React.ReactNode }) {
@@ -287,7 +301,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem('language', lang);
     if (typeof window !== 'undefined') {
       const url = new URL(window.location.href);
-      url.searchParams.set('lang', lang);
+      const isHomePath = url.pathname === '/' || url.pathname === '/ru';
+
+      if (isHomePath) {
+        url.pathname = lang === 'ru' ? '/ru' : '/';
+        url.searchParams.delete('lang');
+      } else {
+        url.searchParams.set('lang', lang);
+      }
+
       window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`);
     }
   };

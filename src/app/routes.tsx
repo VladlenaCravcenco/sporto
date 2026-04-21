@@ -70,6 +70,7 @@ export const router = createBrowserRouter([
     Component: Layout,
     children: [
       { index: true, Component: Home },
+      { path: 'ru', Component: Home },
       { path: 'catalog', Component: Catalog },
       { path: 'product/:slug/:sku', Component: ProductDetail },
       { path: 'product/:id', Component: ProductDetail },

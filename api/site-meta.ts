@@ -1,6 +1,6 @@
 const SITE_URL = 'https://www.sporto.md';
 const SITE_NAME = 'Sporto';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/favicon.svg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-site.png`;
 
 type SiteLanguage = 'ro' | 'ru';
 
@@ -37,8 +37,8 @@ export default function handler(req: { query?: { lang?: string | string[] } }, r
   const rawLang = Array.isArray(req.query?.lang) ? req.query?.lang[0] : req.query?.lang;
   const lang = resolveLanguage(rawLang);
   const meta = SITE_META[lang];
-  const pageUrl = new URL(SITE_URL);
-  pageUrl.searchParams.set('lang', lang);
+  const pageUrl = `${SITE_URL}${lang === 'ru' ? '/ru' : '/'}`;
+  const locale = lang === 'ru' ? 'ru_MD' : 'ro_MD';
 
   const html = `<!DOCTYPE html>
 <html lang="${lang}">
@@ -47,13 +47,14 @@ export default function handler(req: { query?: { lang?: string | string[] } }, r
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(meta.title)}</title>
     <meta name="description" content="${escapeHtml(meta.description)}" />
-    <link rel="canonical" href="${SITE_URL}/" />
+    <link rel="canonical" href="${pageUrl}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${SITE_NAME}" />
     <meta property="og:title" content="${escapeHtml(meta.title)}" />
     <meta property="og:description" content="${escapeHtml(meta.description)}" />
     <meta property="og:image" content="${DEFAULT_OG_IMAGE}" />
-    <meta property="og:url" content="${escapeHtml(pageUrl.toString())}" />
+    <meta property="og:url" content="${escapeHtml(pageUrl)}" />
+    <meta property="og:locale" content="${locale}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(meta.title)}" />
     <meta name="twitter:description" content="${escapeHtml(meta.description)}" />
