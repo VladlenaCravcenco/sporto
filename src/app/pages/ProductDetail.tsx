@@ -18,7 +18,7 @@ import { SeoHead, buildProductJsonLd, buildBreadcrumbJsonLd } from '../component
 import { ServicesBento } from '../components/ServicesBento';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
-import { buildProductPath, extractProductIdFromParam, inferProductRouteLanguage } from '../lib/product-url';
+import { buildProductPath, extractProductIdFromParam, getProductRouteKey, inferProductRouteLanguage } from '../lib/product-url';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -225,6 +225,9 @@ export function ProductDetail() {
 
   useEffect(() => {
     if (!product) return;
+    const currentRouteKey = extractProductIdFromParam(sku || id || slug);
+    const loadedProductRouteKey = extractProductIdFromParam(getProductRouteKey(product));
+    if (!currentRouteKey || currentRouteKey !== loadedProductRouteKey) return;
 
     const explicitLang =
       typeof window !== 'undefined'
