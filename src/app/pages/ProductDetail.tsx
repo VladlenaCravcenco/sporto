@@ -211,14 +211,14 @@ function ServicesBentoSection({ t }: { t: (k: string) => string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function ProductDetail() {
-  const { id, slug } = useParams();
-  const resolvedProductId = extractProductIdFromParam(id || slug);
+  const { id, slug, sku } = useParams();
+  const resolvedProductId = extractProductIdFromParam(sku || id || slug);
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const { addToCart, isInCart } = useCart();
 
   // ── All hooks at top level ──
-  const { product, loading, error } = useSupabaseProduct(id || slug);
+  const { product, loading, error } = useSupabaseProduct(sku || id || slug);
   const { products: brandProducts } = useBrandProducts(product?.brand, product?.id ?? resolvedProductId);
   const { brand: brandData } = useBrandByName(product?.brand);
   const inCart = product ? isInCart(product.id) : false;
@@ -233,11 +233,13 @@ export function ProductDetail() {
     }
 
     const canonicalPath = buildProductPath(product, routeLanguage || (language as 'ro' | 'ru'));
-    const currentPath = slug && id ? `/product/${encodeURIComponent(slug)}/${encodeURIComponent(id)}` : `/product/${encodeURIComponent(id || '')}`;
+    const currentPath = slug && sku
+      ? `/product/${encodeURIComponent(slug)}/${encodeURIComponent(sku)}`
+      : `/product/${encodeURIComponent(id || '')}`;
     if (decodeURIComponent(currentPath) !== decodeURIComponent(canonicalPath)) {
       navigate(canonicalPath, { replace: true });
     }
-  }, [product, id, slug, navigate, language, setLanguage]);
+  }, [product, id, slug, sku, navigate, language, setLanguage]);
 
   if (loading) {
     return (

@@ -40,8 +40,9 @@ function slugify(value: string): string {
     .replace(/-{2,}/g, '-');
 }
 
-export function getProductRouteKey(product: Pick<Product, 'id'>): string {
-  return String(product.id);
+export function getProductRouteKey(product: Pick<Product, 'id' | 'sku'>): string {
+  const sku = normalizeKey(product.sku || '');
+  return sku || String(product.id);
 }
 
 export function getLocalizedProductSlug(
@@ -50,9 +51,7 @@ export function getLocalizedProductSlug(
 ): string {
   const rawName = normalizeKey(product.name[language] || product.name.ro || product.name.ru || '');
   const baseSlug = slugify(rawName);
-  const skuSlug = slugify(normalizeKey(product.sku || ''));
-  const composed = [baseSlug, skuSlug].filter(Boolean).join('-');
-  return composed || 'produs';
+  return baseSlug || 'produs';
 }
 
 export function extractProductIdFromParam(value: string | undefined): string | undefined {

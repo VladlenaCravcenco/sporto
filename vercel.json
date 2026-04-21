@@ -5,7 +5,7 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/product/:slug/:id",
+      "source": "/product/:slug/:sku",
       "has": [
         {
           "type": "header",
@@ -13,7 +13,7 @@
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
         }
       ],
-      "destination": "/api/product-meta?slug=:slug&id=:id"
+      "destination": "/api/product-meta?slug=:slug&sku=:sku"
     },
     {
       "source": "/product/:id",
@@ -35,7 +35,7 @@
       "destination": "/index.html"
     },
     {
-      "source": "/product/:slug/:id",
+      "source": "/product/:slug/:sku",
       "destination": "/index.html"
     },
     {

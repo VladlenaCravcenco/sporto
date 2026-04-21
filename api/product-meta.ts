@@ -100,9 +100,7 @@ function sanitizeMetaText(value: string | null | undefined): string {
 
 function getLocalizedProductSlug(product: ProductRow, language: ProductLanguage): string {
   const rawName = sanitizeMetaText(language === 'ru' ? (product.name_ru || product.name_ro) : (product.name_ro || product.name_ru));
-  const baseSlug = slugify(rawName);
-  const skuSlug = slugify(sanitizeMetaText(product.sku));
-  return [baseSlug, skuSlug].filter(Boolean).join('-') || 'produs';
+  return slugify(rawName) || 'produs';
 }
 
 function inferProductLanguage(product: ProductRow, slug: string | undefined, queryLang: string | undefined): ProductLanguage {
@@ -267,6 +265,9 @@ export default async function handler(req: { query?: { slug?: string } }, res: {
   status: (code: number) => { send: (body: string) => void };
 }) {
   const rawSlug = Array.isArray(req.query?.slug) ? req.query?.slug[0] : req.query?.slug;
+  const rawSku = Array.isArray((req.query as { sku?: string | string[] } | undefined)?.sku)
+    ? (req.query as { sku?: string[] }).sku?.[0]
+    : (req.query as { sku?: string } | undefined)?.sku;
   const rawId = Array.isArray((req.query as { id?: string | string[] } | undefined)?.id)
     ? (req.query as { id?: string[] }).id?.[0]
     : (req.query as { id?: string } | undefined)?.id;
@@ -274,11 +275,13 @@ export default async function handler(req: { query?: { slug?: string } }, res: {
     ? (req.query as { lang?: string[] }).lang?.[0]
     : (req.query as { lang?: string } | undefined)?.lang;
   const slug = rawSlug ? String(rawSlug) : undefined;
+  const sku = rawSku ? String(rawSku) : '';
   const id = rawId ? String(rawId) : '';
-  const path = slug ? `/product/${encodeURIComponent(slug)}/${encodeURIComponent(id)}` : `/product/${encodeURIComponent(id)}`;
+  const routeKey = sku || id;
+  const path = slug ? `/product/${encodeURIComponent(slug)}/${encodeURIComponent(routeKey)}` : `/product/${encodeURIComponent(routeKey)}`;
 
   try {
-    const product = await fetchProduct(id || slug || '');
+    const product = await fetchProduct(routeKey || slug || '');
     const language = product ? inferProductLanguage(product, slug, rawLang) : 'ro';
     const html = renderHtml(path, slug, language, product);
 

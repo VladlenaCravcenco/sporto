@@ -71,7 +71,7 @@ export const router = createBrowserRouter([
     children: [
       { index: true, Component: Home },
       { path: 'catalog', Component: Catalog },
-      { path: 'product/:slug/:id', Component: ProductDetail },
+      { path: 'product/:slug/:sku', Component: ProductDetail },
       { path: 'product/:id', Component: ProductDetail },
       { path: 'brands/:brandId', Component: BrandPage },
       { path: 'login', Component: Login },
