@@ -226,13 +226,22 @@ export function ProductDetail() {
   useEffect(() => {
     if (!product) return;
 
+    const explicitLang =
+      typeof window !== 'undefined'
+        ? new URLSearchParams(window.location.search).get('lang')
+        : null;
     const routeLanguage = inferProductRouteLanguage(product, slug);
-    if (routeLanguage && routeLanguage !== language) {
+    const hasExplicitLang = explicitLang === 'ro' || explicitLang === 'ru';
+
+    if (!hasExplicitLang && routeLanguage && routeLanguage !== language) {
       setLanguage(routeLanguage);
       return;
     }
 
-    const canonicalPath = buildProductPath(product, routeLanguage || (language as 'ro' | 'ru'));
+    const targetLanguage = hasExplicitLang
+      ? (language as 'ro' | 'ru')
+      : (routeLanguage || (language as 'ro' | 'ru'));
+    const canonicalPath = buildProductPath(product, targetLanguage);
     const currentPath = slug && sku
       ? `/product/${encodeURIComponent(slug)}/${encodeURIComponent(sku)}`
       : `/product/${encodeURIComponent(id || '')}`;
