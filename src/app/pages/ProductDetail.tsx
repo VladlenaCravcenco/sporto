@@ -18,7 +18,7 @@ import { SeoHead, buildProductJsonLd, buildBreadcrumbJsonLd } from '../component
 import { ServicesBento } from '../components/ServicesBento';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
-import { buildProductPath, extractProductIdFromParam } from '../lib/product-url';
+import { buildProductPath, extractProductIdFromParam, inferProductRouteLanguage } from '../lib/product-url';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -99,7 +99,7 @@ function BrandCarousel({
           return (
             <Link
               key={p.id}
-              to={buildProductPath(p)}
+              to={buildProductPath(p, language as 'ro' | 'ru')}
               className="group flex-shrink-0 border border-gray-100 bg-white hover:border-black transition-colors duration-200 flex flex-col"
               style={{ width: `calc((100% - ${(visible - 1) * (window?.innerWidth < 640 ? 8 : 12)}px) / ${visible})` }}
             >
@@ -211,25 +211,33 @@ function ServicesBentoSection({ t }: { t: (k: string) => string }) {
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 export function ProductDetail() {
-  const { id } = useParams();
-  const resolvedProductId = extractProductIdFromParam(id);
+  const { id, slug } = useParams();
+  const resolvedProductId = extractProductIdFromParam(id || slug);
   const navigate = useNavigate();
-  const { language, t } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const { addToCart, isInCart } = useCart();
 
   // ── All hooks at top level ──
-  const { product, loading, error } = useSupabaseProduct(id);
+  const { product, loading, error } = useSupabaseProduct(id || slug);
   const { products: brandProducts } = useBrandProducts(product?.brand, product?.id ?? resolvedProductId);
   const { brand: brandData } = useBrandByName(product?.brand);
   const inCart = product ? isInCart(product.id) : false;
 
   useEffect(() => {
-    if (!product || !id) return;
-    const canonicalSlug = buildProductPath(product).replace('/product/', '');
-    if (decodeURIComponent(id) !== decodeURIComponent(canonicalSlug)) {
-      navigate(buildProductPath(product), { replace: true });
+    if (!product) return;
+
+    const routeLanguage = inferProductRouteLanguage(product, slug);
+    if (routeLanguage && routeLanguage !== language) {
+      setLanguage(routeLanguage);
+      return;
     }
-  }, [product, id, navigate]);
+
+    const canonicalPath = buildProductPath(product, routeLanguage || (language as 'ro' | 'ru'));
+    const currentPath = slug && id ? `/product/${encodeURIComponent(slug)}/${encodeURIComponent(id)}` : `/product/${encodeURIComponent(id || '')}`;
+    if (decodeURIComponent(currentPath) !== decodeURIComponent(canonicalPath)) {
+      navigate(canonicalPath, { replace: true });
+    }
+  }, [product, id, slug, navigate, language, setLanguage]);
 
   if (loading) {
     return (
@@ -270,7 +278,8 @@ export function ProductDetail() {
   const subcategory = category?.subcategories.find((s) => s.id === product.subcategory);
   const currentPrice = getCurrentPrice(product);
   const showSalePrice = hasSalePrice(product);
-  const productPath = buildProductPath(product);
+  const routeLanguage = inferProductRouteLanguage(product, slug) || (language as 'ro' | 'ru');
+  const productPath = buildProductPath(product, routeLanguage);
   const productUrl = `https://www.sporto.md${productPath}`;
   const productDescription =
     product.description[language as Language] ||

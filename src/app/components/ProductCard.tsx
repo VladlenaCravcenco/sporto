@@ -63,7 +63,7 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
 
   return (
     <Link
-      to={buildProductPath(product)}
+      to={buildProductPath(product, language as 'ro' | 'ru')}
       className={`group bg-white border border-gray-100 overflow-hidden hover:border-black transition-all duration-200 flex ${listView ? 'flex-row' : 'flex-col'}`}
     >
       {/* ── Image / Wireframe area ── */}

@@ -308,7 +308,7 @@ export function Home() {
                 {featuredProducts[0] && (
                   <div className="col-span-2 row-span-1 md:row-span-2">
                     <Link
-                      to={buildProductPath(featuredProducts[0])}
+                      to={buildProductPath(featuredProducts[0], language as 'ro' | 'ru')}
                       className="group block bg-black text-white h-full min-h-[240px] overflow-hidden relative flex flex-col"
                     >
                       <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">

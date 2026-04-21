@@ -177,7 +177,7 @@ export function SearchDropdown({
           goTo(`/catalog?category=${catMatches[activeIdx].id}`);
         } else {
           const prod = results?.hits[activeIdx - catMatches.length]?.product;
-          if (prod) goTo(buildProductPath(prod));
+          if (prod) goTo(buildProductPath(prod, lang));
         }
       }
     };
@@ -433,7 +433,7 @@ export function SearchDropdown({
             return (
               <div key={product.id} data-idx={idx}
                 onMouseDown={e => e.preventDefault()}
-                onClick={() => goTo(buildProductPath(product))}
+                onClick={() => goTo(buildProductPath(product, lang))}
                 onMouseEnter={() => setActiveIdx(idx)}
                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${isActive ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
                 <Thumb product={product} />

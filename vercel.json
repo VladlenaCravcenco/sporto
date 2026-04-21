@@ -5,7 +5,7 @@
       "destination": "/api/sitemap"
     },
     {
-      "source": "/product/:slug",
+      "source": "/product/:slug/:id",
       "has": [
         {
           "type": "header",
@@ -13,7 +13,18 @@
           "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
         }
       ],
-      "destination": "/api/product-meta?slug=:slug"
+      "destination": "/api/product-meta?slug=:slug&id=:id"
+    },
+    {
+      "source": "/product/:id",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+        }
+      ],
+      "destination": "/api/product-meta?id=:id"
     },
     {
       "source": "/",
@@ -24,7 +35,15 @@
       "destination": "/index.html"
     },
     {
+      "source": "/product/:slug/:id",
+      "destination": "/index.html"
+    },
+    {
       "source": "/product/:slug",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/product/:id",
       "destination": "/index.html"
     },
     {
