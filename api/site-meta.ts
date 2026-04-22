@@ -64,6 +64,7 @@ export default function handler(req: { query?: { lang?: string | string[] } }, r
 </html>`;
 
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+  res.setHeader('Cache-Control', 'no-store, max-age=0');
+  res.setHeader('Vary', 'User-Agent');
   res.status(200).send(html);
 }
