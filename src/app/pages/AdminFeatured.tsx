@@ -4,6 +4,8 @@ import { supabase, type ProductRow } from '../../lib/supabase';
 import { Search, Star, X, Check, RefreshCw, ExternalLink, SlidersHorizontal } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { buildProductPath } from '../lib/product-url';
+import { OptimizedImage } from '../components/OptimizedImage';
+import { getOptimizedImageUrl } from '../../lib/imageHelper';
 
 type Row = Pick<ProductRow, 'id' | 'name_ro' | 'name_ru' | 'category' | 'price' | 'sku' | 'image_url' | 'featured' | 'brand'>;
 
@@ -289,20 +291,25 @@ export function AdminFeatured() {
               return (
                 <div
                   key={product.id}
-                  className={`group bg-white border flex flex-col transition-all ${
-                    isFeatured ? 'border-black' : 'border-gray-100 hover:border-gray-300'
-                  }`}
-                >
-                  {/* Image */}
-                  <div className="relative">
-                    <div className="aspect-square bg-gray-50 overflow-hidden">
-                      {product.image_url
-                        ? <img src={product.image_url} alt="" className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center">
-                            <Star className="w-6 h-6 text-gray-200" />
-                          </div>
-                      }
-                    </div>
+      className={`group bg-white border flex flex-col transition-all ${
+  isFeatured ? 'border-black' : 'border-gray-100 hover:border-gray-300'
+}`}
+>
+  {/* Image */}
+  <div className="relative">
+    <div className="aspect-square bg-gray-50 overflow-hidden">
+      {product.image_url ? (
+        <OptimizedImage
+          src={product.image_url}
+          alt={product.name_ro}
+          className="w-full h-full object-cover rounded-lg"
+        />
+      ) : (
+        <div className="w-full h-full flex items-center justify-center">
+          <Star className="w-6 h-6 text-gray-200" />
+        </div>
+      )}
+    </div>
                     {/* Featured star badge */}
                     {isFeatured && (
                       <div className="absolute top-1.5 left-1.5 bg-black text-white w-5 h-5 flex items-center justify-center">
