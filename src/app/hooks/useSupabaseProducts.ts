@@ -2,8 +2,8 @@ import { useEffect, useState } from 'react';
 import { supabase, fetchAllSupabaseRows, type ProductRow } from '../../lib/supabase';
 import { cacheGet, cacheSet, cacheInvalidate, TTL_DEFAULT } from '../../lib/queryCache';
 import type { Product } from '../data/products';
-import { categories } from '../data/products';
 import { extractProductIdFromParam } from '../lib/product-url';
+import { useCategories } from '../contexts/CategoriesContext';
 
 // Extract YouTube video ID from any YouTube URL
 function extractYouTubeId(url: string | null): string | undefined {
@@ -483,8 +483,9 @@ export function useProductCount() {
   return display;
 }
 
-// ─── Category count (from static categories array) ────────────────────────────
+// ─── Category count (from live categories context) ────────────────────────────
 export function useCategoryCount(): string {
+  const categories = useCategories();
   return String(categories.length);
 }
 

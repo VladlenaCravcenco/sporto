@@ -415,7 +415,7 @@ export function ProductDetail() {
               <h1 className="text-2xl sm:text-3xl text-gray-900 mb-3">
                 {product.name[language as Language]}
               </h1>
-              <p className="text-gray-500 leading-relaxed">
+              <p className="text-gray-500 leading-relaxed whitespace-pre-wrap break-words">
                 {product.description[language as Language]}
               </p>
             </div>
