@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../../lib/supabase';
+import { cacheInvalidate } from '../../lib/queryCache';
 import {
   Upload,
   CheckCircle,
@@ -321,6 +322,11 @@ export function AdminImport() {
     }
 
     setImportResult({ ok: okCount, failed: failCount });
+    if (okCount > 0) {
+      cacheInvalidate('products:');
+      cacheInvalidate('brands:active');
+      cacheInvalidate('brands:counts');
+    }
     setImporting(false);
     if (failCount === 0) setStep('done');
   };

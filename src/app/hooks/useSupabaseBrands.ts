@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
-import { supabase, type BrandRow } from '../../lib/supabase';
+import { supabase, fetchAllSupabaseRows, type BrandRow } from '../../lib/supabase';
 import { cacheGet, cacheSet, cacheInvalidate, TTL_LONG } from '../../lib/queryCache';
 
 // ─── Retry helper (same pattern as products hook) ─────────────────────────────
@@ -97,13 +97,15 @@ export function useActiveBrands() {
 
     // Step 1: distinct brand names from active products
     // Select only the 'brand' column to keep payload tiny
-    const { data: productRows } = await withRetry<Array<{ brand: string | null }>>(() =>
-      supabase
-        .from('products')
-        .select('brand')
-        .eq('active', true)
-        .not('brand', 'is', null)
-        .limit(10_000) // explicit limit — never silently truncated
+    const productRows = await fetchAllSupabaseRows<{ brand: string | null }>((from, to) =>
+      withRetry<Array<{ brand: string | null }>>(() =>
+        supabase
+          .from('products')
+          .select('brand')
+          .eq('active', true)
+          .not('brand', 'is', null)
+          .range(from, to)
+      )
     );
 
     if (!productRows || productRows.length === 0) {
@@ -154,13 +156,15 @@ export function useBrandProductCounts() {
     if (cached) { setCounts(cached); return; }
 
     (async () => {
-      const { data } = await withRetry<Array<{ brand: string | null }>>(() =>
-        supabase
-          .from('products')
-          .select('brand')
-          .eq('active', true)
-          .not('brand', 'is', null)
-          .limit(10_000)
+      const data = await fetchAllSupabaseRows<{ brand: string | null }>((from, to) =>
+        withRetry<Array<{ brand: string | null }>>(() =>
+          supabase
+            .from('products')
+            .select('brand')
+            .eq('active', true)
+            .not('brand', 'is', null)
+            .range(from, to)
+        )
       );
 
       if (!data) return;

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router';
-import { supabase } from '../../lib/supabase';
+import { supabase, fetchAllSupabaseRows } from '../../lib/supabase';
 // npm install exceljs
 import ExcelJS from 'exceljs';
 import {
@@ -20,24 +20,6 @@ interface Stats {
   outOfStock: number;
 }
 
-// ── Грузим ВСЕ строки чанками по 1000 (обходим лимит Supabase) ──────────────
-const fetchAllChunked = async (buildQuery: (from: number, to: number) => any): Promise<any[]> => {
-  const chunkSize = 1000;
-  let offset = 0;
-  let allData: any[] = [];
-
-  while (true) {
-    const { data, error } = await buildQuery(offset, offset + chunkSize - 1);
-    if (error) throw new Error(error.message);
-    if (!data || data.length === 0) break;
-    allData = [...allData, ...data];
-    if (data.length < chunkSize) break; // последний чанк
-    offset += chunkSize;
-  }
-
-  return allData;
-};
-
 export function AdminHub() {
   const { t, lang } = useAdminLang();
   const [stats, setStats] = useState<Stats | null>(null);
@@ -53,9 +35,12 @@ export function AdminHub() {
 
   useEffect(() => {
     (async () => {
-      const { data } = await supabase
-        .from('products')
-        .select('active, featured, image_url, qty');
+      const data = await fetchAllSupabaseRows<{ active: boolean; featured: boolean; image_url: string | null; qty: number | null }>((from, to) =>
+        supabase
+          .from('products')
+          .select('active, featured, image_url, qty')
+          .range(from, to)
+      );
       if (data) {
         const rows = data as { active: boolean; featured: boolean; image_url: string | null; qty: number | null }[];
         setStats({
@@ -95,7 +80,7 @@ export function AdminHub() {
         ? categories.find(c => c.id === exportCategory)?.name_ro || exportCategory
         : (lang === 'ru' ? 'Все категории' : 'Toate categoriile');
 
-      const data = await fetchAllChunked((from, to) => {
+      const data = await fetchAllSupabaseRows((from, to) => {
         let q = supabase
           .from('products')
           .select('id, sku, name_ro, name_ru, category, subcategory, brand, price, qty, active')

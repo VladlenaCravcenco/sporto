@@ -3,7 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { categories } from '../data/products';
 import { ProductCard } from '../components/ProductCard';
-import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
+import { useBrandProducts } from '../hooks/useSupabaseProducts';
 import { supabase, type BrandRow } from '../../lib/supabase';
 import { ArrowLeft, ArrowRight, Globe, MapPin, Tag, Loader2, LayoutGrid, List, ShoppingCart, Package } from 'lucide-react';
 import { SeoHead } from '../components/SeoHead';
@@ -47,20 +47,12 @@ export function BrandPage() {
   const lang = language as Language;
 
   const { brand, loading: brandLoading } = useBrandBySlug(brandId);
-  const { products: allProducts, loading: productsLoading } = useSupabaseProducts();
+  const { products: brandProducts, loading: productsLoading } = useBrandProducts(brand?.name, undefined);
   const [mobileView, setMobileView] = useState<'grid' | 'list'>('grid');
   const [visibleCount, setVisibleCount] = useState(24);
   const [activeCategory, setActiveCategory] = useState<string | null>(null);
 
   const loading = brandLoading || productsLoading;
-
-  // Products that belong to this brand (match by name)
-  const brandProducts = useMemo(() => {
-    if (!brand) return [];
-    return allProducts.filter(
-      p => p.brand && p.brand.toLowerCase().trim() === brand.name.toLowerCase().trim()
-    );
-  }, [brand, allProducts]);
 
   // Filtered by active category
   const filteredProducts = useMemo(() => {

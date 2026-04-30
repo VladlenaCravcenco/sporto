@@ -1,21 +1,11 @@
-import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
+import { usePaginatedCatalogProducts } from '../hooks/useSupabaseProducts';
+import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
 import { SeoHead, SEO_PAGES } from '../components/SeoHead';
-import { norm, expandTokens, scoreProduct as engineScore, parsePrice } from '../../lib/searchEngine';
 import {
   X,
   Search,
   ChevronLeft,
   ChevronRight,
-  Dumbbell,
-  Weight,
-  Waves,
-  Trophy,
-  Users,
-  Swords,
-  Activity,
-  Gamepad2,
-  Building2,
-  TreePine,
   LayoutGrid,
   LayoutList,
   ArrowUpDown,
@@ -23,30 +13,18 @@ import {
   ArrowDown,
   Tag,
   Zap,
-  Target,
-  SlidersHorizontal,
   Package,
 } from 'lucide-react';
-import { useState, useMemo, useRef, useEffect, type ReactNode } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { getCategoryIcon } from '../lib/category-icons';
 import { useSearchParams } from 'react-router';
 import { useLanguage, Language } from '../contexts/LanguageContext';
-import { type Product } from '../data/products';
 import { useCategories } from '../contexts/CategoriesContext';
 import { ProductCard } from '../components/ProductCard';
-import { isProductInStock } from '../lib/productStock';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
 const PAGE_SIZE = 24;
-
-/** Score a product against search tokens. Higher = better match. */
-function scoreProduct(product: Product, tokens: string[], lang: Language): number {
-  if (!tokens.length) return 1;
-  const expanded = expandTokens(tokens, tokens.join(' '));
-  const result = engineScore(product, tokens, lang, expanded);
-  return result?.score ?? -1;
-}
 
 export function Catalog() {
   const { language, t } = useLanguage();
@@ -55,14 +33,7 @@ export function Catalog() {
   const categories = useCategories();
 
   // ── Supabase ────────────────────────────────────────────────────────
-  const { products, loading: dbLoading, error: dbError, connected } = useSupabaseProducts();
-
-  // Dynamic price range from loaded products
-  const [priceMin, priceMax] = useMemo(() => {
-    if (products.length === 0) return [0, 100000];
-    const prices = products.map(p => p.price);
-    return [Math.floor(Math.min(...prices)), Math.ceil(Math.max(...prices))];
-  }, [products]);
+  const { brands: allBrands } = useSupabaseBrands();
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
@@ -100,7 +71,7 @@ export function Catalog() {
   }, [searchParams]);
 
   // ── Reset page on filter change ──────────────────────────────────────────
-  useEffect(() => { setPage(1); }, [selectedCategory, selectedSubcategory, sortBy, selectedBrand, saleOnly]);
+  useEffect(() => { setPage(1); }, [selectedCategory, selectedSubcategory, sortBy, selectedBrand, saleOnly, stockFilter, searchTerm]);
 
   // ── Close popovers on outside click ─────────────────────────────────
   useEffect(() => {
@@ -118,82 +89,31 @@ export function Catalog() {
 
   const currentCategory = categories.find((c) => c.id === selectedCategory);
 
-  // ── Available brands (from products filtered by cat/subcat, not brand) ──
-  const availableBrands = useMemo(() => {
-    const base = products.filter(p => {
-      if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
-      if (selectedSubcategory !== 'all' && p.subcategory !== selectedSubcategory) return false;
-      return true;
-    });
-    const counts: Record<string, number> = {};
-    base.forEach(p => {
-      const b = (p as any).brand;
-      if (b && typeof b === 'string' && b.trim()) {
-        counts[b.trim()] = (counts[b.trim()] || 0) + 1;
-      }
-    });
-    return Object.entries(counts)
-      .sort((a, b) => b[1] - a[1])
-      .map(([name, count]) => ({ name, count }));
-  }, [products, selectedCategory, selectedSubcategory]);
+  const { products, total: totalProducts, loading: dbLoading, error: dbError, connected } = usePaginatedCatalogProducts({
+    page,
+    pageSize: PAGE_SIZE,
+    category: selectedCategory,
+    subcategory: selectedSubcategory,
+    brand: selectedBrand || undefined,
+    saleOnly,
+    stockFilter,
+    searchTerm,
+    sortBy,
+  });
 
-  // ── Smart filtered + sorted products ────────────────────────────────────
-  const allFiltered = useMemo(() => {
-    // Parse price from search term
-    const { price: priceFromQuery, cleanQuery } = parsePrice(searchTerm.trim());
-    const rawSearch = cleanQuery.toLowerCase();
-    const tokens = norm(rawSearch).split(/\s+/).filter(Boolean);
-    const expanded = tokens.length ? expandTokens(tokens, rawSearch) : null;
-    const hasPriceInQuery = priceFromQuery.min !== undefined || priceFromQuery.max !== undefined;
+  const availableBrands = useMemo(
+    () => allBrands.filter((brand) => brand.active !== false).map((brand) => ({ name: brand.name, count: 1 })),
+    [allBrands]
+  );
 
-    let result = products.filter((product) => {
-      if (selectedCategory !== 'all' && product.category !== selectedCategory) return false;
-      if (selectedSubcategory !== 'all' && product.subcategory !== selectedSubcategory) return false;
-      if (selectedBrand && (product as any).brand?.trim() !== selectedBrand) return false;
-      // Sale filter: только товары с акционной ценой
-      if (saleOnly && !product.sale_price) return false;
-      // Stock filter: в наличии или под заказ
-      if (stockFilter !== 'all') {
-        const inStock = isProductInStock(product);
-        if (stockFilter === 'inStock' && !inStock) return false;
-        if (stockFilter === 'onOrder' && inStock) return false;
-      }
-      // Price filter from search query string only (no UI slider on this page)
-      if (hasPriceInQuery) {
-        if (priceFromQuery.min !== undefined && product.price < priceFromQuery.min) return false;
-        if (priceFromQuery.max !== undefined && product.price > priceFromQuery.max) return false;
-      }
-      if (tokens.length > 0 && expanded) {
-        const scored = engineScore(product as any, tokens, lang, expanded);
-        if (!scored || scored.score <= 0) return false;
-      }
-      return true;
-    });
-
-    // Sort
-    if (tokens.length > 0 && sortBy === 'default' && expanded) {
-      result = [...result].sort((a, b) => {
-        const sa = engineScore(a as any, tokens, lang, expanded)?.score ?? 0;
-        const sb = engineScore(b as any, tokens, lang, expanded)?.score ?? 0;
-        return sb - sa;
-      });
-    } else if (sortBy === 'price-asc') {
-      result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'price-desc') {
-      result = [...result].sort((a, b) => b.price - a.price);
-    }
-
-    // Всегда помещаем товары "под заказ" вниз в каталоге по умолчанию.
-    const inStock = result.filter((product) => isProductInStock(product));
-    const onOrder = result.filter((product) => !isProductInStock(product));
-    result = [...inStock, ...onOrder];
-
-    return result;
-  }, [products, searchTerm, selectedCategory, selectedSubcategory, language, sortBy, selectedBrand, saleOnly, stockFilter]);
-
-  const totalPages = Math.max(1, Math.ceil(allFiltered.length / PAGE_SIZE));
+  const totalPages = Math.max(1, Math.ceil(totalProducts / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
-  const paginatedProducts = allFiltered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
+
+  useEffect(() => {
+    if (!dbLoading && page > totalPages) {
+      setPage(totalPages);
+    }
+  }, [dbLoading, page, totalPages]);
 
   // ── Handlers ──────────────────────────────────────────────────────────
   const handleCategoryChange = (value: string) => {
@@ -204,7 +124,6 @@ export function Catalog() {
   };
 
   const clearFilters = () => {
-    setSearchTerm('');
     setSortBy('default');
     setSelectedBrand('');
     setStockFilter('all');
@@ -261,7 +180,7 @@ export function Catalog() {
             </div>
             <div className="text-right">
               <div className="text-2xl text-white tabular-nums">
-                {dbLoading ? '—' : allFiltered.length}
+                {dbLoading ? '—' : totalProducts}
               </div>
               <div className="text-xs text-gray-500">
                 {language === 'ro' ? 'produse găsite' : 'товаров найдено'}
@@ -909,8 +828,8 @@ export function Catalog() {
                 className="w-full bg-black text-white py-3 text-xs uppercase tracking-widest"
               >
                 {language === 'ro'
-                  ? `Aplică · ${allFiltered.length} produse`
-                  : `Применить · ${allFiltered.length} товаров`}
+                  ? `Aplică · ${totalProducts} produse`
+                  : `Применить · ${totalProducts} товаров`}
               </button>
             </div>
           </div>
@@ -960,7 +879,7 @@ export function Catalog() {
         )}
 
         {/* ── Connected but no products yet ── */}
-        {!dbLoading && !dbError && connected && products.length === 0 && (
+        {!dbLoading && !dbError && connected && totalProducts === 0 && (
           <div className="border border-amber-200 bg-amber-50 p-8 md:p-12 text-center max-w-2xl mx-auto mt-8">
             <div className="w-10 h-10 bg-amber-500 flex items-center justify-center mx-auto mb-4">
               <span className="text-white text-lg font-bold">?</span>
@@ -997,7 +916,7 @@ export function Catalog() {
         )}
 
         {/* ── Normal catalog view ── */}
-        {!dbLoading && !dbError && products.length > 0 && (
+        {!dbLoading && !dbError && totalProducts > 0 && (
           <>
             {/* Active filter pills */}
             {hasActiveFilters && (
@@ -1060,30 +979,25 @@ export function Catalog() {
             )}
 
             {/* Results info */}
-            {allFiltered.length > 0 && (
+            {totalProducts > 0 && (
               <div className="flex items-center justify-between mb-4">
                 <p className="text-xs text-gray-400">
                   {language === 'ro'
-                    ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, allFiltered.length)} din ${allFiltered.length} produse`
-                    : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, allFiltered.length)} из ${allFiltered.length} товаров`}
+                    ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, totalProducts)} din ${totalProducts} produse`
+                    : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, totalProducts)} из ${totalProducts} товаров`}
                 </p>
-                {searchTerm && (
-                  <p className="text-xs text-gray-400">
-                    {language === 'ro' ? 'Sortat după relevanță' : 'Отсортировано по релевантности'}
-                  </p>
-                )}
               </div>
             )}
 
             {/* Products grid */}
-            {paginatedProducts.length > 0 ? (
+            {products.length > 0 ? (
               <>
                 <div className={
                   viewMode === 'list'
                     ? 'flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6'
                     : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-2 md:gap-3'
                 }>
-                  {paginatedProducts.map((product) => (
+                  {products.map((product) => (
                     <ProductCard
                       key={product.id}
                       product={product}

@@ -13,6 +13,31 @@ const SUPABASE_ANON_KEY =
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// PostgREST / Supabase often caps a single response at 1000 rows.
+// Read large tables in chunks so catalogs/admin screens don't silently stop at 1000.
+export async function fetchAllSupabaseRows<T>(
+  buildQuery: (from: number, to: number) => PromiseLike<{ data: T[] | null; error: { message: string } | null }>,
+  chunkSize = 1000,
+): Promise<T[]> {
+  let from = 0;
+  const allRows: T[] = [];
+
+  while (true) {
+    const to = from + chunkSize - 1;
+    const { data, error } = await buildQuery(from, to);
+    if (error) throw new Error(error.message);
+
+    const chunk = data ?? [];
+    if (chunk.length === 0) break;
+
+    allRows.push(...chunk);
+    if (chunk.length < chunkSize) break;
+    from += chunkSize;
+  }
+
+  return allRows;
+}
+
 // ─── Row shape from Supabase ──────────────────────────────────────────────────
 export interface ProductRow {
   id: string;

@@ -9,9 +9,6 @@ import { useCategories } from '../contexts/CategoriesContext';
 import { SearchDropdown, VoiceSearchButton } from './SearchDropdown';
 import { addToHistory } from '../../lib/searchEngine';
 import { useContacts } from '../hooks/useContacts';
-// ⚡ Загружаем товары здесь — при монтировании Header (= любая страница)
-// Хук кеширует результат, поэтому Catalog.tsx получит данные из кеша мгновенно
-import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
 
 type Lang = 'ro' | 'ru';
 
@@ -22,9 +19,6 @@ export function Header() {
   const categories = useCategories();
   const CONTACTS = useContacts(); 
 
-  // ⚡ Загружаем товары здесь — при монтировании Header (= любая страница)
-  // Хук кеширует результат, поэтому Catalog.tsx получит данные из кеша мгновенно
-  const { products: searchProducts, loading: searchLoading } = useSupabaseProducts();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchOpen, setSearchOpen] = useState(false);
@@ -169,7 +163,7 @@ export function Header() {
                   onFocus={handleFocus}
                   onClick={handleSearchClick}
                   onBlur={handleBlur}
-                  placeholder={language === 'ro' ? 'Caută produse, categorii...' : 'Поиск товаров, категорий...'}
+                  placeholder={language === 'ro' ? 'Caută după SKU sau cod...' : 'Поиск по SKU или коду...'}
                   className={`w-full h-9 pl-4 pr-20 text-sm border bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white transition-colors ${
                     showDropdown ? 'border-black' : 'border-gray-200 focus:border-black'
                   }`}
@@ -191,8 +185,6 @@ export function Header() {
                   query={searchQuery}
                   onSelect={handleSelect}
                   onQueryChange={q => { setSearchQuery(q); setSearchOpen(true); inputRef.current?.focus(); }}
-                  products={searchProducts}
-                  loading={searchLoading}
                 />
               )}
             </div>
@@ -415,7 +407,7 @@ export function Header() {
             onFocus={handleMobileFocus}
             onClick={handleMobileClick}
             onBlur={handleMobileBlur}
-            placeholder={language === 'ro' ? 'Caută produse...' : 'Поиск товаров...'}
+            placeholder={language === 'ro' ? 'Caută după SKU sau cod...' : 'Поиск по SKU или коду...'}
             className="flex-1 h-10 pl-4 text-sm bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none border-0 focus:bg-white transition-colors"
           />
           <button type="submit" className="w-12 h-10 flex items-center justify-center text-gray-400 hover:text-black transition-colors border-l border-gray-100">
@@ -428,8 +420,6 @@ export function Header() {
               query={searchQuery}
               onSelect={handleSelect}
               onQueryChange={q => { setSearchQuery(q); setMobileSearchOpen(true); mobileInputRef.current?.focus(); }}
-              products={searchProducts}
-              loading={searchLoading}
             />
           </div>
         )}

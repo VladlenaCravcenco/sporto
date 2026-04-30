@@ -1,10 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router';
-import { supabase, type ProductRow } from '../../lib/supabase';
+import { supabase, fetchAllSupabaseRows, type ProductRow } from '../../lib/supabase';
 import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
 import { useCategories, useCategoriesContext } from '../contexts/CategoriesContext';
-import type { Product } from '../data/products';
-import type { Language } from '../contexts/LanguageContext';
 import ExcelJS from 'exceljs';
 import {
   Search, Plus, X, Trash2, ArrowLeft, RefreshCw,
@@ -13,8 +11,8 @@ import {
 } from 'lucide-react';
 import { logoutAdmin } from '../../lib/adminAuth';
 import { useAdminLang } from '../contexts/AdminLangContext';
-import { searchProducts } from '../../lib/searchEngine';
 import { buildProductPath } from '../lib/product-url';
+import { cacheInvalidate } from '../../lib/queryCache';
 
 // ─── Brand Combobox ───────────────────────────────────────────────────────────
 
@@ -418,6 +416,7 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type SortKey = 'name_ro' | 'price' | 'qty' | 'id';
+const PAGE_SIZE = 50;
 
 const EMPTY_FORM: Partial<ProductRow> = {
   name_ro: '', name_ru: '',
@@ -446,6 +445,36 @@ function subcatLabel(categories: ReturnType<typeof useCategories>, catId: string
   return categories.find(c => c.id === catId)?.subcategories.find(s => s.id === subId)?.name.ro ?? subId;
 }
 
+function sanitizeQuery(raw: string) {
+  return raw.trim().replace(/[,%()]/g, ' ');
+}
+
+function applyAdminProductFilters(
+  query: any,
+  params: {
+    search: string;
+    category: string;
+    brand: string;
+    subcategory: string;
+    status: 'all' | 'active' | 'inactive';
+    sortKey: SortKey;
+    sortAsc: boolean;
+  },
+) {
+  let next = query;
+  const search = sanitizeQuery(params.search);
+  const brand = params.brand.trim();
+
+  if (search) next = next.or(`sku.ilike.%${search}%,id.ilike.%${search}%`);
+  if (params.category.trim()) next = next.eq('category', params.category.trim());
+  if (brand) next = next.ilike('brand', `%${brand}%`);
+  if (params.subcategory.trim()) next = next.eq('subcategory', params.subcategory.trim());
+  if (params.status === 'active') next = next.eq('active', true);
+  if (params.status === 'inactive') next = next.eq('active', false);
+
+  return next.order(params.sortKey, { ascending: params.sortAsc });
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AdminProducts() {
@@ -461,6 +490,8 @@ export function AdminProducts() {
   const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'inactive'>('all');
   const [sortKey, setSortKey] = useState<SortKey>('name_ro');
   const [sortAsc, setSortAsc] = useState(true);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
 
   // Edit panel
   const [panelOpen, setPanelOpen] = useState(false);
@@ -481,19 +512,56 @@ export function AdminProducts() {
     setTimeout(() => setToast(null), 3000);
   };
 
+  const invalidateProductCaches = useCallback(() => {
+    cacheInvalidate('products:');
+    cacheInvalidate('brands:active');
+    cacheInvalidate('brands:counts');
+  }, []);
+
   // ─── Load ─────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true);
-    const { data, error } = await supabase
-      .from('products')
-      .select('*')
-      .order('name_ro', { ascending: true });
-    if (error) { showToast(error.message, false); }
-    else { setRows(data as ProductRow[]); }
+    try {
+      const from = (page - 1) * PAGE_SIZE;
+      const to = from + PAGE_SIZE - 1;
+      const query = applyAdminProductFilters(
+        supabase
+          .from('products')
+          .select('*', { count: 'exact' }),
+        {
+          search,
+          category: catFilter,
+          brand: brandFilter,
+          subcategory: subcatFilter,
+          status: statusFilter,
+          sortKey,
+          sortAsc,
+        },
+      );
+      const { data, count, error } = await query.range(from, to);
+      if (error) throw error;
+      setRows((data as ProductRow[]) ?? []);
+      setTotalCount(count ?? 0);
+    } catch (error) {
+      setRows([]);
+      setTotalCount(0);
+      showToast(error instanceof Error ? error.message : 'Failed to load products', false);
+    }
     setLoading(false);
-  }, []);
+  }, [page, search, catFilter, brandFilter, subcatFilter, statusFilter, sortKey, sortAsc]);
 
   useEffect(() => { load(); }, [load]);
+
+  useEffect(() => {
+    setPage(1);
+  }, [search, catFilter, brandFilter, subcatFilter, statusFilter, sortKey, sortAsc]);
+
+  useEffect(() => {
+    const maxPage = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
+    if (!loading && page > maxPage) {
+      setPage(maxPage);
+    }
+  }, [loading, page, totalCount]);
 
   useEffect(() => {
     const channel = supabase
@@ -509,10 +577,24 @@ export function AdminProducts() {
   const handleExportExcel = async () => {
     setExporting(true);
     try {
-      const dataToExport = filtered;
+      const dataToExport = await fetchAllSupabaseRows<ProductRow>((from, to) => {
+        const query = applyAdminProductFilters(
+          supabase.from('products').select('*'),
+          {
+            search,
+            category: catFilter,
+            brand: brandFilter,
+            subcategory: subcatFilter,
+            status: statusFilter,
+            sortKey,
+            sortAsc,
+          },
+        );
+        return query.range(from, to);
+      });
 
       console.log('Export data:', {
-        total: rows.length,
+        total: totalCount,
         filtered: dataToExport.length,
         catFilter,
         search,
@@ -866,7 +948,8 @@ export function AdminProducts() {
       const { error } = await supabase.from('products').update(payload).eq('id', editId);
       if (error) { showToast(error.message, false); }
       else {
-        setRows(r => r.map(p => p.id === editId ? { ...p, ...payload } as ProductRow : p));
+        invalidateProductCaches();
+        await load();
         showToast('Produsul a fost actualizat!');
         closePanel();
       }
@@ -895,7 +978,9 @@ export function AdminProducts() {
       const { data, error } = await supabase.from('products').insert(insertPayload).select().single();
       if (error) { showToast(error.message, false); }
       else {
-        setRows(r => [...r, data as ProductRow]);
+        invalidateProductCaches();
+        setPage(1);
+        await load();
         showToast(l('Produs nou adăugat!', 'Новый товар добавлен!'));
         closePanel();
       }
@@ -911,7 +996,8 @@ export function AdminProducts() {
     const { error } = await supabase.from('products').delete().eq('id', editId);
     if (error) { showToast(error.message, false); }
     else {
-      setRows(r => r.filter(p => p.id !== editId));
+      invalidateProductCaches();
+      await load();
       showToast(l('Produs șters.', 'Товар удалён.'));
       closePanel();
     }
@@ -929,83 +1015,10 @@ export function AdminProducts() {
     const next = !row.active;
     const { error } = await supabase.from('products').update({ active: next }).eq('id', row.id);
     if (!error) {
-      setRows(r => r.map(p => p.id === row.id ? { ...p, active: next } : p));
+      invalidateProductCaches();
+      await load();
     }
   };
-
-  // ─── Filter + sort ────────────────────────────────────────────────────────
-  const categoryFilterQuery = catFilter.trim().toLowerCase();
-  const brandFilterQuery = brandFilter.trim().toLowerCase();
-  const subcategoryFilterQuery = subcatFilter.trim().toLowerCase();
-  const searchQuery = search.trim();
-
-  const searchableProducts = useMemo<Product[]>(() => (
-    rows.map((row) => {
-      const categoryData = categories.find((category) => category.id === row.category);
-      const subcategoryData = categoryData?.subcategories.find((subcategory) => subcategory.id === row.subcategory);
-      return {
-        id: row.id,
-        name: {
-          ro: row.name_ro,
-          ru: row.name_ru || row.name_ro,
-        },
-        description: {
-          ro: row.description_ro || '',
-          ru: row.description_ru || row.description_ro || '',
-        },
-        category: [row.category, categoryData?.name.ro, categoryData?.name.ru].filter(Boolean).join(' '),
-        subcategory: [row.subcategory, subcategoryData?.name.ro, subcategoryData?.name.ru].filter(Boolean).join(' '),
-        price: Number(row.price) || 0,
-        sale_price: row.sale_price ? Number(row.sale_price) : null,
-        image: row.image_url || '',
-        images: row.images || [],
-        featured: row.featured ?? false,
-        specifications: { ro: {}, ru: {} },
-        sku: row.sku || undefined,
-        cod: row.id,
-        brand: row.brand || undefined,
-        qty: row.qty ?? 0,
-        inStock: (row.qty ?? 0) > 0,
-      };
-    })
-  ), [rows, categories]);
-
-  const searchScores = useMemo(() => {
-    if (!searchQuery) return null;
-    const result = searchProducts(searchableProducts, searchQuery, lang as Language, searchableProducts.length);
-    return new Map(result.hits.map((hit) => [hit.product.id, hit.score]));
-  }, [searchableProducts, searchQuery, lang]);
-
-  const filtered = rows
-    .filter(p => {
-      const matchQ = !searchScores || searchScores.has(p.id);
-      const categoryName = catLabel(categories, p.category).toLowerCase();
-      const subcategoryName = p.subcategory
-        ? subcatLabel(categories, p.category, p.subcategory).toLowerCase()
-        : '';
-      const brandName = (p.brand ?? '').toLowerCase();
-      const matchCat = !categoryFilterQuery
-        || p.category.toLowerCase().includes(categoryFilterQuery)
-        || categoryName.includes(categoryFilterQuery);
-      const matchBrand = !brandFilterQuery || brandName.includes(brandFilterQuery);
-      const matchSubcategory = !subcategoryFilterQuery
-        || (p.subcategory ?? '').toLowerCase().includes(subcategoryFilterQuery)
-        || subcategoryName.includes(subcategoryFilterQuery);
-      const matchStatus = statusFilter === 'all'
-        || (statusFilter === 'active' && p.active)
-        || (statusFilter === 'inactive' && !p.active);
-      return matchQ && matchCat && matchBrand && matchSubcategory && matchStatus;
-    })
-    .sort((a, b) => {
-      if (searchScores) {
-        const scoreDiff = (searchScores.get(b.id) || 0) - (searchScores.get(a.id) || 0);
-        if (scoreDiff !== 0) return scoreDiff;
-      }
-      const av = a[sortKey] ?? '';
-      const bv = b[sortKey] ?? '';
-      const cmp = String(av).localeCompare(String(bv), undefined, { numeric: true });
-      return sortAsc ? cmp : -cmp;
-    });
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) setSortAsc(a => !a);
@@ -1113,7 +1126,7 @@ export function AdminProducts() {
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4 text-gray-400" />
               <span className="text-sm text-gray-900">{t.products.title}</span>
-              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums">{rows.length}</span>
+              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums">{totalCount}</span>
             </div>
             <div className="ml-auto flex items-center gap-2">
               <button onClick={load} disabled={loading} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors">
@@ -1122,7 +1135,7 @@ export function AdminProducts() {
               </button>
               <button
                 onClick={handleExportExcel}
-                disabled={exporting || rows.length === 0}
+                disabled={exporting || totalCount === 0}
                 className="flex items-center gap-2 border border-gray-200 text-gray-700 hover:border-black hover:text-black px-4 py-2 text-xs uppercase tracking-wider transition-colors disabled:opacity-40"
               >
                 {exporting ? (
@@ -1157,7 +1170,7 @@ export function AdminProducts() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text" value={search} onChange={e => setSearch(e.target.value)}
-              placeholder={l('Caută după nume, cod, SKU, brand...', 'Поиск по названию, коду, SKU, бренду...')}
+              placeholder={l('Caută după SKU sau cod...', 'Поиск по SKU или коду...')}
               className="w-full h-9 pl-9 pr-8 text-xs border border-gray-200 bg-white placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
             />
             {search && (
@@ -1183,7 +1196,7 @@ export function AdminProducts() {
             )}
             <datalist id="admin-products-category-filter">
               {allCategoryOptions.map((category) => (
-                <option key={category.value} value={category.label} />
+                <option key={category.value} value={category.value} label={category.label} />
               ))}
             </datalist>
           </div>
@@ -1227,9 +1240,9 @@ export function AdminProducts() {
             )}
             <datalist id="admin-products-subcategory-filter">
               {allSubcategoryOptions
-                .filter((subcategory) => !categoryFilterQuery || subcategory.categoryId.toLowerCase().includes(categoryFilterQuery) || subcategory.label.toLowerCase().includes(categoryFilterQuery))
+                .filter((subcategory) => !catFilter.trim() || subcategory.categoryId === catFilter.trim())
                 .map((subcategory) => (
-                  <option key={`${subcategory.categoryId}-${subcategory.value}`} value={subcategory.label} />
+                  <option key={`${subcategory.categoryId}-${subcategory.value}`} value={subcategory.value} label={subcategory.label} />
                 ))}
             </datalist>
           </div>
@@ -1249,7 +1262,7 @@ export function AdminProducts() {
           </div>
 
           <div className="text-xs text-gray-400 flex items-center ml-auto">
-            {filtered.length} {l('din', 'из')} {rows.length}
+            {rows.length} {l('din', 'из')} {totalCount}
           </div>
         </div>
 
@@ -1281,14 +1294,14 @@ export function AdminProducts() {
                 </div>
               ))}
             </div>
-          ) : filtered.length === 0 ? (
+          ) : rows.length === 0 ? (
             <div className="py-20 text-center">
               <Package className="w-8 h-8 text-gray-200 mx-auto mb-3" />
               <p className="text-sm text-gray-400">{t.products.noData}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
-              {filtered.map(row => (
+              {rows.map(row => (
                 <div
                   key={row.id}
                   onClick={() => openEdit(row)}
@@ -1354,6 +1367,35 @@ export function AdminProducts() {
             </div>
           )}
         </div>
+
+        {totalCount > PAGE_SIZE && (
+          <div className="flex items-center justify-between mt-4 text-xs text-gray-400">
+            <span>
+              {lang === 'ro'
+                ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalCount)} din ${totalCount}`
+                : `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalCount)} из ${totalCount}`}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => setPage((current) => Math.max(1, current - 1))}
+                disabled={page === 1 || loading}
+                className="px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
+              >
+                {l('Înapoi', 'Назад')}
+              </button>
+              <span className="tabular-nums text-gray-500">
+                {page} / {Math.max(1, Math.ceil(totalCount / PAGE_SIZE))}
+              </span>
+              <button
+                onClick={() => setPage((current) => current + 1)}
+                disabled={page >= Math.ceil(totalCount / PAGE_SIZE) || loading}
+                className="px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
+              >
+                {l('Înainte', 'Дальше')}
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* ══ EDIT PANEL (slide-in from right) ══════════════════════════════════ */}

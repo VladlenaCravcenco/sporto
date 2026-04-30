@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { supabase, type ProductRow } from '../../lib/supabase';
+import { supabase, fetchAllSupabaseRows, type ProductRow } from '../../lib/supabase';
 import { cacheGet, cacheSet, cacheInvalidate, TTL_DEFAULT } from '../../lib/queryCache';
 import type { Product } from '../data/products';
 import { categories } from '../data/products';
@@ -15,7 +15,7 @@ function extractYouTubeId(url: string | null): string | undefined {
 }
 
 // Map a Supabase row → the Product interface used across the app
-function rowToProduct(row: ProductRow): Product {
+export function rowToProduct(row: ProductRow): Product {
   return {
     id: String(row.id),
     name: {
@@ -43,6 +43,57 @@ function rowToProduct(row: ProductRow): Product {
   };
 }
 
+type StockFilter = 'all' | 'inStock' | 'onOrder';
+type CatalogSortOption = 'default' | 'price-asc' | 'price-desc';
+
+interface CatalogProductsParams {
+  page: number;
+  pageSize: number;
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  saleOnly?: boolean;
+  stockFilter?: StockFilter;
+  searchTerm?: string;
+  sortBy?: CatalogSortOption;
+}
+
+function sanitizeSearchTerm(raw: string): string {
+  return raw.trim().replace(/[,%()]/g, ' ');
+}
+
+function applyCatalogFilters(query: any, params: CatalogProductsParams) {
+  let next = query.eq('active', true);
+
+  if (params.category && params.category !== 'all') next = next.eq('category', params.category);
+  if (params.subcategory && params.subcategory !== 'all') next = next.eq('subcategory', params.subcategory);
+  if (params.brand) next = next.eq('brand', params.brand);
+  if (params.saleOnly) next = next.not('sale_price', 'is', null);
+
+  if (params.stockFilter === 'inStock') {
+    next = next.gt('qty', 0);
+  } else if (params.stockFilter === 'onOrder') {
+    next = next.lte('qty', 0);
+  }
+
+  const searchTerm = sanitizeSearchTerm(params.searchTerm || '');
+  if (searchTerm) {
+    next = next.or(`sku.ilike.%${searchTerm}%,id.ilike.%${searchTerm}%`);
+  }
+
+  if (params.sortBy === 'price-asc') {
+    next = next.order('price', { ascending: true }).order('id', { ascending: true });
+  } else if (params.sortBy === 'price-desc') {
+    next = next.order('price', { ascending: false }).order('id', { ascending: true });
+  } else {
+    next = next
+      .order('qty', { ascending: false, nullsFirst: false })
+      .order('id', { ascending: true });
+  }
+
+  return next;
+}
+
 // ─── Retry helper ─────────────────────────────────────────────────────────────
 // Retries a Supabase query up to `maxAttempts` times with exponential backoff.
 async function withRetry<T>(
@@ -61,13 +112,6 @@ async function withRetry<T>(
   }
   return { data: null, error: lastError };
 }
-
-// ─── Supabase row limit ───────────────────────────────────────────────────────
-// PostgREST default is 1000 rows. We set an explicit high limit so
-// the API never silently truncates results. At 8k products the catalog
-// uses server-side pagination (see Catalog.tsx), but other hooks that
-// need the full list use this constant.
-const MAX_ROWS = 10_000;
 
 interface UseSupabaseProductsResult {
   products: Product[];
@@ -104,14 +148,28 @@ export function useSupabaseProducts(): UseSupabaseProductsResult {
     setError(null);
 
     (async () => {
-      const { data, error: err } = await withRetry<ProductRow[]>(() =>
-        supabase
-          .from('products')
-          .select('*')
-          .eq('active', true)
-          .order('id', { ascending: true })
-          .limit(MAX_ROWS)
-      );
+      const fetchAllActiveProducts = async () => {
+        try {
+          const data = await fetchAllSupabaseRows<ProductRow>((from, to) =>
+            withRetry<ProductRow[]>(() =>
+              supabase
+                .from('products')
+                .select('*')
+                .eq('active', true)
+                .order('id', { ascending: true })
+                .range(from, to)
+            )
+          );
+          return { data, error: null };
+        } catch (error) {
+          return {
+            data: null,
+            error: { message: error instanceof Error ? error.message : 'Failed to fetch products' },
+          };
+        }
+      };
+
+      const { data, error: err } = await fetchAllActiveProducts();
 
       if (cancelled) return;
 
@@ -145,6 +203,68 @@ export function useSupabaseProducts(): UseSupabaseProductsResult {
       setTick(t => t + 1);
     },
   };
+}
+
+interface UsePaginatedCatalogProductsResult {
+  products: Product[];
+  total: number;
+  loading: boolean;
+  error: string | null;
+  connected: boolean;
+}
+
+export function usePaginatedCatalogProducts(params: CatalogProductsParams): UsePaginatedCatalogProductsResult {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [connected, setConnected] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    (async () => {
+      const from = Math.max(0, (params.page - 1) * params.pageSize);
+      const to = from + params.pageSize - 1;
+
+      const query = applyCatalogFilters(
+        supabase.from('products').select('*', { count: 'exact' }),
+        params,
+      );
+      const { data, error: err, count } = await query.range(from, to);
+
+      if (cancelled) return;
+
+      if (err) {
+        setProducts([]);
+        setTotal(0);
+        setError(err.message);
+        setConnected(false);
+      } else {
+        setProducts(((data as ProductRow[]) ?? []).map(rowToProduct));
+        setTotal(count ?? 0);
+        setConnected(true);
+      }
+
+      setLoading(false);
+    })();
+
+    return () => { cancelled = true; };
+  }, [
+    params.page,
+    params.pageSize,
+    params.category,
+    params.subcategory,
+    params.brand,
+    params.saleOnly,
+    params.stockFilter,
+    params.searchTerm,
+    params.sortBy,
+  ]);
+
+  return { products, total, loading, error, connected };
 }
 
 // ─── Single product by ID ─────────────────────────────────────────────────────

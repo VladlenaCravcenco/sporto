@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { supabase } from '../../lib/supabase';
+import { supabase, fetchAllSupabaseRows } from '../../lib/supabase';
 import { categories as staticCategories } from '../data/products';
 import { useCategoriesContext } from '../contexts/CategoriesContext';
 import {
@@ -366,7 +366,9 @@ export function AdminCategories() {
     const { data: catData, error: catErr } = await supabase.from('categories').select('*').order('sort_order').order('name_ro');
     if (catErr) { setDbError(catErr.message); setLoading(false); return; }
     const { data: subData } = await supabase.from('subcategories').select('*').order('sort_order').order('name_ro');
-    const { data: countData } = await supabase.from('products').select('category').eq('active', true);
+    const countData = await fetchAllSupabaseRows<{ category: string }>((from, to) =>
+      supabase.from('products').select('category').eq('active', true).range(from, to)
+    );
     const counts: Record<string, number> = {};
     (countData || []).forEach((r: { category: string }) => { counts[r.category] = (counts[r.category] || 0) + 1; });
     setCats((catData || []) as CatRow[]);

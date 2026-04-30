@@ -1,11 +1,12 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router';
-import { supabase, type ProductRow } from '../../lib/supabase';
+import { supabase, fetchAllSupabaseRows, type ProductRow } from '../../lib/supabase';
 import { Search, Star, X, Check, RefreshCw, ExternalLink, SlidersHorizontal } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { buildProductPath } from '../lib/product-url';
 import { OptimizedImage } from '../components/OptimizedImage';
 import { getOptimizedImageUrl } from '../../lib/imageHelper';
+import { cacheInvalidate } from '../../lib/queryCache';
 
 type Row = Pick<ProductRow, 'id' | 'name_ro' | 'name_ru' | 'category' | 'price' | 'sku' | 'image_url' | 'featured' | 'brand'>;
 
@@ -57,12 +58,15 @@ export function AdminFeatured() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase
-      .from('products')
-      .select('id, name_ro, name_ru, category, price, sku, image_url, featured, brand')
-      .eq('active', true)
-      .order('name_ro', { ascending: true });
-    setAllProducts((data as Row[]) ?? []);
+    const data = await fetchAllSupabaseRows<Row>((from, to) =>
+      supabase
+        .from('products')
+        .select('id, name_ro, name_ru, category, price, sku, image_url, featured, brand')
+        .eq('active', true)
+        .order('name_ro', { ascending: true })
+        .range(from, to)
+    );
+    setAllProducts(data ?? []);
     setLoading(false);
   };
 
@@ -79,6 +83,7 @@ export function AdminFeatured() {
     if (error) {
       showToast(t.featured.errorSave, false);
     } else {
+      cacheInvalidate('products:');
       setAllProducts(prev =>
         prev.map(p => p.id === product.id ? { ...p, featured: next } : p)
       );
