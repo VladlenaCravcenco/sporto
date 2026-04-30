@@ -11,6 +11,7 @@ import {
   ArrowUpDown,
   ArrowUp,
   ArrowDown,
+  SlidersHorizontal,
   Tag,
   Zap,
   Package,
