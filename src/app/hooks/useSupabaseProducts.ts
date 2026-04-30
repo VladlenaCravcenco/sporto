@@ -122,7 +122,7 @@ interface UseSupabaseProductsResult {
   refetch: () => void;
 }
 
-export function useSupabaseProducts(): UseSupabaseProductsResult {
+export function useSupabaseProducts(enabled = true): UseSupabaseProductsResult {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +130,14 @@ export function useSupabaseProducts(): UseSupabaseProductsResult {
   const [tick, setTick] = useState(0);
 
   useEffect(() => {
+    if (!enabled) {
+      setProducts([]);
+      setLoading(false);
+      setError(null);
+      setConnected(false);
+      return;
+    }
+
     let cancelled = false;
 
     const CACHE_KEY = 'products:all';
@@ -191,7 +199,7 @@ export function useSupabaseProducts(): UseSupabaseProductsResult {
     })();
 
     return () => { cancelled = true; };
-  }, [tick]);
+  }, [enabled, tick]);
 
   return {
     products,

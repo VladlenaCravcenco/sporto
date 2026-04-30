@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import {
-  Package, ArrowRight, Search, ShoppingCart, Check,
-  Loader2, Clock, X, Phone, TrendingUp, Mic,
+  Package, ArrowRight, Search, LayoutGrid, ShoppingCart, Check,
+  ChevronRight, Loader2, Clock, X, Sparkles, Tag, Phone, TrendingUp, Mic,
 } from 'lucide-react';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
@@ -10,10 +10,14 @@ import type { Product } from '../data/products';
 import { useCategories } from '../contexts/CategoriesContext';
 import { CONTACTS } from '../../lib/contacts';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
-import { getSearchHistory, addToHistory, removeFromHistory, clearHistory, POPULAR_QUERIES } from '../../lib/searchEngine';
+import {
+  norm, searchProducts, getSuggestions,
+  getSearchHistory, addToHistory, removeFromHistory, clearHistory,
+  POPULAR_QUERIES,
+  type SearchResult,
+} from '../../lib/searchEngine';
 import { buildProductPath } from '../lib/product-url';
-import { supabase, type ProductRow } from '../../lib/supabase';
-import { rowToProduct } from '../hooks/useSupabaseProducts';
+import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
 
 interface SearchDropdownProps {
   query: string;
@@ -21,15 +25,28 @@ interface SearchDropdownProps {
   onQueryChange?: (q: string) => void;
 }
 
-interface SearchHit {
-  product: Product;
+function Highlight({ text, tokens }: { text: string; tokens: string[] }) {
+  if (!tokens.length) return <span className="text-gray-900">{text}</span>;
+  const escaped = tokens.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')).join('|');
+  try {
+    const regex = new RegExp(`(${escaped})`, 'gi');
+    const parts = text.split(regex);
+    return (
+      <span>
+        {parts.map((part, i) =>
+          tokens.some(t => norm(part).includes(t)) ? (
+            <span key={i} className="text-black font-semibold">{part}</span>
+          ) : (
+            <span key={i} className="text-gray-500">{part}</span>
+          )
+        )}
+      </span>
+    );
+  } catch {
+    return <span className="text-gray-900">{text}</span>;
+  }
 }
 
-function sanitizeSearchTerm(raw: string): string {
-  return raw.trim().replace(/[,%()]/g, ' ');
-}
-
-// ── Миниатюра товара ───────────────────────────────────────────────────────────
 function Thumb({ product }: { product: Product }) {
   const [imgErr, setImgErr] = useState(false);
   const src = product.image || (product.images?.[0] ?? '');
@@ -47,7 +64,6 @@ function Thumb({ product }: { product: Product }) {
   );
 }
 
-// ── Кнопка «Добавить в корзину» ───────────────────────────────────────────────
 function QuickAdd({ product }: { product: Product }) {
   const { addToCart, isInCart } = useCart();
   const inCart = isInCart(product.id);
@@ -77,6 +93,19 @@ function QuickAdd({ product }: { product: Product }) {
   );
 }
 
+function MatchBadge({ type }: { type: string }) {
+  if (type === 'fuzzy') {
+    return <span className="text-[9px] px-1 py-px bg-amber-50 text-amber-500 border border-amber-200">~опечатка</span>;
+  }
+  if (type === 'synonym') {
+    return <span className="text-[9px] px-1 py-px bg-blue-50 text-blue-500 border border-blue-200">синоним</span>;
+  }
+  if (type === 'concept') {
+    return <span className="text-[9px] px-1 py-px bg-purple-50 text-purple-500 border border-purple-200">по смыслу</span>;
+  }
+  return null;
+}
+
 export function SearchDropdown({
   query, onSelect, onQueryChange,
 }: SearchDropdownProps) {
@@ -87,13 +116,11 @@ export function SearchDropdown({
   const [activeIdx, setActiveIdx] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const [history, setHistory] = useState<string[]>([]);
-  const [results, setResults] = useState<SearchHit[]>([]);
-  const [loading, setLoading] = useState(false);
+  const { products, loading } = useSupabaseProducts();
 
   const L = (ro: string, ru: string) => lang === 'ro' ? ro : ru;
   const isEmptyQuery = query.trim().length === 0;
 
-  // Обновляем историю при каждом изменении запроса
   useEffect(() => { setHistory(getSearchHistory()); }, [query]);
 
   const removeHistoryItem = useCallback((q: string) => {
@@ -101,42 +128,29 @@ export function SearchDropdown({
   }, []);
   const clearAllHistory = useCallback(() => { clearHistory(); setHistory([]); }, []);
 
-  useEffect(() => {
-    let cancelled = false;
+  const results: SearchResult | null = useMemo(() => {
+    if (isEmptyQuery || !products.length) return null;
+    return searchProducts(products, query, lang, 8);
+  }, [query, products, lang, isEmptyQuery]);
 
-    if (isEmptyQuery || query.trim().length < 2) {
-      setResults([]);
-      setLoading(false);
-      return;
-    }
+  const catMatches = useMemo(() => {
+    if (isEmptyQuery || !results) return [];
+    const other: Language = lang === 'ro' ? 'ru' : 'ro';
+    const all = [...results.rawTokens, ...results.expandedTokens.withSynonyms];
+    return categories.filter(cat => {
+      const n = norm(cat.name[lang]);
+      const no = norm(cat.name[other]);
+      return all.some(t => n.includes(t) || no.includes(t));
+    }).slice(0, 2);
+  }, [results, categories, lang, isEmptyQuery]);
 
-    setLoading(true);
-    (async () => {
-      const term = sanitizeSearchTerm(query);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('active', true)
-        .or(`sku.ilike.%${term}%,id.ilike.%${term}%`)
-        .order('qty', { ascending: false, nullsFirst: false })
-        .order('id', { ascending: true })
-        .limit(8);
+  const suggestions = useMemo(() => {
+    if (!results || results.total > 0 || !results.rawTokens.length) return [];
+    return getSuggestions(products, results.rawTokens, lang);
+  }, [results, products, lang]);
 
-      if (cancelled) return;
-      if (error) {
-        setResults([]);
-      } else {
-        setResults(((data as ProductRow[]) ?? []).map((row) => ({ product: rowToProduct(row) })));
-      }
-      setLoading(false);
-    })();
+  const totalRows = catMatches.length + (results?.hits.length ?? 0);
 
-    return () => { cancelled = true; };
-  }, [isEmptyQuery, query]);
-
-  const totalRows = results.length;
-
-  // ── Навигация клавишами ────────────────────────────────────────────────────
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === 'ArrowDown') {
@@ -145,17 +159,19 @@ export function SearchDropdown({
         e.preventDefault(); setActiveIdx(i => i <= 0 ? totalRows : i - 1);
       } else if (e.key === 'Enter') {
         e.preventDefault();
-        if (activeIdx === totalRows || activeIdx === -1 || results.length === 0) {
+        if (activeIdx === totalRows || activeIdx === -1) {
           goTo(`/catalog?search=${encodeURIComponent(query.trim())}`);
+        } else if (activeIdx < catMatches.length) {
+          goTo(`/catalog?category=${catMatches[activeIdx].id}`);
         } else {
-          const prod = results[activeIdx]?.product;
+          const prod = results?.hits[activeIdx - catMatches.length]?.product;
           if (prod) goTo(buildProductPath(prod, lang));
         }
       }
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [activeIdx, totalRows, results, query, lang]);
+  }, [activeIdx, totalRows, catMatches, results, query, lang]);
 
   useEffect(() => { setActiveIdx(-1); }, [query]);
 
@@ -174,27 +190,23 @@ export function SearchDropdown({
 
   const suggest = (q: string) => { onQueryChange?.(q); };
 
-  // ── Загрузка: products ещё не пришли ──────────────────────────────────────
   if (loading && !isEmptyQuery) {
     return (
       <div className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999]"
         style={{ top: '100%' }}>
         <div className="flex items-center gap-3 px-4 py-5">
           <Loader2 className="w-4 h-4 text-gray-300 animate-spin" />
-          <span className="text-xs text-gray-400">{L('Se caută după SKU...', 'Поиск по SKU...')}</span>
+          <span className="text-xs text-gray-400">{L('Se caută...', 'Загрузка каталога...')}</span>
         </div>
       </div>
     );
   }
 
-  // ── Пустой запрос: история + популярные ──────────────────────────────────
   if (isEmptyQuery) {
     const popular = POPULAR_QUERIES[lang];
     return (
       <div className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999] overflow-hidden"
         style={{ top: '100%', maxHeight: 480 }}>
-
-        {/* История */}
         {history.length > 0 && (
           <>
             <div className="px-4 pt-3 pb-1.5 flex items-center justify-between">
@@ -228,7 +240,6 @@ export function SearchDropdown({
           </>
         )}
 
-        {/* Популярные */}
         <div className="px-4 pt-3 pb-4">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-3 h-3 text-gray-400" />
@@ -249,23 +260,7 @@ export function SearchDropdown({
     );
   }
 
-  if (!isEmptyQuery && query.trim().length < 2) {
-    return (
-      <div className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999]"
-        style={{ top: '100%' }}>
-        <div className="px-4 py-4">
-          <div className="flex items-center gap-3">
-            <Search className="w-4 h-4 text-gray-300 flex-shrink-0" />
-            <span className="text-xs text-gray-500">
-              {L('Introduceți minimum 2 caractere din SKU sau cod.', 'Введите минимум 2 символа SKU или кода.')}
-            </span>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (!loading && !isEmptyQuery && results.length === 0) {
+  if (results && results.total === 0) {
     return (
       <div className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999]"
         style={{ top: '100%' }}>
@@ -277,6 +272,22 @@ export function SearchDropdown({
               <span className="text-gray-900">«{query}»</span>
             </span>
           </div>
+
+          {suggestions.length > 0 && (
+            <div className="mb-3">
+              <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
+                {L('Încercați:', 'Попробуйте:')}
+              </p>
+              <div className="flex flex-wrap gap-1.5">
+                {suggestions.map(s => (
+                  <button key={s} onMouseDown={e => e.preventDefault()} onClick={() => suggest(s)}
+                    className="text-xs px-2.5 py-1 border border-gray-300 text-gray-700 hover:border-black hover:text-black transition-colors">
+                    {s}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="mb-3">
             <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1.5">
@@ -304,24 +315,95 @@ export function SearchDropdown({
     );
   }
 
-  // ── Результаты ────────────────────────────────────────────────────────────
+  if (!results) {
+    return (
+      <div className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999]"
+        style={{ top: '100%' }}>
+        <div className="px-4 py-4">
+          <div className="flex items-center gap-3">
+            <Search className="w-4 h-4 text-gray-300" />
+            <span className="text-xs text-gray-500">
+              {L('Căutarea momentan este indisponibilă. Reîncercați mai târziu.', 'Поиск временно недоступен. Попробуйте позже.')}
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div ref={containerRef}
       className="absolute left-0 right-0 bg-white border border-gray-200 shadow-2xl z-[999] overflow-hidden flex flex-col"
       style={{ top: '100%', maxHeight: 540 }}>
+      {results.priceRange && (
+        <div className="px-4 py-1.5 bg-gray-50 border-b border-gray-100 flex items-center gap-2 flex-shrink-0">
+          <Tag className="w-3 h-3 text-gray-400" />
+          <span className="text-[10px] text-gray-500">
+            {results.priceRange.min !== undefined && results.priceRange.max !== undefined
+              ? `${results.priceRange.min.toLocaleString()} – ${results.priceRange.max.toLocaleString()} MDL`
+              : results.priceRange.max !== undefined
+                ? `${L('până la', 'до')} ${results.priceRange.max.toLocaleString()} MDL`
+                : `${L('de la', 'от')} ${results.priceRange.min!.toLocaleString()} MDL`}
+          </span>
+        </div>
+      )}
 
-      {/* Товары */}
-      {results.length > 0 && (
+      {(results.hasFuzzy || results.hasSynonym || results.hasConcept) && (
+        <div className="px-4 py-1.5 bg-gradient-to-r from-violet-50 to-transparent border-b border-violet-100 flex items-center gap-2 flex-shrink-0">
+          <Sparkles className="w-3 h-3 text-violet-400 flex-shrink-0" />
+          <span className="text-[10px] text-violet-500">
+            {results.hasConcept
+              ? L('Rezultate după sensul cererii', 'Результаты по смыслу запроса')
+              : results.hasSynonym
+                ? L('Incluse sinonime și variante', 'Включены синонимы и варианты')
+                : L('Căutare aproximativă — greșelile de tipar luate în calcul', 'Нечёткий поиск — опечатки учтены')}
+          </span>
+        </div>
+      )}
+
+      {catMatches.length > 0 && (
+        <div className="border-b border-gray-100 flex-shrink-0">
+          <div className="px-4 pt-3 pb-1">
+            <span className="text-[9px] uppercase tracking-[0.18em] text-gray-400">
+              {L('Categorii', 'Категории')}
+            </span>
+          </div>
+          {catMatches.map((cat, i) => (
+            <div key={cat.id} data-idx={i}
+              onMouseDown={e => e.preventDefault()}
+              onClick={() => goTo(`/catalog?category=${cat.id}`)}
+              onMouseEnter={() => setActiveIdx(i)}
+              className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${activeIdx === i ? 'bg-black' : 'hover:bg-gray-50'}`}>
+              <div className={`w-8 h-8 flex items-center justify-center flex-shrink-0 ${activeIdx === i ? 'bg-white/10' : 'bg-gray-100'}`}>
+                <LayoutGrid className={`w-3.5 h-3.5 ${activeIdx === i ? 'text-white' : 'text-gray-500'}`} />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className={`text-xs ${activeIdx === i ? 'text-white' : 'text-gray-900'}`}>{cat.name[lang]}</p>
+                <p className="text-[10px] mt-0.5 text-gray-400">
+                  {cat.subcategories.length} {L('subcategorii', 'подкатегорий')}
+                </p>
+              </div>
+              <ChevronRight className={`w-3.5 h-3.5 ${activeIdx === i ? 'text-gray-400' : 'text-gray-300'}`} />
+            </div>
+          ))}
+        </div>
+      )}
+
+      {results.hits.length > 0 && (
         <div className="overflow-y-auto flex-1" style={{ scrollbarWidth: 'thin' }}>
           <div className="px-4 pt-3 pb-1 flex items-center justify-between">
             <span className="text-[9px] uppercase tracking-[0.18em] text-gray-400">
               {L('Produse', 'Товары')}
             </span>
-            <span className="text-[10px] text-gray-400">{results.length}</span>
+            {results.total > results.hits.length && (
+              <span className="text-[10px] text-gray-400">
+                {results.hits.length} {L('din', 'из')} {results.total}
+              </span>
+            )}
           </div>
 
-          {results.map(({ product }, i) => {
-            const idx = i;
+          {results.hits.map(({ product, matchType }, i) => {
+            const idx = catMatches.length + i;
             const catLabel = categories.find(c => c.id === product.category)?.name[lang] ?? '';
             const isActive = activeIdx === idx;
             return (
@@ -332,7 +414,12 @@ export function SearchDropdown({
                 className={`flex items-center gap-3 px-4 py-2.5 cursor-pointer transition-colors ${isActive ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
                 <Thumb product={product} />
                 <div className="flex-1 min-w-0 pr-1">
-                  <p className="text-xs leading-snug line-clamp-1 text-gray-900">{product.name[lang]}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <p className="text-xs leading-snug line-clamp-1">
+                      <Highlight text={product.name[lang]} tokens={results.rawTokens} />
+                    </p>
+                    {matchType !== 'exact' && <MatchBadge type={matchType} />}
+                  </div>
                   <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
                     {product.brand && (
                       <span className="text-[10px] text-gray-500 bg-gray-100 px-1.5 py-px">{product.brand}</span>
@@ -368,10 +455,25 @@ export function SearchDropdown({
               </div>
             );
           })}
+
+          {results.matchedBrands.length > 1 && (
+            <div className="px-4 py-2.5 border-t border-gray-100 flex items-center gap-2 flex-wrap">
+              <span className="text-[9px] uppercase tracking-wider text-gray-400">
+                {L('Branduri:', 'Бренды:')}
+              </span>
+              {results.matchedBrands.map(brand => (
+                <button key={brand}
+                  onMouseDown={e => e.preventDefault()}
+                  onClick={() => goTo(`/catalog?brand=${encodeURIComponent(brand)}`)}
+                  className="text-[10px] px-2 py-0.5 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors">
+                  {brand}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Все результаты */}
       <div data-idx={totalRows}
         onMouseDown={e => e.preventDefault()}
         onClick={() => goTo(`/catalog?search=${encodeURIComponent(query.trim())}`)}
@@ -384,13 +486,15 @@ export function SearchDropdown({
           {L('Toate rezultatele pentru', 'Все результаты по')}{' '}
           <span className={activeIdx === totalRows ? 'text-gray-300' : 'text-black'}>«{query}»</span>
         </span>
-        <ArrowRight className={`w-3.5 h-3.5 ${activeIdx === totalRows ? 'text-gray-300' : 'text-gray-400'}`} />
+        <span className={`flex items-center gap-1.5 text-xs ${activeIdx === totalRows ? 'text-gray-300' : 'text-gray-400'}`}>
+          <span className="tabular-nums">{results.total}</span>
+          <ArrowRight className="w-3.5 h-3.5" />
+        </span>
       </div>
     </div>
   );
 }
 
-// ── Голосовой поиск ────────────────────────────────────────────────────────────
 interface VoiceSearchButtonProps {
   onResult: (text: string) => void;
   lang: Language;
@@ -418,7 +522,7 @@ export function VoiceSearchButton({ onResult, lang }: VoiceSearchButtonProps) {
     r.interimResults = false;
     r.maxAlternatives = 1;
     r.onstart = () => setListening(true);
-    r.onend   = () => setListening(false);
+    r.onend = () => setListening(false);
     r.onerror = () => setListening(false);
     r.onresult = (e: SpeechRecognitionEvent) => {
       const text = e.results[0][0].transcript;
