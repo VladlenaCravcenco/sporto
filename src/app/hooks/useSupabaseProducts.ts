@@ -4,6 +4,7 @@ import { cacheGet, cacheSet, cacheInvalidate, TTL_DEFAULT } from '../../lib/quer
 import type { Product } from '../data/products';
 import { extractProductIdFromParam } from '../lib/product-url';
 import { useCategories } from '../contexts/CategoriesContext';
+import { parsePrice } from '../../lib/searchEngine';
 
 // Extract YouTube video ID from any YouTube URL
 function extractYouTubeId(url: string | null): string | undefined {
@@ -62,6 +63,17 @@ function sanitizeSearchTerm(raw: string): string {
   return raw.trim().replace(/[,%()]/g, ' ');
 }
 
+function buildCatalogSearch(searchTerm: string) {
+  const pattern = `%${searchTerm}%`;
+  return [
+    `name_ro.ilike.${pattern}`,
+    `name_ru.ilike.${pattern}`,
+    `sku.ilike.${pattern}`,
+    `brand.ilike.${pattern}`,
+    `id.ilike.${pattern}`,
+  ].join(',');
+}
+
 function applyCatalogFilters(query: any, params: CatalogProductsParams) {
   let next = query.eq('active', true);
 
@@ -76,9 +88,14 @@ function applyCatalogFilters(query: any, params: CatalogProductsParams) {
     next = next.lte('qty', 0);
   }
 
-  const searchTerm = sanitizeSearchTerm(params.searchTerm || '');
+  const { price, cleanQuery } = parsePrice(params.searchTerm || '');
+  const searchTerm = sanitizeSearchTerm(cleanQuery);
+
+  if (price.min !== undefined) next = next.gte('price', price.min);
+  if (price.max !== undefined) next = next.lte('price', price.max);
+
   if (searchTerm) {
-    next = next.or(`sku.ilike.%${searchTerm}%,id.ilike.%${searchTerm}%`);
+    next = next.or(buildCatalogSearch(searchTerm));
   }
 
   if (params.sortBy === 'price-asc') {

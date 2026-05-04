@@ -1,7 +1,6 @@
-import { usePaginatedCatalogProducts, useSupabaseProducts } from '../hooks/useSupabaseProducts';
+import { usePaginatedCatalogProducts } from '../hooks/useSupabaseProducts';
 import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
 import { SeoHead, SEO_PAGES } from '../components/SeoHead';
-import { norm, expandTokens, scoreProduct as engineScore, parsePrice } from '../../lib/searchEngine';
 import {
   X,
   Search,
@@ -17,13 +16,12 @@ import {
   Zap,
   Package,
 } from 'lucide-react';
-import { useState, useMemo, useRef, useEffect } from 'react';
+import { useState, useMemo, useRef, useEffect, useDeferredValue } from 'react';
 import { getCategoryIcon } from '../lib/category-icons';
 import { useSearchParams } from 'react-router';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useCategories } from '../contexts/CategoriesContext';
 import { ProductCard } from '../components/ProductCard';
-import { isProductInStock } from '../lib/productStock';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 
@@ -91,7 +89,7 @@ export function Catalog() {
   }, []);
 
   const currentCategory = categories.find((c) => c.id === selectedCategory);
-  const searchEnabled = searchTerm.trim().length > 0;
+  const deferredSearchTerm = useDeferredValue(searchTerm);
 
   const { products, total: totalProducts, loading: dbLoading, error: dbError, connected } = usePaginatedCatalogProducts({
     page,
@@ -101,91 +99,18 @@ export function Catalog() {
     brand: selectedBrand || undefined,
     saleOnly,
     stockFilter,
-    searchTerm,
+    searchTerm: deferredSearchTerm,
     sortBy,
   });
-  const {
-    products: searchableProducts,
-    loading: searchLoading,
-    error: searchError,
-    connected: searchConnected,
-  } = useSupabaseProducts(searchEnabled);
-
-  const searchFiltered = useMemo(() => {
-    if (!searchEnabled) return [];
-
-    const { price: priceFromQuery, cleanQuery } = parsePrice(searchTerm.trim());
-    const rawSearch = cleanQuery.toLowerCase();
-    const tokens = norm(rawSearch).split(/\s+/).filter(Boolean);
-    const expanded = tokens.length ? expandTokens(tokens, rawSearch) : null;
-    const hasPriceInQuery = priceFromQuery.min !== undefined || priceFromQuery.max !== undefined;
-
-    let result = searchableProducts.filter((product) => {
-      if (selectedCategory !== 'all' && product.category !== selectedCategory) return false;
-      if (selectedSubcategory !== 'all' && product.subcategory !== selectedSubcategory) return false;
-      if (selectedBrand && (product as any).brand?.trim() !== selectedBrand) return false;
-      if (saleOnly && !product.sale_price) return false;
-      if (stockFilter !== 'all') {
-        const inStock = isProductInStock(product);
-        if (stockFilter === 'inStock' && !inStock) return false;
-        if (stockFilter === 'onOrder' && inStock) return false;
-      }
-      if (hasPriceInQuery) {
-        if (priceFromQuery.min !== undefined && product.price < priceFromQuery.min) return false;
-        if (priceFromQuery.max !== undefined && product.price > priceFromQuery.max) return false;
-      }
-      if (tokens.length > 0 && expanded) {
-        const scored = engineScore(product as any, tokens, lang, expanded);
-        if (!scored || scored.score <= 0) return false;
-      }
-      return true;
-    });
-
-    if (tokens.length > 0 && sortBy === 'default' && expanded) {
-      result = [...result].sort((a, b) => {
-        const sa = engineScore(a as any, tokens, lang, expanded)?.score ?? 0;
-        const sb = engineScore(b as any, tokens, lang, expanded)?.score ?? 0;
-        return sb - sa;
-      });
-    } else if (sortBy === 'price-asc') {
-      result = [...result].sort((a, b) => a.price - b.price);
-    } else if (sortBy === 'price-desc') {
-      result = [...result].sort((a, b) => b.price - a.price);
-    }
-
-    const inStock = result.filter((product) => isProductInStock(product));
-    const onOrder = result.filter((product) => !isProductInStock(product));
-    return [...inStock, ...onOrder];
-  }, [searchEnabled, searchTerm, searchableProducts, selectedCategory, selectedSubcategory, selectedBrand, saleOnly, stockFilter, sortBy, lang]);
-
-  const displayProducts = searchEnabled
-    ? searchFiltered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
-    : products;
-  const displayTotal = searchEnabled ? searchFiltered.length : totalProducts;
-  const displayLoading = searchEnabled ? searchLoading : dbLoading;
-  const displayError = searchEnabled ? searchError : dbError;
-  const displayConnected = searchEnabled ? searchConnected : connected;
+  const displayProducts = products;
+  const displayTotal = totalProducts;
+  const displayLoading = dbLoading;
+  const displayError = dbError;
+  const displayConnected = connected;
 
   const availableBrands = useMemo(() => {
-    if (searchEnabled) {
-      const base = searchableProducts.filter(p => {
-        if (selectedCategory !== 'all' && p.category !== selectedCategory) return false;
-        if (selectedSubcategory !== 'all' && p.subcategory !== selectedSubcategory) return false;
-        return true;
-      });
-      const counts: Record<string, number> = {};
-      base.forEach(p => {
-        const b = (p as any).brand;
-        if (b && typeof b === 'string' && b.trim()) {
-          counts[b.trim()] = (counts[b.trim()] || 0) + 1;
-        }
-      });
-      return Object.entries(counts)
-        .sort((a, b) => b[1] - a[1])
-        .map(([name, count]) => ({ name, count }));
-    }
     return allBrands.filter((brand) => brand.active !== false).map((brand) => ({ name: brand.name, count: 1 }));
-  }, [allBrands, searchEnabled, searchableProducts, selectedCategory, selectedSubcategory]);
+  }, [allBrands]);
 
   const totalPages = Math.max(1, Math.ceil(displayTotal / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -1061,17 +986,12 @@ export function Catalog() {
 
             {/* Results info */}
             {displayTotal > 0 && (
-              <div className="flex items-center justify-between mb-4">
+              <div className="mb-4">
                 <p className="text-xs text-gray-400">
                   {language === 'ro'
                     ? `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, displayTotal)} din ${displayTotal} produse`
                     : `${(safePage - 1) * PAGE_SIZE + 1}–${Math.min(safePage * PAGE_SIZE, displayTotal)} из ${displayTotal} товаров`}
                 </p>
-                {searchEnabled && (
-                  <p className="text-xs text-gray-400">
-                    {language === 'ro' ? 'Sortat după relevanță' : 'Отсортировано по релевантности'}
-                  </p>
-                )}
               </div>
             )}
 

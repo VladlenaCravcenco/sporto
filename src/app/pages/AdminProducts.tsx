@@ -449,6 +449,17 @@ function sanitizeQuery(raw: string) {
   return raw.trim().replace(/[,%()]/g, ' ');
 }
 
+function buildAdminProductSearch(search: string) {
+  const pattern = `%${search}%`;
+  return [
+    `name_ro.ilike.${pattern}`,
+    `name_ru.ilike.${pattern}`,
+    `sku.ilike.${pattern}`,
+    `brand.ilike.${pattern}`,
+    `id.ilike.${pattern}`,
+  ].join(',');
+}
+
 function applyAdminProductFilters(
   query: any,
   params: {
@@ -465,7 +476,7 @@ function applyAdminProductFilters(
   const search = sanitizeQuery(params.search);
   const brand = params.brand.trim();
 
-  if (search) next = next.or(`sku.ilike.%${search}%,id.ilike.%${search}%`);
+  if (search) next = next.or(buildAdminProductSearch(search));
   if (params.category.trim()) next = next.eq('category', params.category.trim());
   if (brand) next = next.ilike('brand', `%${brand}%`);
   if (params.subcategory.trim()) next = next.eq('subcategory', params.subcategory.trim());
