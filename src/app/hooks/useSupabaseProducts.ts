@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { supabase, fetchAllSupabaseRows, type ProductRow } from '../../lib/supabase';
-import { cacheGet, cacheSet, cacheInvalidate, TTL_DEFAULT } from '../../lib/queryCache';
+import { cacheGet, cacheSet, cacheInvalidate } from '../../lib/queryCache';
 import type { Product } from '../data/products';
 import { extractProductIdFromParam } from '../lib/product-url';
 import { useCategories } from '../contexts/CategoriesContext';
@@ -59,56 +59,9 @@ interface CatalogProductsParams {
   sortBy?: CatalogSortOption;
 }
 
-function sanitizeSearchTerm(raw: string): string {
-  return raw.trim().replace(/[,%()]/g, ' ');
-}
-
-function buildCatalogSearch(searchTerm: string) {
-  const pattern = `%${searchTerm}%`;
-  return [
-    `name_ro.ilike.${pattern}`,
-    `name_ru.ilike.${pattern}`,
-    `sku.ilike.${pattern}`,
-    `brand.ilike.${pattern}`,
-    `id.ilike.${pattern}`,
-  ].join(',');
-}
-
-function applyCatalogFilters(query: any, params: CatalogProductsParams) {
-  let next = query.eq('active', true);
-
-  if (params.category && params.category !== 'all') next = next.eq('category', params.category);
-  if (params.subcategory && params.subcategory !== 'all') next = next.eq('subcategory', params.subcategory);
-  if (params.brand) next = next.eq('brand', params.brand);
-  if (params.saleOnly) next = next.not('sale_price', 'is', null);
-
-  if (params.stockFilter === 'inStock') {
-    next = next.gt('qty', 0);
-  } else if (params.stockFilter === 'onOrder') {
-    next = next.lte('qty', 0);
-  }
-
-  const { price, cleanQuery } = parsePrice(params.searchTerm || '');
-  const searchTerm = sanitizeSearchTerm(cleanQuery);
-
-  if (price.min !== undefined) next = next.gte('price', price.min);
-  if (price.max !== undefined) next = next.lte('price', price.max);
-
-  if (searchTerm) {
-    next = next.or(buildCatalogSearch(searchTerm));
-  }
-
-  if (params.sortBy === 'price-asc') {
-    next = next.order('price', { ascending: true }).order('id', { ascending: true });
-  } else if (params.sortBy === 'price-desc') {
-    next = next.order('price', { ascending: false }).order('id', { ascending: true });
-  } else {
-    next = next
-      .order('qty', { ascending: false, nullsFirst: false })
-      .order('id', { ascending: true });
-  }
-
-  return next;
+interface CatalogSearchRpcRow extends ProductRow {
+  relevance: number | null;
+  total_count: number;
 }
 
 // ─── Retry helper ─────────────────────────────────────────────────────────────
@@ -251,14 +204,22 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
     setError(null);
 
     (async () => {
-      const from = Math.max(0, (params.page - 1) * params.pageSize);
-      const to = from + params.pageSize - 1;
+      const { price, cleanQuery } = parsePrice(params.searchTerm || '');
+      const queryText = cleanQuery.trim() || null;
 
-      const query = applyCatalogFilters(
-        supabase.from('products').select('*', { count: 'exact' }),
-        params,
-      );
-      const { data, error: err, count } = await query.range(from, to);
+      const { data, error: err } = await supabase.rpc('search_products_catalog', {
+        p_query: queryText,
+        p_category: params.category && params.category !== 'all' ? params.category : null,
+        p_subcategory: params.subcategory && params.subcategory !== 'all' ? params.subcategory : null,
+        p_brand: params.brand || null,
+        p_sale_only: params.saleOnly ?? false,
+        p_stock_filter: params.stockFilter ?? 'all',
+        p_price_min: price.min ?? null,
+        p_price_max: price.max ?? null,
+        p_sort_by: params.sortBy ?? 'default',
+        p_page: params.page,
+        p_page_size: params.pageSize,
+      });
 
       if (cancelled) return;
 
@@ -268,8 +229,9 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
         setError(err.message);
         setConnected(false);
       } else {
-        setProducts(((data as ProductRow[]) ?? []).map(rowToProduct));
-        setTotal(count ?? 0);
+        const rows = (data as CatalogSearchRpcRow[] | null) ?? [];
+        setProducts(rows.map(rowToProduct));
+        setTotal(rows[0]?.total_count ?? 0);
         setConnected(true);
       }
 
