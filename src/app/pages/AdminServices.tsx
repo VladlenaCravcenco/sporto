@@ -33,11 +33,11 @@ function BiField({ label, value, onChange, textarea, placeholder }: {
 }) {
   const cls = 'w-full bg-black border border-white/20 px-2.5 text-xs text-white placeholder-gray-700 focus:border-white/60 focus:outline-none transition-colors';
   return (
-    <div>
+    <div className="min-w-0">
       <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{label}</div>
-      <div className="grid grid-cols-2 gap-2">
+      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
         {(['ro', 'ru'] as const).map(l => (
-          <div key={l}>
+          <div key={l} className="min-w-0">
             <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">{l.toUpperCase()}</div>
             {textarea
               ? <textarea rows={2} value={value[l]} placeholder={placeholder?.[l]}
@@ -113,11 +113,11 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
   const t = (b: BiText | undefined) => b?.[lang] || b?.ro || '';
   const sections: Record<SectionKey, React.ReactNode> = {
     stats: data.show_stats ? (
-      <button type="button" onClick={() => focusField('stats')} className={`block w-full text-left px-8 py-6 border-b transition-colors ${activeFieldId === 'stats' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
-        <div className="grid grid-cols-3 divide-x divide-gray-100">
+      <button type="button" onClick={() => focusField('stats')} className={`block w-full text-left px-4 py-5 sm:px-8 sm:py-6 border-b transition-colors ${activeFieldId === 'stats' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
+        <div className="grid grid-cols-1 divide-y divide-gray-100 sm:grid-cols-3 sm:divide-x sm:divide-y-0">
           {data.stats.map((s, i) => (
-            <div key={i} className="px-6 first:pl-0 py-2">
-              <div className="text-3xl tabular-nums tracking-tight text-black leading-none mb-1">{t(s.n) || '—'}</div>
+            <div key={i} className="px-0 py-3 first:pt-0 last:pb-0 sm:px-6 sm:first:pl-0 sm:py-2">
+              <div className="text-2xl tabular-nums tracking-tight text-black leading-none mb-1 sm:text-3xl">{t(s.n) || '—'}</div>
               <div className="text-[10px] uppercase tracking-widest text-gray-400">{t(s.label) || '—'}</div>
             </div>
           ))}
@@ -125,9 +125,9 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
       </button>
     ) : null,
     services: data.show_services ? (
-      <button type="button" onClick={() => focusField('services')} className={`block w-full text-left px-8 py-8 border-b transition-colors ${activeFieldId === 'services' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
-        <h2 className="text-xl leading-tight tracking-tight whitespace-pre-line mb-6 text-black">{t(data.services_title)}</h2>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-6">
+      <button type="button" onClick={() => focusField('services')} className={`block w-full text-left px-4 py-6 sm:px-8 sm:py-8 border-b transition-colors ${activeFieldId === 'services' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
+        <h2 className="text-lg leading-tight tracking-tight whitespace-pre-line mb-5 text-black sm:text-xl sm:mb-6">{t(data.services_title)}</h2>
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 sm:gap-x-8 sm:gap-y-6">
           {data.services.map((s, i) => (
             <div key={i}>
               <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-2">{s.num}</div>
@@ -139,8 +139,8 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
       </button>
     ) : null,
     process: data.show_process ? (
-      <button type="button" onClick={() => focusField('process')} className={`block w-full text-left px-8 py-8 border-b transition-colors ${activeFieldId === 'process' ? 'border-black/30 bg-gray-100' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}>
-        <h2 className="text-xl leading-tight tracking-tight whitespace-pre-line mb-6 text-black">{t(data.process_title)}</h2>
+      <button type="button" onClick={() => focusField('process')} className={`block w-full text-left px-4 py-6 sm:px-8 sm:py-8 border-b transition-colors ${activeFieldId === 'process' ? 'border-black/30 bg-gray-100' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'}`}>
+        <h2 className="text-lg leading-tight tracking-tight whitespace-pre-line mb-5 text-black sm:text-xl sm:mb-6">{t(data.process_title)}</h2>
         <div className="space-y-3">
           {data.steps.map((s, i) => (
             <div key={i} className="flex gap-4 items-start">
@@ -155,9 +155,9 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
       </button>
     ) : null,
     why: data.show_why ? (
-      <button type="button" onClick={() => focusField('why')} className={`block w-full text-left px-8 py-8 border-b transition-colors ${activeFieldId === 'why' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
-        <h2 className="text-xl leading-tight tracking-tight whitespace-pre-line mb-6 text-black">{t(data.why_title)}</h2>
-        <div className="grid grid-cols-2 gap-x-8 gap-y-4">
+      <button type="button" onClick={() => focusField('why')} className={`block w-full text-left px-4 py-6 sm:px-8 sm:py-8 border-b transition-colors ${activeFieldId === 'why' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
+        <h2 className="text-lg leading-tight tracking-tight whitespace-pre-line mb-5 text-black sm:text-xl sm:mb-6">{t(data.why_title)}</h2>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-x-8">
           {data.why.map((w, i) => (
             <div key={i} className="flex items-start gap-3">
               <Check className="w-3.5 h-3.5 text-black mt-0.5 flex-shrink-0" />
@@ -171,8 +171,8 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
       </button>
     ) : null,
     cases: data.show_cases ? (
-      <button type="button" onClick={() => focusField('cases')} className={`block w-full text-left px-8 py-8 border-b transition-colors ${activeFieldId === 'cases' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
-        <h2 className="text-xl leading-tight tracking-tight whitespace-pre-line mb-6 text-black">{t(data.cases_title)}</h2>
+      <button type="button" onClick={() => focusField('cases')} className={`block w-full text-left px-4 py-6 sm:px-8 sm:py-8 border-b transition-colors ${activeFieldId === 'cases' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
+        <h2 className="text-lg leading-tight tracking-tight whitespace-pre-line mb-5 text-black sm:text-xl sm:mb-6">{t(data.cases_title)}</h2>
         {data.cases.length === 0 ? (
           <div className="border border-dashed border-gray-200 py-8 text-center text-xs text-gray-300">
             {lang === 'ro' ? 'Proiecte neadăugate' : 'Проекты не добавлены'}
@@ -195,9 +195,9 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
       </button>
     ) : null,
     cta: data.show_cta ? (
-      <button type="button" onClick={() => focusField('cta')} className={`block w-full text-left px-8 py-8 transition-colors ${activeFieldId === 'cta' ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
-        <div className="bg-black text-white px-8 py-10 text-center">
-          <h2 className="text-2xl tracking-tight text-white mb-4">{t(data.cta_title)}</h2>
+      <button type="button" onClick={() => focusField('cta')} className={`block w-full text-left px-4 py-6 sm:px-8 sm:py-8 transition-colors ${activeFieldId === 'cta' ? 'bg-gray-50' : 'hover:bg-gray-50'}`}>
+        <div className="bg-black text-white px-4 py-8 text-center sm:px-8 sm:py-10">
+          <h2 className="text-xl tracking-tight text-white mb-4 sm:text-2xl">{t(data.cta_title)}</h2>
           <p className="text-sm text-gray-400 leading-relaxed mb-6 max-w-md mx-auto">{t(data.cta_body)}</p>
           <div className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 text-[10px] uppercase tracking-widest">
             {t(data.cta_btn)}<ArrowRight className="w-3 h-3" />
@@ -209,13 +209,13 @@ function Preview({ data, lang, activeFieldId, focusField }: { data: PageData; la
   return (
     <div className="bg-white min-h-full text-black">
 
-      <button type="button" onClick={() => focusField('hero')} className={`block w-full text-left px-8 pt-10 pb-8 border-b transition-colors ${activeFieldId === 'hero' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
+      <button type="button" onClick={() => focusField('hero')} className={`block w-full text-left px-4 pt-8 pb-6 sm:px-8 sm:pt-10 sm:pb-8 border-b transition-colors ${activeFieldId === 'hero' ? 'border-black/30 bg-gray-50' : 'border-gray-100 hover:bg-gray-50'}`}>
         <div className="text-[10px] uppercase tracking-[0.2em] text-gray-300 mb-4">
           {lang === 'ro' ? 'Soluții complete · B2B' : 'Полный комплекс · B2B'}
         </div>
-        <h1 className="text-3xl leading-tight tracking-tight whitespace-pre-line mb-4 text-black">{t(data.hero_title)}</h1>
+        <h1 className="text-2xl leading-tight tracking-tight whitespace-pre-line mb-4 text-black sm:text-3xl">{t(data.hero_title)}</h1>
         <p className="text-sm text-gray-500 leading-relaxed max-w-lg mb-5">{t(data.hero_body)}</p>
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-4">
           <div className="inline-flex items-center gap-2 bg-black text-white px-5 py-2.5 text-[10px] uppercase tracking-widest">
             {t(data.hero_cta)}<ArrowRight className="w-3 h-3" />
           </div>
@@ -361,18 +361,18 @@ export function AdminServices() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-48px)] overflow-hidden bg-black">
+    <div className="flex min-h-[calc(100vh-48px)] flex-col overflow-x-hidden bg-black lg:h-[calc(100vh-48px)] lg:flex-row lg:overflow-hidden">
 
       {/* ══ LEFT — EDITOR ══ */}
-      <div className="w-[520px] shrink-0 flex flex-col border-r border-white/10 overflow-y-auto">
+      <div className="w-full min-w-0 shrink-0 flex flex-col border-b border-white/10 lg:w-[520px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
 
-        <div className="sticky top-0 z-10 bg-black border-b border-white/10 px-5 py-4">
-          <div className="flex items-center justify-between">
+        <div className="sticky top-[88px] z-10 bg-black border-b border-white/10 px-4 py-4 sm:px-5 lg:top-0">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">{l('Pagină', 'Страница')}</p>
-              <h1 className="text-base text-white">/turnkey-solutions</h1>
+              <h1 className="break-all text-sm text-white sm:text-base">/turnkey-solutions</h1>
             </div>
-            <div className="flex items-center gap-2">
+            <div className="flex flex-wrap items-center gap-2">
               <button onClick={handleReset}
                 className="h-8 px-3 text-[10px] text-gray-600 border border-white/10 hover:border-white/30 hover:text-gray-300 transition-colors uppercase tracking-wider">
                 {isRu ? 'Сброс' : 'Reset'}
@@ -394,7 +394,7 @@ export function AdminServices() {
           )}
         </div>
 
-        <div className="px-5 py-5 space-y-6">
+        <div className="min-w-0 px-4 py-5 space-y-6 sm:px-5">
 
           {/* HERO */}
           <div ref={registerField('hero')} className={activeFieldId === 'hero' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
@@ -414,7 +414,7 @@ export function AdminServices() {
                 const visible = data[showKey(section)] as boolean;
                 return (
                   <div key={section} className="border border-white/10 px-3 py-2 flex items-center gap-2">
-                    <div className="text-[10px] text-gray-400 uppercase tracking-widest flex-1">{SECTION_TITLES[section]}</div>
+                    <div className="min-w-0 flex-1 text-[10px] text-gray-400 uppercase tracking-widest break-words">{SECTION_TITLES[section]}</div>
                     <button onClick={() => set(showKey(section), (!visible) as PageData[keyof PageData])} className={`w-6 h-6 flex items-center justify-center ${visible ? 'text-green-400' : 'text-gray-600'}`}>
                       {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                     </button>
@@ -559,11 +559,11 @@ export function AdminServices() {
                         <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-2">
                           {isRu ? 'Рекомендуемый размер: 1600×900 px, формат 16:9' : 'Dimensiune recomandată: 1600×900 px, format 16:9'}
                         </div>
-                        <div className="flex items-center gap-2">
+                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                           <input value={c.image} onChange={e => upd({ ...c, image: e.target.value })}
                             placeholder="https://..."
-                            className="flex-1 h-8 bg-black border border-white/20 px-2.5 text-xs text-white focus:border-white/60 focus:outline-none" />
-                          <div className="w-8 h-8 border border-white/10 flex items-center justify-center text-gray-700">
+                            className="h-8 min-w-0 flex-1 bg-black border border-white/20 px-2.5 text-xs text-white focus:border-white/60 focus:outline-none" />
+                          <div className="w-8 h-8 shrink-0 border border-white/10 flex items-center justify-center text-gray-700">
                             <ImageIcon className="w-3.5 h-3.5" />
                           </div>
                         </div>
@@ -574,7 +574,7 @@ export function AdminServices() {
                           </div>
                         )}
                       </div>
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                         <div>
                           <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">{l('Etichetă RO', 'Подпись RO')}</div>
                           <input value={c.label_ro} onChange={e => upd({ ...c, label_ro: e.target.value })}
@@ -617,10 +617,10 @@ export function AdminServices() {
       </div>
 
       {/* ══ RIGHT — PREVIEW ══ */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <div className="shrink-0 bg-white border-b border-gray-200 px-5 py-2.5 flex items-center gap-3">
+      <div className="flex min-w-0 flex-1 flex-col overflow-hidden bg-gray-50">
+        <div className="shrink-0 bg-white border-b border-gray-200 px-4 py-2.5 flex flex-wrap items-center gap-2 sm:gap-3 sm:px-5">
           <Monitor className="w-4 h-4 text-gray-400" />
-          <span className="text-[10px] text-gray-500 flex-1 uppercase tracking-widest">/turnkey-solutions</span>
+          <span className="min-w-0 flex-1 break-all text-[10px] text-gray-500 uppercase tracking-widest">/turnkey-solutions</span>
           <div className="flex items-center border border-gray-200">
             {(['ro', 'ru'] as const).map(l => (
               <button key={l} onClick={() => setPreviewLang(l)}
@@ -636,9 +636,9 @@ export function AdminServices() {
             {hasChanges ? (isRu ? 'Не сохранено' : 'Nesalvat') : (isRu ? 'Актуально' : 'Actualizat')}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
-          <Preview data={data} lang={previewLang} activeFieldId={activeFieldId} focusField={focusField} />
-        </div>
+          <div className="min-w-0 flex-1 overflow-y-auto">
+            <Preview data={data} lang={previewLang} activeFieldId={activeFieldId} focusField={focusField} />
+          </div>
       </div>
 
     </div>
