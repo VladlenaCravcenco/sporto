@@ -265,28 +265,28 @@ export function AdminHub() {
         <rect width="100%" height="100%" fill="url(#grid-hub)" />
       </svg>
 
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 py-10">
+      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
 
         {/* Welcome */}
-        <div className="mb-10">
-          <p className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-2">Sportosfera S.R.L.</p>
-          <h1 className="text-2xl text-white">{t.hub.statsTitle}</h1>
+        <div className="mb-6 sm:mb-10">
+          <p className="text-[10px] sm:text-xs text-gray-600 uppercase tracking-[0.18em] sm:tracking-[0.2em] mb-2">Sportosfera S.R.L.</p>
+          <h1 className="text-xl sm:text-2xl text-white leading-tight">{t.hub.statsTitle}</h1>
         </div>
 
         {/* Stats bar */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-white/10 mb-8 border border-white/10">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-px bg-transparent sm:bg-white/10 mb-6 sm:mb-8 sm:border sm:border-white/10">
           {[
             { label: t.hub.totalLabel,    value: stats?.total,    icon: <Box         className="w-3.5 h-3.5" /> },
             { label: t.hub.activeLabel,   value: stats?.active,   icon: <Eye         className="w-3.5 h-3.5" /> },
             { label: t.hub.featuredLabel, value: stats?.featured, icon: <Star        className="w-3.5 h-3.5" /> },
             { label: t.hub.noImageLabel,  value: stats?.noImage,  icon: <AlertCircle className="w-3.5 h-3.5" />, warn: true },
           ].map(s => (
-            <div key={s.label} className="bg-black/80 px-5 py-4">
+            <div key={s.label} className="bg-black/80 border border-white/10 sm:border-0 px-3 sm:px-5 py-3 sm:py-4 rounded-2xl sm:rounded-none min-w-0">
               <div className={`flex items-center gap-1.5 mb-2 ${s.warn && s.value ? 'text-amber-500' : 'text-gray-600'}`}>
                 {s.icon}
-                <span className="text-[10px] uppercase tracking-widest">{s.label}</span>
+                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.18em] sm:tracking-widest truncate">{s.label}</span>
               </div>
-              <div className={`text-2xl tabular-nums ${s.warn && s.value ? 'text-amber-400' : 'text-white'}`}>
+              <div className={`text-xl sm:text-2xl tabular-nums ${s.warn && s.value ? 'text-amber-400' : 'text-white'}`}>
                 {loadingStats ? <span className="text-gray-700">—</span> : s.value ?? 0}
               </div>
             </div>
@@ -294,60 +294,60 @@ export function AdminHub() {
         </div>
 
         {/* ── PRICE LIST EXPORT ─────────────────────────────────────────────── */}
-        <div className="mb-8 border border-white/20 bg-white/5">
-          <div className="flex items-center gap-3 px-5 py-4 border-b border-white/10">
-            <div className="w-8 h-8 bg-white/10 flex items-center justify-center flex-shrink-0">
+        <div className="mb-6 sm:mb-8 border border-white/20 bg-white/5 rounded-2xl sm:rounded-none overflow-hidden">
+          <div className="flex items-start sm:items-center gap-3 px-4 sm:px-5 py-4 border-b border-white/10">
+            <div className="w-8 h-8 bg-white/10 rounded-xl sm:rounded-none flex items-center justify-center flex-shrink-0">
               <Download className="w-4 h-4 text-white" />
             </div>
-            <div>
-              <p className="text-sm text-white uppercase tracking-wider">
+            <div className="min-w-0">
+              <p className="text-[13px] sm:text-sm text-white uppercase tracking-[0.14em] sm:tracking-wider leading-tight">
                 {lang === 'ru' ? 'Выгрузить прайс-лист' : 'Exportă lista de prețuri'}
               </p>
-              <p className="text-[11px] text-gray-500 mt-0.5">
+              <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
                 {lang === 'ru' ? 'Актуальные данные из базы · Excel (.xlsx)' : 'Date actuale din bază · Excel (.xlsx)'}
               </p>
             </div>
           </div>
-          <div className="px-5 py-4 flex flex-wrap items-center gap-3">
+          <div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
             {/* Language */}
-            <div className="flex items-center gap-1">
+            <div className="grid grid-cols-3 gap-1.5 w-full sm:flex sm:items-center sm:gap-1">
               {(['both', 'ru', 'ro'] as const).map(l => (
                 <button key={l} onClick={() => setExportLang(l)}
-                  className={`px-3 py-1.5 text-[11px] uppercase tracking-wider border transition-colors ${exportLang === l ? 'bg-white text-black border-white' : 'border-white/20 text-gray-400 hover:border-white/50 hover:text-white'}`}>
+                  className={`px-2.5 py-2 sm:py-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-wider border transition-colors whitespace-nowrap ${exportLang === l ? 'bg-white text-black border-white' : 'border-white/20 text-gray-400 hover:border-white/50 hover:text-white'}`}>
                   {l === 'both' ? (lang === 'ru' ? 'Оба яз.' : 'Ambele') : l.toUpperCase()}
                 </button>
               ))}
             </div>
-            <div className="w-px h-5 bg-white/10" />
+            <div className="hidden sm:block w-px h-5 bg-white/10" />
             {/* Active only */}
             <button onClick={() => setExportActive(v => !v)}
-              className={`flex items-center gap-2 px-3 py-1.5 text-[11px] uppercase tracking-wider border transition-colors ${exportActive ? 'bg-white text-black border-white' : 'border-white/20 text-gray-400 hover:border-white/50 hover:text-white'}`}>
+              className={`flex items-center justify-center sm:justify-start gap-2 px-3 py-2 sm:py-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-wider border transition-colors w-full sm:w-auto ${exportActive ? 'bg-white text-black border-white' : 'border-white/20 text-gray-400 hover:border-white/50 hover:text-white'}`}>
               {exportActive && <Check className="w-3 h-3" />}
               {lang === 'ru' ? 'Только активные' : 'Doar active'}
             </button>
-            <div className="w-px h-5 bg-white/10" />
+            <div className="hidden sm:block w-px h-5 bg-white/10" />
             {/* Category */}
-            <div className="relative">
+            <div className="relative w-full sm:w-auto">
               <button onClick={() => setCatOpen(v => !v)}
-                className="flex items-center gap-2 px-3 py-1.5 text-[11px] uppercase tracking-wider border border-white/20 text-gray-400 hover:border-white/50 hover:text-white transition-colors">
-                <span className="max-w-[160px] truncate">{catLabel}</span>
+                className="flex items-center justify-between gap-2 w-full sm:w-auto px-3 py-2 sm:py-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-wider border border-white/20 text-gray-400 hover:border-white/50 hover:text-white transition-colors">
+                <span className="min-w-0 sm:max-w-[160px] truncate">{catLabel}</span>
                 <ChevronDown className="w-3 h-3 flex-shrink-0" />
               </button>
               {catOpen && (
-                <div className="absolute top-full left-0 mt-1 bg-gray-900 border border-white/20 z-50 shadow-2xl min-w-[200px] max-h-60 overflow-y-auto">
+                <div className="absolute top-full left-0 right-0 sm:right-auto mt-1 bg-gray-900 border border-white/20 z-50 shadow-2xl min-w-[200px] max-h-60 overflow-y-auto">
                   {[{ id: 'all', slug: 'all', name_ro: lang === 'ru' ? 'Все категории' : 'Toate categoriile' }, ...categories].map(c => (
                     <button key={c.id} onClick={() => { setExportCategory(c.id); setCatOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-[11px] flex items-center justify-between hover:bg-white/10 transition-colors ${exportCategory === c.id ? 'text-white' : 'text-gray-400'}`}>
-                      <span>{c.name_ro}</span>
+                      className={`w-full text-left px-4 py-2 text-[11px] flex items-center justify-between gap-3 hover:bg-white/10 transition-colors ${exportCategory === c.id ? 'text-white' : 'text-gray-400'}`}>
+                      <span className="min-w-0 truncate">{c.name_ro}</span>
                       {exportCategory === c.id && <Check className="w-3 h-3 flex-shrink-0" />}
                     </button>
                   ))}
                 </div>
               )}
             </div>
-            <div className="flex-1" />
+            <div className="hidden sm:block flex-1" />
             <button onClick={handleExport} disabled={exporting}
-              className="flex items-center gap-2 bg-white text-black px-5 py-2 text-[11px] uppercase tracking-widest hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed">
+              className="flex items-center justify-center gap-2 bg-white text-black px-5 py-2.5 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-widest hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
               {exporting
                 ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{lang === 'ru' ? 'Генерация...' : 'Generare...'}</>
                 : <><Download className="w-3.5 h-3.5" />{lang === 'ru' ? 'Скачать Excel' : 'Descarcă Excel'}</>
@@ -357,33 +357,33 @@ export function AdminHub() {
         </div>
 
         {/* ── MODULE CARDS ──────────────────────────────────────────────────── */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {modules.map(m => (
             <Link key={m.to} to={m.to}
-              className={`group border transition-all duration-200 flex flex-col p-6 hover:border-white ${
+              className={`group border transition-all duration-200 flex flex-col p-4 sm:p-6 hover:border-white rounded-2xl sm:rounded-none min-w-0 ${
                 m.primary ? 'border-white bg-white text-black' : 'border-white/20 bg-white/5 text-white hover:bg-white/10'
               }`}
             >
-              <div className="flex items-start justify-between mb-6">
-                <div className={`w-11 h-11 flex items-center justify-center ${m.primary ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
+              <div className="flex items-start justify-between mb-4 sm:mb-6 gap-3">
+                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-none flex items-center justify-center flex-shrink-0 ${m.primary ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
                   {m.icon}
                 </div>
                 <TrendingUp className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${m.primary ? 'text-gray-400' : 'text-gray-700'}`} />
               </div>
-              <h2 className={`text-sm uppercase tracking-wider mb-2 ${m.primary ? 'text-black' : 'text-white'}`}>
+              <h2 className={`text-[13px] sm:text-sm uppercase tracking-[0.12em] sm:tracking-wider mb-2 leading-snug break-words ${m.primary ? 'text-black' : 'text-white'}`}>
                 {m.title}
               </h2>
-              <p className={`text-xs leading-relaxed flex-1 mb-5 ${m.primary ? 'text-gray-600' : 'text-gray-500'}`}>
+              <p className={`text-[11px] sm:text-xs leading-relaxed flex-1 mb-4 sm:mb-5 break-words ${m.primary ? 'text-gray-600' : 'text-gray-500'}`}>
                 {m.desc}
               </p>
-              <div className="flex items-center gap-2">
-                <span className={`text-xs font-mono ${m.primary ? 'text-gray-500' : 'text-gray-600'}`}>
+              <div className="flex items-center gap-2 min-w-0 flex-wrap">
+                <span className={`text-[11px] sm:text-xs font-mono ${m.primary ? 'text-gray-500' : 'text-gray-600'}`}>
                   {loadingStats ? '—' : m.stat}
                 </span>
                 {m.statBad && (
                   <>
                     <span className="text-gray-400">·</span>
-                    <span className="text-xs text-red-400">{m.statBad}</span>
+                    <span className="text-[11px] sm:text-xs text-red-400 break-words">{m.statBad}</span>
                   </>
                 )}
               </div>
@@ -392,9 +392,9 @@ export function AdminHub() {
         </div>
 
         {/* Connection note */}
-        <div className="mt-8 border border-white/10 px-5 py-4 flex gap-3">
+        <div className="mt-6 sm:mt-8 border border-white/10 rounded-2xl sm:rounded-none px-4 sm:px-5 py-4 flex gap-3">
           <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-shrink-0" />
-          <p className="text-xs text-gray-500 leading-relaxed">
+          <p className="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
             <strong className="text-gray-400">
               {lang === 'ru' ? 'Всё подключено в реальном времени с сайтом.' : 'Totul este conectat live cu site-ul.'}
             </strong>{' '}

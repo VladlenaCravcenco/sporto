@@ -69,6 +69,20 @@ function AdminLayoutInner() {
     g.items.some(i => location.pathname.startsWith(i.to));
 
   const isActive = (to: string) => location.pathname.startsWith(to);
+  const mobileTabLabel = (key: 'dashboard' | 'clients' | 'products' | 'content' | 'logout') => {
+    if (lang === 'ru') {
+      if (key === 'dashboard') return 'Главная';
+      if (key === 'clients') return 'Заявки';
+      if (key === 'products') return 'Товары';
+      if (key === 'content') return 'Контент';
+      return 'Выйти';
+    }
+    if (key === 'dashboard') return 'Panou';
+    if (key === 'clients') return 'Cereri';
+    if (key === 'products') return 'Produse';
+    if (key === 'content') return 'Conținut';
+    return 'Ieși';
+  };
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -139,13 +153,13 @@ function AdminLayoutInner() {
 
       {/* ── TOP NAV ─────────────────────────────────────────────────────────── */}
       <nav ref={navRef} className="bg-black text-white sticky top-0 z-50 flex-shrink-0">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6">
+        <div className="max-w-[1600px] mx-auto px-3 sm:px-6">
           <div className="flex items-center h-12 gap-1">
 
             {/* Brand */}
-            <Link to="/admin" className="flex items-center gap-2 mr-3 flex-shrink-0">
-              <span className="text-xs tracking-[0.15em] text-white">SPORTOSFERA</span>
-              <span className="text-[9px] uppercase tracking-widest bg-white/15 text-white/70 px-1.5 py-0.5">
+            <Link to="/admin" className="flex items-center gap-1.5 mr-2 sm:mr-3 flex-shrink-0 min-w-0">
+              <span className="text-[11px] sm:text-xs tracking-[0.12em] sm:tracking-[0.15em] text-white truncate">SPORTO</span>
+              <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-widest bg-white/15 text-white/70 px-1.5 py-0.5">
                 ADMIN
               </span>
             </Link>
@@ -228,7 +242,7 @@ function AdminLayoutInner() {
             {/* ── Mobile menu button ── */}
             <button
               onClick={() => setMobileMenuOpen(open => !open)}
-              className="flex items-center justify-center w-9 h-12 text-white/50 hover:text-white transition-colors lg:hidden"
+              className="flex items-center justify-center w-8 h-12 text-white/50 hover:text-white transition-colors lg:hidden"
               aria-label="Open admin menu"
             >
               <Menu className="w-4 h-4" />
@@ -238,10 +252,10 @@ function AdminLayoutInner() {
             <div className="flex items-center gap-0.5 flex-shrink-0">
 
               {/* Language switcher */}
-              <div className="flex items-center border border-white/20 overflow-hidden mr-1">
+              <div className="flex items-center border border-white/20 overflow-hidden mr-0.5 sm:mr-1">
                 <button
                   onClick={() => setLang('ru')}
-                  className={`px-2 h-7 text-[10px] uppercase tracking-widest transition-colors ${
+                  className={`px-1.5 sm:px-2 h-7 text-[10px] uppercase tracking-widest transition-colors ${
                     lang === 'ru' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
                   }`}
                 >
@@ -250,7 +264,7 @@ function AdminLayoutInner() {
                 <div className="w-px h-4 bg-white/20" />
                 <button
                   onClick={() => setLang('ro')}
-                  className={`px-2 h-7 text-[10px] uppercase tracking-widest transition-colors ${
+                  className={`px-1.5 sm:px-2 h-7 text-[10px] uppercase tracking-widest transition-colors ${
                     lang === 'ro' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
                   }`}
                 >
@@ -262,7 +276,7 @@ function AdminLayoutInner() {
               <Link
                 to="/admin/requests"
                 onClick={clearUnread}
-                className="relative flex items-center justify-center w-9 h-12 text-white/40 hover:text-white transition-colors"
+                className="relative flex items-center justify-center w-8 sm:w-9 h-12 text-white/40 hover:text-white transition-colors"
                 title={t.nav.requests}
               >
                 <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-white' : ''}`} />
@@ -298,7 +312,7 @@ function AdminLayoutInner() {
 
         {mobileMenuOpen && (
           <div className="absolute inset-x-0 top-full bg-black text-white border-t border-white/10 z-40">
-            <div className="max-w-[1600px] mx-auto px-4 py-4 space-y-4">
+            <div className="max-w-[1600px] mx-auto px-3 sm:px-4 py-4 space-y-4">
               {GROUPS.map(group => (
                 <div key={group.key}>
                   <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60 mb-2">
@@ -310,15 +324,15 @@ function AdminLayoutInner() {
                       <Link
                         key={item.to}
                         to={item.to}
-                        className={`rounded-xl border border-white/10 px-3 py-2 text-xs text-left transition-colors ${
+                        className={`rounded-xl border border-white/10 px-3 py-2.5 text-xs text-left transition-colors min-w-0 ${
                           isActive(item.to)
                             ? 'bg-white/10 text-white'
                             : 'text-white/70 hover:text-white hover:bg-white/5'
                         }`}
                       >
-                        <div className="flex items-center gap-2">
-                          {item.icon}
-                          <span>{item.label}</span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="flex-shrink-0">{item.icon}</span>
+                          <span className="truncate">{item.label}</span>
                         </div>
                       </Link>
                     ))}
@@ -336,8 +350,8 @@ function AdminLayoutInner() {
       </div>
 
       {/* ── MOBILE BOTTOM TAB BAR ─────────────────────────────────────────────── */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-black border-t border-white/10">
-        <div className="flex items-stretch h-14">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-black/95 backdrop-blur border-t border-white/10">
+        <div className="flex items-stretch h-[58px]">
 
           {/* Dashboard */}
           <Link
@@ -350,7 +364,7 @@ function AdminLayoutInner() {
               <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-white" />
             )}
             <LayoutDashboard className="w-[18px] h-[18px]" />
-            <span className="text-[9px] tracking-wide leading-none">{t.nav.dashboard}</span>
+            <span className="max-w-[56px] truncate text-[8px] tracking-wide leading-none">{mobileTabLabel('dashboard')}</span>
           </Link>
 
           {/* 3 groups */}
@@ -375,7 +389,9 @@ function AdminLayoutInner() {
                     </span>
                   )}
                 </span>
-                <span className="text-[9px] tracking-wide leading-none">{group.label}</span>
+                <span className="max-w-[56px] truncate text-[8px] tracking-wide leading-none">
+                  {mobileTabLabel(group.key as 'clients' | 'products' | 'content')}
+                </span>
               </Link>
             );
           })}
@@ -386,7 +402,7 @@ function AdminLayoutInner() {
             className="flex-1 flex flex-col items-center justify-center gap-0.5 text-white/35 active:text-red-400 transition-colors"
           >
             <LogOut className="w-[18px] h-[18px]" />
-            <span className="text-[9px] tracking-wide leading-none">{t.nav.logout}</span>
+            <span className="max-w-[56px] truncate text-[8px] tracking-wide leading-none">{mobileTabLabel('logout')}</span>
           </button>
 
         </div>
