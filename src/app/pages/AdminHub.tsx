@@ -281,7 +281,7 @@ export function AdminHub() {
             { label: t.hub.featuredLabel, value: stats?.featured, icon: <Star        className="w-3.5 h-3.5" /> },
             { label: t.hub.noImageLabel,  value: stats?.noImage,  icon: <AlertCircle className="w-3.5 h-3.5" />, warn: true },
           ].map(s => (
-            <div key={s.label} className="bg-black/80 border border-white/10 sm:border-0 px-3 sm:px-5 py-3 sm:py-4 rounded-2xl sm:rounded-none min-w-0">
+            <div key={s.label} className="bg-black/80 border border-white/10 sm:border-0 px-3 sm:px-5 py-3 sm:py-4 min-w-0">
               <div className={`flex items-center gap-1.5 mb-2 ${s.warn && s.value ? 'text-amber-500' : 'text-gray-600'}`}>
                 {s.icon}
                 <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.18em] sm:tracking-widest truncate">{s.label}</span>
@@ -294,9 +294,9 @@ export function AdminHub() {
         </div>
 
         {/* ── PRICE LIST EXPORT ─────────────────────────────────────────────── */}
-        <div className="mb-6 sm:mb-8 border border-white/20 bg-white/5 rounded-2xl sm:rounded-none overflow-hidden">
+        <div className="mb-6 sm:mb-8 border border-white/20 bg-white/5 overflow-hidden">
           <div className="flex items-start sm:items-center gap-3 px-4 sm:px-5 py-4 border-b border-white/10">
-            <div className="w-8 h-8 bg-white/10 rounded-xl sm:rounded-none flex items-center justify-center flex-shrink-0">
+            <div className="w-8 h-8 bg-white/10 flex items-center justify-center flex-shrink-0">
               <Download className="w-4 h-4 text-white" />
             </div>
             <div className="min-w-0">
@@ -360,12 +360,12 @@ export function AdminHub() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           {modules.map(m => (
             <Link key={m.to} to={m.to}
-              className={`group border transition-all duration-200 flex flex-col p-4 sm:p-6 hover:border-white rounded-2xl sm:rounded-none min-w-0 ${
+              className={`group border transition-all duration-200 flex flex-col p-4 sm:p-6 hover:border-white min-w-0 ${
                 m.primary ? 'border-white bg-white text-black' : 'border-white/20 bg-white/5 text-white hover:bg-white/10'
               }`}
             >
               <div className="flex items-start justify-between mb-4 sm:mb-6 gap-3">
-                <div className={`w-10 h-10 sm:w-11 sm:h-11 rounded-xl sm:rounded-none flex items-center justify-center flex-shrink-0 ${m.primary ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
+                <div className={`w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center flex-shrink-0 ${m.primary ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
                   {m.icon}
                 </div>
                 <TrendingUp className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${m.primary ? 'text-gray-400' : 'text-gray-700'}`} />
@@ -392,7 +392,7 @@ export function AdminHub() {
         </div>
 
         {/* Connection note */}
-        <div className="mt-6 sm:mt-8 border border-white/10 rounded-2xl sm:rounded-none px-4 sm:px-5 py-4 flex gap-3">
+        <div className="mt-6 sm:mt-8 border border-white/10 px-4 sm:px-5 py-4 flex gap-3">
           <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-shrink-0" />
           <p className="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
             <strong className="text-gray-400">

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { sendWelcomeEmail } from '../../lib/emailService';
+import { ensureClientRecord } from '../../lib/clients';
 
 export interface UserProfile {
   id: string;
@@ -140,18 +141,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     if (!authData.user) return false;
 
-    // Сохраняем профиль в public.clients
-    supabase.from('clients').insert({
-      name:        data.name,
-      company:     data.company    || null,
-      email:       data.email,
-      phone:       data.phone      || null,
-      address:     data.address    || null,
-      client_type: data.clientType || 'company',
-      notes:       null,
-    }).then(({ error: insertError }) => {
-      if (insertError) console.warn('[AuthContext] clients insert failed:', insertError.message);
-    });
+    try {
+      await ensureClientRecord({
+        name: data.name,
+        company: data.company,
+        email: data.email,
+        phone: data.phone,
+        address: data.address,
+        clientType: data.clientType,
+      });
+    } catch (clientError) {
+      console.warn('[AuthContext] clients save failed:', clientError);
+      return false;
+    }
 
     const profile: UserProfile = {
       id:            authData.user.id,

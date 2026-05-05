@@ -324,7 +324,7 @@ function AdminLayoutInner() {
                       <Link
                         key={item.to}
                         to={item.to}
-                        className={`rounded-xl border border-white/10 px-3 py-2.5 text-xs text-left transition-colors min-w-0 ${
+                        className={`border border-white/10 px-3 py-2.5 text-xs text-left transition-colors min-w-0 ${
                           isActive(item.to)
                             ? 'bg-white/10 text-white'
                             : 'text-white/70 hover:text-white hover:bg-white/5'

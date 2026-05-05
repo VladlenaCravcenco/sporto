@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 import { sendAdminOrderNotification, sendOrderConfirmation } from '../../lib/emailService';
 import { SeoHead } from '../components/SeoHead';
 import { trackGoogleAdsLead } from '../../lib/googleAds';
+import { ensureClientRecord } from '../../lib/clients';
 
 type AuthTab = 'new' | 'login';
 type Step = 'cart' | 'success';
@@ -150,6 +151,15 @@ export function OrderRequest() {
     name: string; company: string; email: string; phone: string;
     clientType: 'individual' | 'company'; deliveryAddress: string; notes: string;
   }) => {
+    await ensureClientRecord({
+      name: clientData.name,
+      company: clientData.company,
+      email: clientData.email,
+      phone: clientData.phone,
+      address: clientData.deliveryAddress,
+      clientType: clientData.clientType,
+    });
+
     const items = cart.map(item => ({
       id:        item.id,
       name_ro:   item.name.ro,
@@ -206,35 +216,41 @@ export function OrderRequest() {
     }
     setLoading(true);
     await new Promise(r => setTimeout(r, 900));
-    if (guest.saveProfile && guest.password) {
-      const ok = await register({
-        email:      guest.email,
-        password:   guest.password,
-        name:       guest.name,
-        company:    guest.company,
-        phone:      guest.phone,
-        address:    guest.deliveryAddress,
-        clientType: guest.clientType,
-      });
-      if (!ok) {
-        toast.error(L('Email deja înregistrat', 'Email уже зарегистрирован'));
-        setLoading(false);
-        return;
+    try {
+      if (guest.saveProfile && guest.password) {
+        const ok = await register({
+          email:      guest.email,
+          password:   guest.password,
+          name:       guest.name,
+          company:    guest.company,
+          phone:      guest.phone,
+          address:    guest.deliveryAddress,
+          clientType: guest.clientType,
+        });
+        if (!ok) {
+          toast.error(L('Email deja înregistrat', 'Email уже зарегистрирован'));
+          setLoading(false);
+          return;
+        }
       }
+
+      await saveRequestToSupabase({
+        name:            guest.name,
+        company:         guest.company,
+        email:           guest.email,
+        phone:           guest.phone,
+        clientType:      guest.clientType,
+        deliveryAddress: guest.deliveryAddress,
+        notes:           guest.notes,
+      });
+      clearCart();
+      trackGoogleAdsLead();
+      setStep('success');
+    } catch (error) {
+      toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
+    } finally {
+      setLoading(false);
     }
-    await saveRequestToSupabase({
-      name:            guest.name,
-      company:         guest.company,
-      email:           guest.email,
-      phone:           guest.phone,
-      clientType:      guest.clientType,
-      deliveryAddress: guest.deliveryAddress,
-      notes:           guest.notes,
-    });
-    clearCart();
-    trackGoogleAdsLead();
-    setLoading(false);
-    setStep('success');
   };
 
   // ✅ FIX 2: передаём user.address в заявку для залогиненного пользователя
@@ -242,22 +258,27 @@ export function OrderRequest() {
     e.preventDefault();
     if (cart.length === 0) return;
     setLoading(true);
-    if (user) {
-      await saveRequestToSupabase({
-        name:            user.name,
-        company:         user.company,
-        email:           user.email,
-        phone:           user.phone,
-        clientType:      user.clientType ?? 'company',
-        deliveryAddress: user.address ?? '',  // ← было пустая строка
-        notes,
-      });
+    try {
+      if (user) {
+        await saveRequestToSupabase({
+          name:            user.name,
+          company:         user.company,
+          email:           user.email,
+          phone:           user.phone,
+          clientType:      user.clientType ?? 'company',
+          deliveryAddress: user.address ?? '',
+          notes,
+        });
+      }
+      clearCart();
+      setNotes('');
+      trackGoogleAdsLead();
+      setStep('success');
+    } catch (error) {
+      toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
+    } finally {
+      setLoading(false);
     }
-    clearCart();
-    setNotes('');
-    trackGoogleAdsLead();
-    setLoading(false);
-    setStep('success');
   };
 
   // ✅ FIX 3: после логина грузим профиль из базы и передаём все данные
@@ -279,19 +300,24 @@ export function OrderRequest() {
       .eq('email', loginEmail)
       .maybeSingle();
 
-    await saveRequestToSupabase({
-      name:            profile?.name        || loginEmail,
-      company:         profile?.company     || '',
-      email:           loginEmail,
-      phone:           profile?.phone       || '',
-      clientType:      profile?.client_type || 'company',
-      deliveryAddress: profile?.address     || '',
-      notes:           '',
-    });
-    clearCart();
-    trackGoogleAdsLead();
-    setLoading(false);
-    setStep('success');
+    try {
+      await saveRequestToSupabase({
+        name:            profile?.name        || loginEmail,
+        company:         profile?.company     || '',
+        email:           loginEmail,
+        phone:           profile?.phone       || '',
+        clientType:      profile?.client_type || 'company',
+        deliveryAddress: profile?.address     || '',
+        notes:           '',
+      });
+      clearCart();
+      trackGoogleAdsLead();
+      setStep('success');
+    } catch (error) {
+      toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
+    } finally {
+      setLoading(false);
+    }
   };
 
   // ── Success screen ─────────────────────────────────────────────────────────
