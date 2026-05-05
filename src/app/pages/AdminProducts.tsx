@@ -1133,40 +1133,42 @@ export function AdminProducts() {
       {/* ── Top bar ── */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center h-12 gap-4">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-wrap sm:flex-nowrap items-center min-h-12 py-2 sm:py-0 gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 min-w-0">
               <Package className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-900">{t.products.title}</span>
-              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums">{totalCount}</span>
+              <span className="text-sm text-gray-900 truncate">{t.products.title}</span>
+              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums flex-shrink-0">{totalCount}</span>
             </div>
-            <div className="ml-auto flex items-center gap-2">
-              <button onClick={load} disabled={loading} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors">
+            <div className="w-full sm:w-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-2">
+              <button onClick={load} disabled={loading} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors flex-shrink-0">
                 <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">{t.common.refresh}</span>
               </button>
               <button
                 onClick={handleExportExcel}
                 disabled={exporting || totalCount === 0}
-                className="flex items-center gap-2 border border-gray-200 text-gray-700 hover:border-black hover:text-black px-4 py-2 text-xs uppercase tracking-wider transition-colors disabled:opacity-40"
+                className="flex items-center justify-center gap-2 border border-gray-200 text-gray-700 hover:border-black hover:text-black px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-wider transition-colors disabled:opacity-40 min-w-0"
               >
                 {exporting ? (
                   <>
                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                    {l('Export...', 'Экспорт...')}
+                    <span className="truncate">{l('Export...', 'Экспорт...')}</span>
                   </>
                 ) : (
                   <>
                     <Download className="w-3.5 h-3.5" />
-                    {l('Exportă Excel', 'Экспорт Excel')}
+                    <span className="hidden sm:inline">{l('Exportă Excel', 'Экспорт Excel')}</span>
+                    <span className="sm:hidden">{l('Excel', 'Excel')}</span>
                   </>
                 )}
               </button>
               <button
                 onClick={openNew}
-                className="flex items-center gap-2 bg-black text-white px-4 py-2 text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className="flex items-center justify-center gap-2 bg-black text-white px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-wider hover:bg-gray-800 transition-colors min-w-0"
               >
                 <Plus className="w-3.5 h-3.5" />
-                {t.products.newBtn}
+                <span className="hidden sm:inline">{t.products.newBtn}</span>
+                <span className="sm:hidden">{l('Nou', 'Новый')}</span>
               </button>
             </div>
           </div>
@@ -1176,8 +1178,8 @@ export function AdminProducts() {
       <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
 
         {/* ── Filters ── */}
-        <div className="flex flex-wrap gap-2 mb-4">
-          <div className="relative flex-1 min-w-[200px] max-w-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1.2fr)_repeat(4,minmax(160px,1fr))_auto] gap-2 mb-4">
+          <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
             <input
               type="text" value={search} onChange={e => setSearch(e.target.value)}
@@ -1191,7 +1193,7 @@ export function AdminProducts() {
             )}
           </div>
 
-          <div className="relative min-w-[180px]">
+          <div className="relative min-w-0">
             <input
               type="text"
               list="admin-products-category-filter"
@@ -1212,7 +1214,7 @@ export function AdminProducts() {
             </datalist>
           </div>
 
-          <div className="relative min-w-[180px]">
+          <div className="relative min-w-0">
             <input
               type="text"
               list="admin-products-brand-filter"
@@ -1235,7 +1237,7 @@ export function AdminProducts() {
             </datalist>
           </div>
 
-          <div className="relative min-w-[200px]">
+          <div className="relative min-w-0">
             <input
               type="text"
               list="admin-products-subcategory-filter"
@@ -1258,12 +1260,12 @@ export function AdminProducts() {
             </datalist>
           </div>
 
-          <div className="flex border border-gray-200 bg-white">
+          <div className="flex border border-gray-200 bg-white min-w-0">
             {(['all', 'active', 'inactive'] as const).map(s => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`px-3 h-9 text-xs transition-colors border-r last:border-0 border-gray-100 ${
+                className={`flex-1 px-2 sm:px-3 h-9 text-[11px] sm:text-xs transition-colors border-r last:border-0 border-gray-100 whitespace-nowrap ${
                   statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
                 }`}
               >
@@ -1272,7 +1274,7 @@ export function AdminProducts() {
             ))}
           </div>
 
-          <div className="text-xs text-gray-400 flex items-center ml-auto">
+          <div className="text-xs text-gray-400 flex items-center justify-end xl:justify-start">
             {rows.length} {l('din', 'из')} {totalCount}
           </div>
         </div>
@@ -1316,26 +1318,47 @@ export function AdminProducts() {
                 <div
                   key={row.id}
                   onClick={() => openEdit(row)}
-                  className="grid grid-cols-[56px_1fr] lg:grid-cols-[56px_2fr_1fr_90px_90px_70px_70px_44px] gap-3 items-center px-4 py-3 cursor-pointer hover:bg-gray-50/70 transition-colors group"
+                  className="grid grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[56px_2fr_1fr_90px_90px_70px_70px_44px] gap-x-3 gap-y-2 items-start lg:items-center px-3 sm:px-4 py-3 cursor-pointer hover:bg-gray-50/70 transition-colors group"
                 >
                   {/* Thumb */}
-                  <div className="w-10 h-10 bg-gray-100 flex-shrink-0 overflow-hidden">
+                  <div className="w-12 h-12 lg:w-10 lg:h-10 bg-gray-100 flex-shrink-0 overflow-hidden">
                     {row.image_url
                       ? <img src={row.image_url} alt="" className="w-full h-full object-cover" />
-                      : <Package className="w-4 h-4 text-gray-300 m-3" />
+                      : <Package className="w-4 h-4 text-gray-300 m-4 lg:m-3" />
                     }
                   </div>
 
                   {/* Name */}
                   <div className="min-w-0">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 min-w-0">
                       {!row.active && <span className="w-1.5 h-1.5 bg-gray-300 rounded-full flex-shrink-0" />}
                       {row.featured && <Star className="w-3 h-3 text-gray-400 fill-gray-200 flex-shrink-0" />}
                       <span className="text-xs text-gray-900 truncate group-hover:text-black">{row.name_ro}</span>
                     </div>
-                    <div className="flex items-center gap-3 mt-0.5">
-                      {row.sku && <span className="text-[10px] text-gray-400 font-mono">{row.sku}</span>}
-                      {row.brand && <span className="text-[10px] text-gray-400">{row.brand}</span>}
+                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
+                      {row.sku && <span className="text-[10px] text-gray-400 font-mono break-all">{row.sku}</span>}
+                      {row.brand && <span className="text-[10px] text-gray-400 truncate">{row.brand}</span>}
+                    </div>
+                    <div className="lg:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
+                      <span className="text-[10px] text-gray-500 truncate max-w-full">{catLabel(categories, row.category)}</span>
+                      <span className="text-[10px] text-gray-700 font-mono">{Number(row.price).toLocaleString()} MDL</span>
+                      <span className={`text-[10px] font-mono ${
+                        Number(row.qty) === 0 ? 'text-red-400' : Number(row.qty) < 5 ? 'text-amber-500' : 'text-gray-700'
+                      }`}>
+                        {l('Stoc', 'Сток')}: {row.qty ?? '—'}
+                      </span>
+                    </div>
+                    <div className="lg:hidden flex items-center gap-3 mt-2">
+                      <button
+                        onClick={e => toggleActive(row, e)}
+                        className={`w-8 h-5 rounded-full transition-colors flex items-center ${row.active ? 'bg-black' : 'bg-gray-200'}`}
+                        aria-label={row.active ? l('Dezactivează', 'Деактивировать') : l('Activează', 'Активировать')}
+                      >
+                        <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${row.active ? 'translate-x-3' : 'translate-x-0'}`} />
+                      </button>
+                      <span className="text-[10px] text-gray-400">
+                        {row.active ? l('Activ', 'Активен') : l('Inactiv', 'Неактивен')}
+                      </span>
                     </div>
                   </div>
 
@@ -1380,27 +1403,27 @@ export function AdminProducts() {
         </div>
 
         {totalCount > PAGE_SIZE && (
-          <div className="flex items-center justify-between mt-4 text-xs text-gray-400">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3 text-xs text-gray-400">
             <span>
               {lang === 'ro'
                 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalCount)} din ${totalCount}`
                 : `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalCount)} из ${totalCount}`}
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
               <button
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page === 1 || loading}
-                className="px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
+                className="flex-1 sm:flex-none px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
               >
                 {l('Înapoi', 'Назад')}
               </button>
-              <span className="tabular-nums text-gray-500">
+              <span className="tabular-nums text-gray-500 min-w-[56px] text-center">
                 {page} / {Math.max(1, Math.ceil(totalCount / PAGE_SIZE))}
               </span>
               <button
                 onClick={() => setPage((current) => current + 1)}
                 disabled={page >= Math.ceil(totalCount / PAGE_SIZE) || loading}
-                className="px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
+                className="flex-1 sm:flex-none px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
               >
                 {l('Înainte', 'Дальше')}
               </button>
@@ -1422,14 +1445,14 @@ export function AdminProducts() {
       <div className={`fixed top-0 right-0 h-full w-full sm:w-[560px] bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
         {/* Panel header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100 flex-shrink-0">
-          <div>
+        <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0 gap-3">
+          <div className="min-w-0">
             <h2 className="text-sm text-gray-900">
               {editId ? t.products.editTitle : t.products.newTitle}
             </h2>
             {editId && <p className="text-[10px] text-gray-400 font-mono mt-0.5">#{editId}</p>}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             {editId && (
               <a
                 href={buildProductPath({
@@ -1455,7 +1478,7 @@ export function AdminProducts() {
 
         {/* Panel body — scrollable */}
         <div className="flex-1 overflow-y-auto">
-          <div className="p-6 space-y-6">
+          <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
 
             {/* ── Images — 4 slots ── */}
             <div>
@@ -1579,7 +1602,7 @@ export function AdminProducts() {
             </div>
 
             {/* ── Names ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">
                   {t.products.nameRoLabel} <span className="text-red-400">*</span>
@@ -1591,7 +1614,7 @@ export function AdminProducts() {
                   placeholder={t.products.namePlaceholder}
                 />
               </div>
-              <div className="col-span-2">
+              <div className="col-span-1 sm:col-span-2">
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.nameRuLabel}</label>
                 <input
                   type="text" value={form.name_ru ?? ''}
@@ -1603,7 +1626,7 @@ export function AdminProducts() {
             </div>
 
             {/* ── Category ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">
                   {t.common.category} <span className="text-red-400">*</span>
@@ -1630,7 +1653,7 @@ export function AdminProducts() {
             </div>
 
             {/* ── Price / unit / qty ── */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.priceMdl}</label>
                 <input
@@ -1682,7 +1705,7 @@ export function AdminProducts() {
             </div>
 
             {/* ── SKU / Brand ── */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.sku}</label>
                 <input
@@ -1727,8 +1750,8 @@ export function AdminProducts() {
             </div>
 
             {/* ── Toggles ── */}
-            <div className="flex gap-6">
-              <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+              <label className="flex items-center gap-3 cursor-pointer select-none min-w-0">
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, active: !f.active }))}
@@ -1744,7 +1767,7 @@ export function AdminProducts() {
                 </div>
               </label>
 
-              <label className="flex items-center gap-3 cursor-pointer select-none">
+              <label className="flex items-center gap-3 cursor-pointer select-none min-w-0">
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, featured: !f.featured }))}
@@ -1776,29 +1799,29 @@ export function AdminProducts() {
         </div>
 
         {/* Panel footer */}
-        <div className="flex items-center justify-between px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 gap-3">
           {editId ? (
             <button
               onClick={handleDelete}
               disabled={deleting || saving}
-              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-40"
+              className="flex items-center gap-1.5 text-xs text-red-400 hover:text-red-600 transition-colors disabled:opacity-40 order-2 sm:order-1"
             >
               <Trash2 className="w-3.5 h-3.5" />
               {deleting ? l('Se șterge...', 'Удаление...') : t.products.deleteProduct}
             </button>
           ) : <div />}
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
             <button
               onClick={closePanel}
-              className="px-4 py-2 text-xs text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-black transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-xs text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-black transition-colors"
             >
               {t.common.cancel}
             </button>
             <button
               onClick={handleSave}
               disabled={saving || uploadingSlot !== null}
-              className="flex items-center gap-2 px-5 py-2 bg-black text-white text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-black text-white text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:opacity-50"
             >
               {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
               {saving ? t.common.saving : t.common.save}
@@ -1809,7 +1832,7 @@ export function AdminProducts() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-6 right-6 z-[60] flex items-center gap-2 px-4 py-3 text-xs text-white shadow-xl transition-all ${
+        <div className={`fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[60] flex items-center gap-2 px-4 py-3 text-xs text-white shadow-xl transition-all ${
           toast.ok ? 'bg-black' : 'bg-red-600'
         }`}>
           {toast.ok ? <Check className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
