@@ -2,7 +2,9 @@ import { useLanguage } from '../contexts/LanguageContext';
 import { SeoHead, buildFaqJsonLd } from '../components/SeoHead';
 import { Link } from 'react-router';
 import { ArrowRight, ChevronDown } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { supabase } from '../../lib/supabase';
+import { FAQ_SEO_DEFAULTS, type FaqItem, toLocalizedFaq } from '../../lib/faq';
 
 const content = {
   ro: {
@@ -49,52 +51,33 @@ const content = {
   },
 };
 
-// ── Static FAQ (bilingual, SEO-optimised) ────────────────────────────────────
-const FAQ = {
-  ro: [
-    {
-      q: 'Livrați echipamente sportive în toată Moldova?',
-      a: 'Da, livrăm în toată Republica Moldova. Comenzile din Chișinău sunt procesate în 1–2 zile lucrătoare, iar în restul țării — în 3–5 zile. Livrarea se efectuează prin curierat sau transport propriu pentru comenzi mari.',
-    },
-    {
-      q: 'Oferiți prețuri wholesale pentru echipamente fitness?',
-      a: 'Da, oferim condiții speciale B2B pentru cluburi fitness, săli de sport, magazine sportive și instituții. Prețurile se stabilesc individual în funcție de volumul comenzii. Contactați-ne — consultanța este gratuită.',
-    },
-    {
-      q: 'Ce garanție oferiți pe echipamentele sportive?',
-      a: 'Toate echipamentele comercializate de Sporto (SPORTOSFERA S.R.L.) beneficiază de garanție de minimum 12 luni. Produsele provin din Italia și UE — branduri certificate cu reputație internațională. Serviciul post-vânzare este asigurat de echipa noastră.',
-    },
-    {
-      q: 'Puteți echipa o sală de sport pentru o școală sau instituție publică?',
-      a: 'Da, lucrăm activ în segmentul B2G — dotăm școli, licee, grădinițe, instituții publice și primării. Oferim inventar sportiv conform normativelor, prețuri speciale pentru licitații și documentație completă pentru proiecte la cheie.',
-    },
-  ],
-  ru: [
-    {
-      q: 'Доставляете ли вы спортивное оборудование по всей Молдове?',
-      a: 'Да, доставляем по всей Молдове. Заказы по Кишинёву выполняются за 1–2 рабочих дня, по остальным регионам — за 3–5 дней. Доставка осуществляется курьером или собственным транспортом для крупных партий.',
-    },
-    {
-      q: 'Предоставляете ли вы оптовые цены на фитнес-оборудование?',
-      a: 'Да, предлагаем специальные условия B2B для фитнес-клубов, спортивных залов, магазинов и учреждений. Условия рассчитываются индивидуально в зависимости от объёма заказа. Свяжитесь с нами — консультация бесплатна.',
-    },
-    {
-      q: 'Какая гарантия предоставляется на спортивное оборудование?',
-      a: 'Всё оборудование Sporto (SPORTOSFERA S.R.L.) имеет гарантию не менее 12 месяцев. Продукция поставляется из Италии и ЕС — сертифицированные бренды с международной репутацией. Постпродажное обслуживание обеспечивает наша команда.',
-    },
-    {
-      q: 'Можете ли вы оснастить спортзал для школы или государственного учреждения?',
-      a: 'Да, работаем в сегменте B2G — оснащаем школы, лицеи, детские сады, государственные учреждения и муниципальные объекты. Предлагаем инвентарь по нормативам, специальные цены для тендеров и полный пакет документации.',
-    },
-  ],
-};
-
 export function About() {
   const { language } = useLanguage();
   const c = content[language as 'ro' | 'ru'];
   const lang = language as 'ro' | 'ru';
   const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const faqItems = FAQ[lang];
+  const [faqRows, setFaqRows] = useState<FaqItem[]>(
+    FAQ_SEO_DEFAULTS.map((item, index) => ({ ...item, id: `fallback-${index}` })),
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      const { data, error } = await supabase
+        .from('faq_items')
+        .select('*')
+        .eq('active', true)
+        .order('sort_order', { ascending: true });
+
+      if (cancelled || error || !data) return;
+      setFaqRows(data as FaqItem[]);
+    })();
+
+    return () => { cancelled = true; };
+  }, []);
+
+  const faqItems = toLocalizedFaq(faqRows, lang);
 
   return (
     <div className="min-h-screen bg-white">
@@ -258,44 +241,45 @@ export function About() {
         </div>
       </section>
 
-      {/* ── FAQ ── */}
-      <section className="py-16 md:py-24 border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid lg:grid-cols-12 gap-12">
+      {faqItems.length > 0 && (
+        <section className="py-16 md:py-24 border-t border-gray-100">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="grid lg:grid-cols-12 gap-12">
 
-            {/* Label */}
-            <div className="lg:col-span-3">
-              <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-2">FAQ</p>
-              <p className="text-sm text-gray-500 leading-relaxed">
-                {lang === 'ro' ? 'Întrebări frecvente' : 'Часто задаваемые вопросы'}
-              </p>
+              {/* Label */}
+              <div className="lg:col-span-3">
+                <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-2">FAQ</p>
+                <p className="text-sm text-gray-500 leading-relaxed">
+                  {lang === 'ro' ? 'Întrebări frecvente' : 'Часто задаваемые вопросы'}
+                </p>
+              </div>
+
+              {/* Accordion */}
+              <div className="lg:col-span-9 divide-y divide-gray-100">
+                {faqItems.map((item, i) => (
+                  <div key={i}>
+                    <button
+                      onClick={() => setOpenFaq(openFaq === i ? null : i)}
+                      className="w-full flex items-center justify-between gap-4 py-5 text-left group"
+                    >
+                      <span className={`text-sm leading-relaxed transition-colors ${openFaq === i ? 'text-black' : 'text-gray-700 group-hover:text-black'}`}>
+                        {item.q}
+                      </span>
+                      <ChevronDown className={`w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${openFaq === i ? 'rotate-180 text-black' : ''}`} />
+                    </button>
+                    {openFaq === i && (
+                      <div className="pb-5">
+                        <p className="text-sm text-gray-500 leading-relaxed">{item.a}</p>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+
             </div>
-
-            {/* Accordion */}
-            <div className="lg:col-span-9 divide-y divide-gray-100">
-              {faqItems.map((item, i) => (
-                <div key={i}>
-                  <button
-                    onClick={() => setOpenFaq(openFaq === i ? null : i)}
-                    className="w-full flex items-center justify-between gap-4 py-5 text-left group"
-                  >
-                    <span className={`text-sm leading-relaxed transition-colors ${openFaq === i ? 'text-black' : 'text-gray-700 group-hover:text-black'}`}>
-                      {item.q}
-                    </span>
-                    <ChevronDown className={`w-4 h-4 flex-shrink-0 text-gray-400 transition-transform duration-200 ${openFaq === i ? 'rotate-180 text-black' : ''}`} />
-                  </button>
-                  {openFaq === i && (
-                    <div className="pb-5">
-                      <p className="text-sm text-gray-500 leading-relaxed">{item.a}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
     </div>
   );
