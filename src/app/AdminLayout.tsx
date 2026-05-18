@@ -288,15 +288,16 @@ function AdminLayoutInner() {
                 )}
               </Link>
 
-              {/* Site — desktop only */}
+              {/* Site */}
               <a
                 href="/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="hidden lg:flex items-center gap-1.5 px-3 h-12 text-xs text-white/40 hover:text-white/70 transition-colors"
+                className="flex items-center justify-center w-8 sm:w-9 lg:w-auto lg:gap-1.5 lg:px-3 h-12 text-xs text-white/40 hover:text-white/70 transition-colors"
+                title={t.nav.site}
               >
                 <ExternalLink className="w-3.5 h-3.5" />
-                <span>{t.nav.site}</span>
+                <span className="hidden lg:inline">{t.nav.site}</span>
               </a>
 
               {/* Logout — desktop only */}

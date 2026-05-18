@@ -53,6 +53,10 @@ export interface ProductRow {
   qty: number | null;
   description_ro: string | null;
   description_ru: string | null;
+  seo_description_ro: string | null;
+  seo_description_ru: string | null;
+  seo_keywords_ro: string | null;
+  seo_keywords_ru: string | null;
   image_url: string | null;
   images: string[] | null;   // gallery (images[0] === image_url)
   youtube_url: string | null; // full YouTube URL, e.g. https://youtu.be/abc123

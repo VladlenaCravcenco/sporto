@@ -296,12 +296,20 @@ export function ProductDetail() {
   const productPath = buildProductPath(product, routeLanguage);
   const productUrl = `https://www.sporto.md${productPath}`;
   const productDescription =
+    product.seoDescription?.[language as Language] ||
+    product.seoDescription?.ro ||
+    product.seoDescription?.ru ||
     product.description[language as Language] ||
     product.description.ro ||
     product.description.ru ||
     (language === 'ro'
       ? `Descoperă ${product.name.ro} disponibil la comandă în Moldova.`
       : `Ознакомьтесь с ${product.name.ru} с доставкой по Молдове.`);
+  const productKeywords =
+    product.seoKeywords?.[language as Language] ||
+    product.seoKeywords?.ro ||
+    product.seoKeywords?.ru ||
+    `${product.name.ro}, ${product.name.ru}${product.brand ? `, ${product.brand}` : ''}${product.sku ? `, ${product.sku}` : ''}, echipament sportiv Moldova, спортивное оборудование Молдова`;
 
   const handleAddToCart = () => {
     addToCart({
@@ -324,7 +332,7 @@ export function ProductDetail() {
       <SeoHead
         title={`${product.name[language as Language]} | SPORTOSFERA`}
         description={productDescription}
-        keywords={`${product.name.ro}, ${product.name.ru}${product.brand ? `, ${product.brand}` : ''}${product.sku ? `, ${product.sku}` : ''}, echipament sportiv Moldova, спортивное оборудование Молдова`}
+        keywords={productKeywords}
         canonical={productPath}
         ogImage={product.image || undefined}
         lang={language as 'ro' | 'ru'}

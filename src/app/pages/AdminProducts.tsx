@@ -421,6 +421,8 @@ const PAGE_SIZE = 50;
 const EMPTY_FORM: Partial<ProductRow> = {
   name_ro: '', name_ru: '',
   description_ro: '', description_ru: '',
+  seo_description_ro: '', seo_description_ru: '',
+  seo_keywords_ro: '', seo_keywords_ru: '',
   category: '', subcategory: '',
   price: 0, sku: '', brand: '',
   unit: 'BUC.', qty: 0,
@@ -939,6 +941,10 @@ export function AdminProducts() {
       name_ru: form.name_ru?.trim() || form.name_ro?.trim(),
       description_ro: form.description_ro?.trim() || null,
       description_ru: form.description_ru?.trim() || null,
+      seo_description_ro: form.seo_description_ro?.trim() || null,
+      seo_description_ru: form.seo_description_ru?.trim() || null,
+      seo_keywords_ro: form.seo_keywords_ro?.trim() || null,
+      seo_keywords_ru: form.seo_keywords_ru?.trim() || null,
       category: form.category,
       subcategory: form.subcategory || null,
       price: Number(form.price) || 0,
@@ -980,6 +986,10 @@ export function AdminProducts() {
         qty: payload.qty || 0,
         description_ro: payload.description_ro || null,
         description_ru: payload.description_ru || null,
+        seo_description_ro: payload.seo_description_ro || null,
+        seo_description_ru: payload.seo_description_ru || null,
+        seo_keywords_ro: payload.seo_keywords_ro || null,
+        seo_keywords_ru: payload.seo_keywords_ru || null,
         image_url: payload.image_url || null,
         images: payload.images || [],
         youtube_url: payload.youtube_url || null,
@@ -1746,6 +1756,48 @@ export function AdminProducts() {
                 rows={3}
                 placeholder={t.products.descRuPlaceholder}
                 className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoDescRoLabel}</label>
+              <textarea
+                value={form.seo_description_ro ?? ''}
+                onChange={e => setForm(f => ({ ...f, seo_description_ro: e.target.value }))}
+                rows={2}
+                placeholder={t.products.seoDescRoPlaceholder}
+                className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoDescRuLabel}</label>
+              <textarea
+                value={form.seo_description_ru ?? ''}
+                onChange={e => setForm(f => ({ ...f, seo_description_ru: e.target.value }))}
+                rows={2}
+                placeholder={t.products.seoDescRuPlaceholder}
+                className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+              />
+            </div>
+
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoKeywordsRoLabel}</label>
+              <input
+                type="text"
+                value={form.seo_keywords_ro ?? ''}
+                onChange={e => setForm(f => ({ ...f, seo_keywords_ro: e.target.value }))}
+                placeholder={t.products.seoKeywordsRoPlaceholder}
+                className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+              />
+            </div>
+            <div>
+              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoKeywordsRuLabel}</label>
+              <input
+                type="text"
+                value={form.seo_keywords_ru ?? ''}
+                onChange={e => setForm(f => ({ ...f, seo_keywords_ru: e.target.value }))}
+                placeholder={t.products.seoKeywordsRuPlaceholder}
+                className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
               />
             </div>
 

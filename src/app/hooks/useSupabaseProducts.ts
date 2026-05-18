@@ -27,6 +27,14 @@ export function rowToProduct(row: ProductRow): Product {
       ro: row.description_ro || '',
       ru: row.description_ru || row.description_ro || '',
     },
+    seoDescription: {
+      ro: row.seo_description_ro || '',
+      ru: row.seo_description_ru || row.seo_description_ro || '',
+    },
+    seoKeywords: {
+      ro: row.seo_keywords_ro || '',
+      ru: row.seo_keywords_ru || row.seo_keywords_ro || '',
+    },
     category: row.category,
     subcategory: row.subcategory || '',
     price: Number(row.price),

@@ -16,6 +16,10 @@ type ProductRow = {
   name_ru: string | null;
   description_ro: string | null;
   description_ru: string | null;
+  seo_description_ro?: string | null;
+  seo_description_ru?: string | null;
+  seo_keywords_ro?: string | null;
+  seo_keywords_ru?: string | null;
   image_url: string | null;
   images: string[] | null;
   price: number | string | null;
@@ -129,12 +133,17 @@ function getPrice(product: ProductRow): number | null {
 function buildDescription(product: ProductRow, language: ProductLanguage): string {
   const cleanDescription = sanitizeMetaText(
     language === 'ru'
+      ? (product.seo_description_ru || product.seo_description_ro || product.description_ru || product.description_ro)
+      : (product.seo_description_ro || product.seo_description_ru || product.description_ro || product.description_ru),
+  );
+  const fallbackDescription = sanitizeMetaText(
+    language === 'ru'
       ? (product.description_ru || product.description_ro)
       : (product.description_ro || product.description_ru),
   );
   const price = getPrice(product);
   const parts = [
-    cleanDescription,
+    cleanDescription || fallbackDescription,
     product.brand ? `Brand: ${sanitizeMetaText(product.brand)}.` : '',
     price != null ? `${language === 'ru' ? 'Цена' : 'Preț'}: ${price.toLocaleString('ro-RO')} MDL.` : '',
   ]
@@ -147,9 +156,27 @@ function buildDescription(product: ProductRow, language: ProductLanguage): strin
   );
 }
 
+function buildKeywords(product: ProductRow, language: ProductLanguage): string {
+  const localizedKeywords = sanitizeMetaText(
+    language === 'ru'
+      ? (product.seo_keywords_ru || product.seo_keywords_ro)
+      : (product.seo_keywords_ro || product.seo_keywords_ru),
+  );
+  if (localizedKeywords) return localizedKeywords;
+
+  const names = [
+    sanitizeMetaText(product.name_ro),
+    sanitizeMetaText(product.name_ru),
+    sanitizeMetaText(product.brand),
+    sanitizeMetaText(product.sku),
+  ].filter(Boolean);
+
+  return [...names, 'echipament sportiv Moldova', 'спортивное оборудование Молдова'].join(', ');
+}
+
 async function fetchProductBy(field: 'sku' | 'id', value: string): Promise<ProductRow | null> {
   const url = new URL(`${SUPABASE_URL}/rest/v1/products`);
-  url.searchParams.set('select', 'id,name_ro,name_ru,description_ro,description_ru,image_url,images,price,sale_price,sku,brand,qty');
+  url.searchParams.set('select', '*');
   url.searchParams.set(field, `eq.${value}`);
   url.searchParams.set('active', 'eq.true');
   url.searchParams.set('limit', '1');
@@ -212,6 +239,7 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
   );
   const title = `${name} | Sporto`;
   const description = buildDescription(product, language);
+  const keywords = buildKeywords(product, language);
   const imageUrl = normalizeImageUrl(product.images?.[0] || product.image_url);
   const price = getPrice(product);
   const structuredData = {
@@ -241,6 +269,7 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
+    <meta name="keywords" content="${escapeHtml(keywords)}" />
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
     <meta property="og:type" content="product" />
     <meta property="og:site_name" content="${SITE_NAME}" />

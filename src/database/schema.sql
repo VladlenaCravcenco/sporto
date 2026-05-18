@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS products (
   qty          INTEGER DEFAULT 0,        -- Количество на складе
   description_ro TEXT DEFAULT '',        -- Описание (румынский)
   description_ru TEXT DEFAULT '',        -- Описание (русский)
+  seo_description_ro TEXT,               -- Meta description (румынский)
+  seo_description_ru TEXT,               -- Meta description (русский)
+  seo_keywords_ro TEXT,                  -- Meta keywords через запятую (румынский)
+  seo_keywords_ru TEXT,                  -- Meta keywords через запятую (русский)
   image_url    TEXT,                     -- URL главного фото (Supabase Storage или внешний)
   images       TEXT[] DEFAULT '{}',      -- Массив всех фото (images[1] = главное = image_url)
   youtube_url  TEXT,                     -- YouTube ссылка (https://youtu.be/ID или watch?v=ID)

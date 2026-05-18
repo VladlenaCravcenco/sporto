@@ -4,6 +4,8 @@ export interface Product {
   id: string;
   name: { ro: string; ru: string };
   description: { ro: string; ru: string };
+  seoDescription?: { ro: string; ru: string };
+  seoKeywords?: { ro: string; ru: string };
   category: string;
   subcategory: string;
   price: number;
