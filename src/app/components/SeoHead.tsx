@@ -95,7 +95,6 @@ function buildLocalizedUrl(path: string, lang: 'ro' | 'ru') {
 
 function buildCanonicalUrl(path: string) {
   const url = new URL(path, SITE_URL);
-  url.search = '';
   url.hash = '';
   return url.toString();
 }

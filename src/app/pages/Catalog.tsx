@@ -1,6 +1,6 @@
 import { usePaginatedCatalogProducts } from '../hooks/useSupabaseProducts';
 import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
-import { SeoHead, SEO_PAGES } from '../components/SeoHead';
+import { SeoHead, SEO_PAGES, buildBreadcrumbJsonLd } from '../components/SeoHead';
 import {
   X,
   Search,
@@ -89,7 +89,68 @@ export function Catalog() {
   }, []);
 
   const currentCategory = categories.find((c) => c.id === selectedCategory);
+  const currentSubcategory = currentCategory?.subcategories.find((s) => s.id === selectedSubcategory);
   const deferredSearchTerm = useDeferredValue(searchTerm);
+
+  const catalogSeo = useMemo(() => {
+    const catalogDefaults = SEO_PAGES.catalog[lang];
+    const categoryName = currentCategory?.name[lang];
+    const subcategoryName = currentSubcategory?.name[lang];
+    const canonicalParams = new URLSearchParams();
+
+    if (currentCategory) canonicalParams.set('category', currentCategory.id);
+    if (currentCategory && currentSubcategory) canonicalParams.set('subcategory', currentSubcategory.id);
+    if (lang === 'ru') canonicalParams.set('lang', 'ru');
+
+    const canonical = `/catalog${canonicalParams.size ? `?${canonicalParams.toString()}` : ''}`;
+
+    if (currentCategory && currentSubcategory && subcategoryName && categoryName) {
+      return {
+        title: lang === 'ro'
+          ? `${subcategoryName} în Chișinău | Sporto Moldova`
+          : `${subcategoryName} в Кишинёве | Sporto Молдова`,
+        description: lang === 'ro'
+          ? `${subcategoryName} din categoria ${categoryName}, disponibile în Moldova prin Sporto. Vezi produsele, prețurile și solicită o ofertă.`
+          : `${subcategoryName} из категории «${categoryName}» в Молдове от Sporto. Смотрите товары и цены, запрашивайте предложение.`,
+        keywords: lang === 'ro'
+          ? `${subcategoryName}, ${categoryName}, echipament sportiv Moldova, Sporto Chișinău`
+          : `${subcategoryName}, ${categoryName}, спортивное оборудование Молдова, Sporto Кишинёв`,
+        canonical,
+      };
+    }
+
+    if (currentCategory && categoryName) {
+      const categoryDescription = currentCategory.description[lang]?.trim();
+      return {
+        title: lang === 'ro'
+          ? `${categoryName} în Chișinău | Sporto Moldova`
+          : `${categoryName} в Кишинёве | Sporto Молдова`,
+        description: categoryDescription || (lang === 'ro'
+          ? `${categoryName} disponibile în Moldova prin Sporto. Vezi produsele, prețurile și solicită o ofertă.`
+          : `${categoryName} в Молдове от Sporto. Смотрите товары и цены, запрашивайте предложение.`),
+        keywords: lang === 'ro'
+          ? `${categoryName}, echipament sportiv Moldova, Sporto Chișinău`
+          : `${categoryName}, спортивное оборудование Молдова, Sporto Кишинёв`,
+        canonical,
+      };
+    }
+
+    return { ...catalogDefaults, canonical };
+  }, [currentCategory, currentSubcategory, lang]);
+
+  const catalogHeading = currentSubcategory?.name[lang] || currentCategory?.name[lang] || t('nav.catalog');
+  const catalogBreadcrumbs = [
+    { name: lang === 'ro' ? 'Acasă' : 'Главная', url: lang === 'ru' ? 'https://www.sporto.md/ru' : 'https://www.sporto.md/' },
+    { name: lang === 'ro' ? 'Catalog' : 'Каталог', url: `https://www.sporto.md/catalog${lang === 'ru' ? '?lang=ru' : ''}` },
+    ...(currentCategory ? [{
+      name: currentCategory.name[lang],
+      url: `https://www.sporto.md/catalog?category=${encodeURIComponent(currentCategory.id)}${lang === 'ru' ? '&lang=ru' : ''}`,
+    }] : []),
+    ...(currentCategory && currentSubcategory ? [{
+      name: currentSubcategory.name[lang],
+      url: `https://www.sporto.md${catalogSeo.canonical}`,
+    }] : []),
+  ];
 
   const { products, total: totalProducts, loading: dbLoading, error: dbError, connected } = usePaginatedCatalogProducts({
     page,
@@ -170,11 +231,12 @@ export function Catalog() {
   return (
     <div className="min-h-screen bg-white">
       <SeoHead
-        title={SEO_PAGES.catalog[lang].title}
-        description={SEO_PAGES.catalog[lang].description}
-        keywords={SEO_PAGES.catalog[lang].keywords}
-        canonical="/catalog"
+        title={catalogSeo.title}
+        description={catalogSeo.description}
+        keywords={catalogSeo.keywords}
+        canonical={catalogSeo.canonical}
         lang={lang}
+        jsonLd={buildBreadcrumbJsonLd(catalogBreadcrumbs)}
       />
 
       {/* ─── PAGE HEADER ─── */}
@@ -182,7 +244,7 @@ export function Catalog() {
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
-              <h1 className="text-2xl md:text-3xl text-white">{t('nav.catalog')}</h1>
+              <h1 className="text-2xl md:text-3xl text-white">{catalogHeading}</h1>
             </div>
             <div className="text-right">
               <div className="text-2xl text-white tabular-nums">
