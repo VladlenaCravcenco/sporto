@@ -3,42 +3,13 @@ import { X, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router';
 import { useLanguage } from '../contexts/LanguageContext';
 import { motion, AnimatePresence } from 'motion/react';
+import {
+  loadPopupConfig,
+  subscribeToPopupConfig,
+  type PopupData,
+} from '../lib/popup-config';
 
-const STORAGE_KEY = 'sporto_popup';
 const SEEN_KEY    = 'sporto_promo_seen';
-
-interface PopupData {
-  active: boolean;
-  title_ro: string; title_ru: string;
-  body_ro: string;  body_ru: string;
-  cta_label_ro: string; cta_label_ru: string;
-  cta_url: string;
-  show_once: boolean;
-  delay_seconds: number;
-}
-
-// Дефолтный попап — активен сразу, меняется через админку
-const FALLBACK: PopupData = {
-  active: true,
-  title_ro: 'Echipament sportiv\nla cel mai bun preț',
-  title_ru: 'Спортивное оборудование\nпо лучшей цене',
-  body_ro:  'Catalog de peste 8 000 de produse din Italia și UE. Prețuri angro pentru cluburi, școli și instituții.',
-  body_ru:  'Каталог более 8 000 товаров из Италии и ЕС. Оптовые цены для клубов, школ и учреждений.',
-  cta_label_ro: 'Vezi Catalogul',
-  cta_label_ru: 'Смотреть каталог',
-  cta_url:  '/catalog',
-  show_once: true,
-  delay_seconds: 5,
-};
-
-function loadConfig(): PopupData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...FALLBACK, ...JSON.parse(raw) } : FALLBACK;
-  } catch {
-    return FALLBACK;
-  }
-}
 
 export function PromoPopup() {
   const { language } = useLanguage();
@@ -47,15 +18,41 @@ export function PromoPopup() {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
-    const config = loadConfig();
-    if (!config.active) return;
-    if (!config.title_ro && !config.title_ru) return;
-    if (config.show_once && sessionStorage.getItem(SEEN_KEY)) return;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    let cancelled = false;
 
-    setCfg(config);
-    const delay = Math.max(0, (config.delay_seconds ?? 5)) * 1000;
-    const timer = setTimeout(() => setVisible(true), delay);
-    return () => clearTimeout(timer);
+    const applyConfig = (config: PopupData | null) => {
+      if (timer) clearTimeout(timer);
+      setVisible(false);
+      setCfg(config);
+
+      if (!config?.active) return;
+      if (!config.title_ro && !config.title_ru) return;
+      if (config.show_once && sessionStorage.getItem(SEEN_KEY)) return;
+
+      const delay = Math.max(0, config.delay_seconds ?? 5) * 1000;
+      timer = setTimeout(() => {
+        if (!cancelled) setVisible(true);
+      }, delay);
+    };
+
+    loadPopupConfig()
+      .then(config => {
+        if (!cancelled) applyConfig(config);
+      })
+      .catch(() => {
+        if (!cancelled) applyConfig(null);
+      });
+
+    const unsubscribe = subscribeToPopupConfig(config => {
+      if (!cancelled) applyConfig(config);
+    });
+
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+      unsubscribe();
+    };
   }, []);
 
   const close = () => {

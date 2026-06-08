@@ -2,31 +2,19 @@ import { useState, useEffect } from 'react';
 import { Save, X, ArrowRight, Monitor, Globe } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { toast } from 'sonner';
+import {
+  DEFAULT_POPUP,
+  loadPopupConfig,
+  savePopupConfig,
+  type PopupData,
+} from '../lib/popup-config';
 
 const STORAGE_KEY = 'sporto_popup';
 const SEEN_KEY    = 'sporto_promo_seen';
 
-interface PopupData {
-  active: boolean;
-  title_ro: string; title_ru: string;
-  body_ro: string;  body_ru: string;
-  cta_label_ro: string; cta_label_ru: string;
-  cta_url: string;
-  show_once: boolean;
-  delay_seconds: number;
-}
-
 const DEFAULT: PopupData = {
+  ...DEFAULT_POPUP,
   active: true,
-  title_ro: 'Echipament sportiv\nla cel mai bun preț',
-  title_ru: 'Спортивное оборудование\nпо лучшей цене',
-  body_ro:  'Catalog de peste 8 000 de produse din Italia și UE. Prețuri angro pentru cluburi, școli și instituții.',
-  body_ru:  'Каталог более 8 000 товаров из Италии и ЕС. Оптовые цены для клубов, школ и учреждений.',
-  cta_label_ro: 'Vezi Catalogul',
-  cta_label_ru: 'Смотреть каталог',
-  cta_url: '/catalog',
-  show_once: true,
-  delay_seconds: 5,
 };
 
 function loadFromStorage(): PopupData {
@@ -133,22 +121,40 @@ export function AdminPopup() {
   const { lang } = useAdminLang();
   const [data, setData] = useState<PopupData>(loadFromStorage);
   const [previewLang, setPreviewLang] = useState<'ro' | 'ru'>('ro');
+  const [saving, setSaving] = useState(false);
 
   const isRu = lang === 'ru';
 
-  useEffect(() => { setData(loadFromStorage()); }, []);
+  useEffect(() => {
+    let cancelled = false;
+
+    loadPopupConfig()
+      .then(config => {
+        if (!cancelled && config) setData(config);
+      })
+      .catch(() => {
+        // Keep the previous local admin draft when server settings are unavailable.
+      });
+
+    return () => { cancelled = true; };
+  }, []);
 
   const set = <K extends keyof PopupData>(key: K, value: PopupData[K]) =>
     setData(p => ({ ...p, [key]: value }));
 
-  const handleSave = () => {
+  const handleSave = async () => {
+    setSaving(true);
     try {
+      await savePopupConfig(data);
       localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-      // Reset seen flag so popup shows again after save
       sessionStorage.removeItem(SEEN_KEY);
-      toast(isRu ? '✓ Попап сохранён — перезагрузите сайт' : '✓ Popup salvat — reîncărcați site-ul');
-    } catch {
-      toast(isRu ? 'Ошибка сохранения' : 'Eroare la salvare');
+      toast(isRu ? '✓ Попап сохранён для всех посетителей' : '✓ Popup salvat pentru toți vizitatorii');
+    } catch (error) {
+      toast(isRu
+        ? `Ошибка сохранения: ${error instanceof Error ? error.message : 'неизвестная ошибка'}`
+        : `Eroare la salvare: ${error instanceof Error ? error.message : 'eroare necunoscută'}`);
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -174,10 +180,11 @@ export function AdminPopup() {
             </div>
             <button
               onClick={handleSave}
-              className="flex items-center gap-1.5 bg-white text-black px-4 py-2 text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors"
+              disabled={saving}
+              className="flex items-center gap-1.5 bg-white text-black px-4 py-2 text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
               <Save className="w-3 h-3" />
-              {isRu ? 'Сохранить' : 'Salvează'}
+              {saving ? (isRu ? 'Сохранение...' : 'Se salvează...') : (isRu ? 'Сохранить' : 'Salvează')}
             </button>
           </div>
         </div>
