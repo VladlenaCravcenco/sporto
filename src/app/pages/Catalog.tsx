@@ -52,6 +52,7 @@ export function Catalog() {
   const [stockPopoverOpen, setStockPopoverOpen] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
+  const categoryDragRef = useRef({ active: false, dragged: false, startX: 0, scrollLeft: 0 });
   const brandRef = useRef<HTMLDivElement>(null);
   const stockRef = useRef<HTMLDivElement>(null);
   const mobileBrandRef = useRef<HTMLDivElement>(null);
@@ -86,6 +87,20 @@ export function Catalog() {
     };
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
+  }, []);
+
+  useEffect(() => {
+    const container = scrollRef.current;
+    if (!container) return;
+
+    const handleWheel = (event: WheelEvent) => {
+      const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+      event.preventDefault();
+      container.scrollLeft += delta;
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
   const currentCategory = categories.find((c) => c.id === selectedCategory);
@@ -202,6 +217,48 @@ export function Catalog() {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -220 : 220, behavior: 'smooth' });
   };
 
+  const startCategoryDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.pointerType !== 'mouse' || event.button !== 0) return;
+
+    const container = event.currentTarget;
+    categoryDragRef.current = {
+      active: true,
+      dragged: false,
+      startX: event.clientX,
+      scrollLeft: container.scrollLeft,
+    };
+    container.setPointerCapture(event.pointerId);
+    container.classList.add('cursor-grabbing', 'select-none');
+  };
+
+  const moveCategoryDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const drag = categoryDragRef.current;
+    if (!drag.active) return;
+
+    const distance = event.clientX - drag.startX;
+    if (Math.abs(distance) > 4) drag.dragged = true;
+    event.currentTarget.scrollLeft = drag.scrollLeft - distance;
+  };
+
+  const stopCategoryDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (!categoryDragRef.current.active) return;
+    categoryDragRef.current.active = false;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    event.currentTarget.classList.remove('cursor-grabbing', 'select-none');
+    window.setTimeout(() => {
+      categoryDragRef.current.dragged = false;
+    }, 0);
+  };
+
+  const preventCategoryClickAfterDrag = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!categoryDragRef.current.dragged) return;
+    event.preventDefault();
+    event.stopPropagation();
+    categoryDragRef.current.dragged = false;
+  };
+
   const isPriceFiltered = sortBy !== 'default';
   const hasActiveFilters = searchTerm !== '' || selectedCategory !== 'all' || selectedSubcategory !== 'all' || isPriceFiltered || !!selectedBrand || stockFilter !== 'all' || saleOnly;
 
@@ -273,7 +330,12 @@ export function Catalog() {
 
             <div
               ref={scrollRef}
-              className="flex items-center overflow-x-auto flex-1"
+              onPointerDown={startCategoryDrag}
+              onPointerMove={moveCategoryDrag}
+              onPointerUp={stopCategoryDrag}
+              onPointerCancel={stopCategoryDrag}
+              onClickCapture={preventCategoryClickAfterDrag}
+              className="flex items-center overflow-x-auto flex-1 cursor-grab"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
               {/* "All" button — always show label */}
