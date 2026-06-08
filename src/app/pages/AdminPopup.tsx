@@ -9,22 +9,11 @@ import {
   type PopupData,
 } from '../lib/popup-config';
 
-const STORAGE_KEY = 'sporto_popup';
 const SEEN_KEY    = 'sporto_promo_seen';
 
 const DEFAULT: PopupData = {
   ...DEFAULT_POPUP,
-  active: true,
 };
-
-function loadFromStorage(): PopupData {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? { ...DEFAULT, ...JSON.parse(raw) } : { ...DEFAULT };
-  } catch {
-    return { ...DEFAULT };
-  }
-}
 
 // ── Toggle component ───────────────────────────────────────────────────────────
 function Toggle({ value, onChange }: {
@@ -119,7 +108,7 @@ function PopupCard({ data, lang, onClose }: {
 // ── Main component ─────────────────────────────────────────────────────────────
 export function AdminPopup() {
   const { lang } = useAdminLang();
-  const [data, setData] = useState<PopupData>(loadFromStorage);
+  const [data, setData] = useState<PopupData>({ ...DEFAULT });
   const [previewLang, setPreviewLang] = useState<'ro' | 'ru'>('ro');
   const [saving, setSaving] = useState(false);
 
@@ -130,10 +119,10 @@ export function AdminPopup() {
 
     loadPopupConfig()
       .then(config => {
-        if (!cancelled && config) setData(config);
+        if (!cancelled) setData(config ?? { ...DEFAULT });
       })
       .catch(() => {
-        // Keep the previous local admin draft when server settings are unavailable.
+        if (!cancelled) setData({ ...DEFAULT });
       });
 
     return () => { cancelled = true; };
@@ -146,7 +135,6 @@ export function AdminPopup() {
     setSaving(true);
     try {
       await savePopupConfig(data);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
       sessionStorage.removeItem(SEEN_KEY);
       toast(isRu ? '✓ Попап сохранён для всех посетителей' : '✓ Popup salvat pentru toți vizitatorii');
     } catch (error) {
