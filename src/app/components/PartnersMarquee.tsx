@@ -14,10 +14,13 @@ export function PartnersMarquee() {
   const posRef     = useRef(0);          // current translateX in px
   const halfRef    = useRef(0);          // half of track width (loop point)
   const pausedRef  = useRef(false);
-
-  // Touch drag state
-  const touchStartX   = useRef(0);
-  const touchStartPos = useRef(0);
+  const dragRef = useRef({
+    active: false,
+    dragged: false,
+    startX: 0,
+    startPos: 0,
+  });
+  const suppressClickRef = useRef(false);
 
   // Measure half-width after render
   useEffect(() => {
@@ -54,20 +57,10 @@ export function PartnersMarquee() {
     setTimeout(() => { pausedRef.current = false; }, ms);
   };
 
-  // ── Touch handlers ───────────────────────────────────────────────────
-  const onTouchStart = (e: React.TouchEvent) => {
-    pause();
-    touchStartX.current   = e.touches[0].clientX;
-    touchStartPos.current = posRef.current;
-  };
-
-  const onTouchMove = (e: React.TouchEvent) => {
-    const dx = e.touches[0].clientX - touchStartX.current;
-    let next = touchStartPos.current + dx;
-    // Keep within loop bounds
+  const setTrackPosition = (next: number) => {
     if (halfRef.current > 0) {
-      while (next > 0)                  next -= halfRef.current;
-      while (next < -halfRef.current)   next += halfRef.current;
+      while (next > 0) next -= halfRef.current;
+      while (next < -halfRef.current) next += halfRef.current;
     }
     posRef.current = next;
     if (trackRef.current) {
@@ -75,7 +68,53 @@ export function PartnersMarquee() {
     }
   };
 
-  const onTouchEnd = () => resumeAfter(800);
+  // ── Pointer drag: mouse, touch, pen ──────────────────────────────────
+  const onPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    pause();
+    dragRef.current = {
+      active: true,
+      dragged: false,
+      startX: e.clientX,
+      startPos: posRef.current,
+    };
+  };
+
+  const onPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+
+    const dx = e.clientX - drag.startX;
+    if (Math.abs(dx) > 4 && !drag.dragged) {
+      drag.dragged = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+      e.currentTarget.classList.add('cursor-grabbing', 'select-none');
+    }
+    if (!drag.dragged) return;
+    setTrackPosition(drag.startPos + dx);
+  };
+
+  const onPointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    const wasDragged = dragRef.current.dragged;
+    dragRef.current.active = false;
+    if (e.currentTarget.hasPointerCapture(e.pointerId)) {
+      e.currentTarget.releasePointerCapture(e.pointerId);
+    }
+    e.currentTarget.classList.remove('cursor-grabbing', 'select-none');
+
+    if (wasDragged) {
+      suppressClickRef.current = true;
+      window.setTimeout(() => { suppressClickRef.current = false; }, 0);
+    }
+    resumeAfter(800);
+  };
+
+  const preventClickAfterDrag = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (!suppressClickRef.current) return;
+    e.preventDefault();
+    e.stopPropagation();
+    suppressClickRef.current = false;
+  };
 
   if (loading || brands.length === 0) return null;
 
@@ -99,12 +138,15 @@ export function PartnersMarquee() {
 
       {/* Track — overflow:hidden + transform-based scroll */}
       <div
-        className="relative overflow-hidden"
-        onTouchStart={onTouchStart}
-        onTouchMove={onTouchMove}
-        onTouchEnd={onTouchEnd}
+        className="relative overflow-hidden cursor-grab"
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerEnd}
+        onPointerCancel={onPointerEnd}
+        onClickCapture={preventClickAfterDrag}
         onMouseEnter={pause}
         onMouseLeave={() => resumeAfter(150)}
+        style={{ touchAction: 'pan-y' }}
       >
         {/* Fade edges */}
         <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-r from-white to-transparent" />

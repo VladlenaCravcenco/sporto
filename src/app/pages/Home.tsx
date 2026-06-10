@@ -415,7 +415,7 @@ export function Home() {
               { icon: <Users className="w-5 h-5" />, title: t('about.support'), desc: t('about.support.desc'), num: '03' },
               { icon: <CheckCircle className="w-5 h-5" />, title: t('about.prices'), desc: t('about.prices.desc'), num: '04' },
             ].map((item) => (
-              <div key={item.num} className="bg-gray-50 border border-gray-100 p-5 md:p-6 flex flex-col gap-4">
+              <div key={item.num} className="min-w-0 bg-gray-50 border border-gray-100 p-5 md:p-6 flex flex-col gap-4">
                 <div className="flex items-start justify-between">
                   <div className="w-9 h-9 bg-black flex items-center justify-center text-white">
                     {item.icon}
@@ -423,7 +423,7 @@ export function Home() {
                   <span className="text-xs text-gray-200 tabular-nums">{item.num}</span>
                 </div>
                 <div>
-                  <h3 className="text-xs uppercase tracking-wider text-gray-900 mb-2">{item.title}</h3>
+                  <h3 className="text-xs uppercase tracking-wider text-gray-900 mb-2 break-words [overflow-wrap:anywhere]">{item.title}</h3>
                   <p className="text-xs text-gray-500 leading-relaxed">{item.desc}</p>
                 </div>
               </div>

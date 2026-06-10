@@ -44,6 +44,7 @@ function AdminLayoutInner() {
         { to: '/admin/products',   label: t.nav.products,   icon: <Package  className="w-4 h-4" /> },
         { to: '/admin/brands',     label: t.nav.brands,     icon: <Bookmark className="w-4 h-4" /> },
         { to: '/admin/categories', label: t.nav.categories, icon: <Tag      className="w-4 h-4" /> },
+        { to: '/admin/attributes', label: lang === 'ru' ? 'Характеристики' : 'Caracteristici', icon: <Settings className="w-4 h-4" /> },
         { to: '/admin/featured',   label: t.nav.featured,   icon: <Star     className="w-4 h-4" /> },
         { to: '/admin/import',     label: t.nav.import,     icon: <Upload   className="w-4 h-4" /> },
       ],

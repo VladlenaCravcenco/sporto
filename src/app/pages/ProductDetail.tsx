@@ -19,6 +19,7 @@ import { ServicesBento } from '../components/ServicesBento';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
 import { buildProductPath, extractProductIdFromParam, getProductRouteKey, inferProductRouteLanguage } from '../lib/product-url';
+import { useProductAttributeDefinitions, useProductAttributeValues } from '../hooks/useProductAttributes';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -221,6 +222,8 @@ export function ProductDetail() {
   const { product, loading, error } = useSupabaseProduct(sku || id || slug);
   const { products: brandProducts } = useBrandProducts(product?.brand, product?.id ?? resolvedProductId);
   const { brand: brandData } = useBrandByName(product?.brand);
+  const { attributes: dynamicAttributes } = useProductAttributeDefinitions(product?.category);
+  const { values: dynamicAttributeValues } = useProductAttributeValues(product?.id);
   const inCart = product ? isInCart(product.id) : false;
 
   useEffect(() => {
@@ -310,6 +313,22 @@ export function ProductDetail() {
     product.seoKeywords?.ro ||
     product.seoKeywords?.ru ||
     `${product.name.ro}, ${product.name.ru}${product.brand ? `, ${product.brand}` : ''}${product.sku ? `, ${product.sku}` : ''}, echipament sportiv Moldova, спортивное оборудование Молдова`;
+  const dynamicSpecifications = dynamicAttributes
+    .filter((attribute) => attribute.specification_enabled)
+    .flatMap((attribute) => {
+      const value = dynamicAttributeValues.find((item) => item.attribute_id === attribute.id);
+      if (!value) return [];
+      const raw = value.numeric_value != null
+        ? String(value.numeric_value)
+        : value.boolean_value != null
+        ? (value.boolean_value ? (language === 'ro' ? 'Da' : 'Да') : (language === 'ro' ? 'Nu' : 'Нет'))
+        : value.text_value;
+      if (!raw) return [];
+      return [{
+        name: language === 'ro' ? attribute.name_ro : attribute.name_ru,
+        value: `${raw}${attribute.unit ? ` ${attribute.unit}` : ''}`,
+      }];
+    });
 
   const handleAddToCart = () => {
     addToCart({
@@ -351,6 +370,10 @@ export function ProductDetail() {
             { name: language === 'ro' ? 'Acasă' : 'Главная', url: `https://www.sporto.md/?lang=${language}` },
             { name: language === 'ro' ? 'Catalog' : 'Каталог', url: `https://www.sporto.md/catalog?lang=${language}` },
             ...(category ? [{ name: category.name[language as Language], url: `https://www.sporto.md/catalog?category=${category.id}&lang=${language}` }] : []),
+            ...(category && subcategory ? [{
+              name: subcategory.name[language as Language],
+              url: `https://www.sporto.md/catalog?category=${category.id}&subcategory=${subcategory.id}&lang=${language}`,
+            }] : []),
             { name: product.name[language as Language], url: productUrl },
           ]),
         ]}
@@ -374,6 +397,17 @@ export function ProductDetail() {
                   className="hover:text-gray-900 transition-colors shrink-0"
                 >
                   {category.name[language as Language]}
+                </Link>
+              </>
+            )}
+            {category && subcategory && (
+              <>
+                <span>/</span>
+                <Link
+                  to={`/catalog?category=${category.id}&subcategory=${subcategory.id}`}
+                  className="hover:text-gray-900 transition-colors shrink-0"
+                >
+                  {subcategory.name[language as Language]}
                 </Link>
               </>
             )}
@@ -413,9 +447,12 @@ export function ProductDetail() {
                 </Link>
               )}
               {subcategory && (
-                <span className="text-xs text-gray-300 uppercase tracking-wider">
+                <Link
+                  to={`/catalog?category=${category?.id}&subcategory=${subcategory.id}`}
+                  className="text-xs text-gray-300 uppercase tracking-wider hover:text-gray-900 transition-colors"
+                >
                   / {subcategory.name[language as Language]}
-                </span>
+                </Link>
               )}
             </div>
 
@@ -548,17 +585,26 @@ export function ProductDetail() {
             </div>
 
             {/* Specifications */}
-            {Object.keys(product.specifications[language as Language]).length > 0 && (
+            {(dynamicSpecifications.length > 0 || Object.keys(product.specifications[language as Language]).length > 0) && (
               <div>
                 <h2 className="text-sm uppercase tracking-wider text-gray-400 mb-4">
                   {t('products.specifications')}
                 </h2>
                 <div className="border border-gray-100 bg-gray-50 px-5 py-4">
-                  <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-line">
-                    {Object.entries(product.specifications[language as Language])
-                      .map(([key, value]) => `${key}: ${value}`)
-                      .join('\n')}
-                  </p>
+                  <div className="divide-y divide-gray-200">
+                    {dynamicSpecifications.map((item) => (
+                      <div key={item.name} className="flex items-start justify-between gap-4 py-2 first:pt-0 last:pb-0 text-sm">
+                        <span className="text-gray-500">{item.name}</span>
+                        <span className="text-gray-900 text-right">{item.value}</span>
+                      </div>
+                    ))}
+                    {Object.entries(product.specifications[language as Language]).map(([key, value]) => (
+                      <div key={key} className="flex items-start justify-between gap-4 py-2 first:pt-0 last:pb-0 text-sm">
+                        <span className="text-gray-500">{key}</span>
+                        <span className="text-gray-900 text-right">{value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             )}

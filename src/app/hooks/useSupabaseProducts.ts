@@ -58,9 +58,10 @@ type CatalogSortOption = 'default' | 'price-asc' | 'price-desc';
 interface CatalogProductsParams {
   page: number;
   pageSize: number;
-  category?: string;
-  subcategory?: string;
-  brand?: string;
+  category?: string | string[];
+  subcategory?: string | string[];
+  brand?: string | string[];
+  productIds?: string[];
   saleOnly?: boolean;
   stockFilter?: StockFilter;
   searchTerm?: string;
@@ -205,6 +206,10 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [connected, setConnected] = useState(false);
+  const categoryKey = JSON.stringify(params.category ?? null);
+  const subcategoryKey = JSON.stringify(params.subcategory ?? null);
+  const brandKey = JSON.stringify(params.brand ?? null);
+  const productIdsKey = JSON.stringify(params.productIds ?? null);
 
   useEffect(() => {
     let cancelled = false;
@@ -214,6 +219,62 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
     (async () => {
       const { price, cleanQuery } = parsePrice(params.searchTerm || '');
       const queryText = cleanQuery.trim() || null;
+      const categories = Array.isArray(params.category) ? params.category : [];
+      const subcategories = Array.isArray(params.subcategory) ? params.subcategory : [];
+      const brands = Array.isArray(params.brand) ? params.brand : [];
+      const usesMultiSelect = Array.isArray(params.category)
+        || Array.isArray(params.subcategory)
+        || Array.isArray(params.brand)
+        || Array.isArray(params.productIds);
+
+      if (usesMultiSelect) {
+        if (params.productIds && params.productIds.length === 0) {
+          setProducts([]);
+          setTotal(0);
+          setConnected(true);
+          setLoading(false);
+          return;
+        }
+        let query = supabase
+          .from('products')
+          .select('*', { count: 'exact' })
+          .eq('active', true);
+
+        if (categories.length > 0) query = query.in('category', categories);
+        if (subcategories.length > 0) query = query.in('subcategory', subcategories);
+        if (brands.length > 0) query = query.in('brand', brands);
+        if (params.productIds?.length) query = query.in('id', params.productIds);
+        if (params.saleOnly) query = query.not('sale_price', 'is', null);
+        if (params.stockFilter === 'inStock') query = query.gt('qty', 0);
+        if (params.stockFilter === 'onOrder') query = query.lte('qty', 0);
+        if (queryText) {
+          const escaped = queryText.replaceAll(',', ' ');
+          query = query.or(`name_ro.ilike.%${escaped}%,name_ru.ilike.%${escaped}%,sku.ilike.%${escaped}%,brand.ilike.%${escaped}%`);
+        }
+        if (price.min != null) query = query.gte('price', price.min);
+        if (price.max != null) query = query.lte('price', price.max);
+
+        if (params.sortBy === 'price-asc') query = query.order('price', { ascending: true });
+        else if (params.sortBy === 'price-desc') query = query.order('price', { ascending: false });
+        else query = query.order('id', { ascending: true });
+
+        const from = (params.page - 1) * params.pageSize;
+        const { data, error: err, count } = await query.range(from, from + params.pageSize - 1);
+
+        if (cancelled) return;
+        if (err) {
+          setProducts([]);
+          setTotal(0);
+          setError(err.message);
+          setConnected(false);
+        } else {
+          setProducts(((data as ProductRow[] | null) ?? []).map(rowToProduct));
+          setTotal(count ?? 0);
+          setConnected(true);
+        }
+        setLoading(false);
+        return;
+      }
 
       const { data, error: err } = await supabase.rpc('search_products_catalog', {
         p_query: queryText,
@@ -250,9 +311,10 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
   }, [
     params.page,
     params.pageSize,
-    params.category,
-    params.subcategory,
-    params.brand,
+    categoryKey,
+    subcategoryKey,
+    brandKey,
+    productIdsKey,
     params.saleOnly,
     params.stockFilter,
     params.searchTerm,

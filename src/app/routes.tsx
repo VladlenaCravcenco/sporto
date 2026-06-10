@@ -35,6 +35,7 @@ import { AdminFaq } from './pages/AdminFaq';
 import { AdminServices } from './pages/AdminServices';
 import { AdminMaintenance } from './pages/AdminMaintenance';
 import { AdminContentPages } from './pages/AdminContentPages';
+import { AdminAttributes } from './pages/AdminAttributes';
 
 export const router = createBrowserRouter([
 
@@ -50,6 +51,7 @@ export const router = createBrowserRouter([
       { path: 'products', Component: AdminProducts },
       { path: 'brands', Component: AdminBrands },
       { path: 'categories', Component: AdminCategories },
+      { path: 'attributes', Component: AdminAttributes },
       { path: 'featured', Component: AdminFeatured },
       { path: 'import', Component: AdminImport },
       { path: 'banners', Component: AdminBanners },

@@ -13,6 +13,7 @@ import { logoutAdmin } from '../../lib/adminAuth';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { buildProductPath } from '../lib/product-url';
 import { cacheInvalidate } from '../../lib/queryCache';
+import { useProductAttributeDefinitions, type ProductAttributeValue } from '../hooks/useProductAttributes';
 
 // ─── Brand Combobox ───────────────────────────────────────────────────────────
 
@@ -516,9 +517,11 @@ export function AdminProducts() {
   const [gallery, setGallery] = useState<string[]>([]); // up to 4 image URLs
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [storageNote, setStorageNote] = useState(false);
+  const [attributeValues, setAttributeValues] = useState<Record<string, string | boolean>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSlotRef = useRef<number>(0); // which slot triggered the file picker
   const navigate = useNavigate();
+  const { attributes: categoryAttributes } = useProductAttributeDefinitions(form.category || undefined);
 
   const showToast = (msg: string, ok = true) => {
     setToast({ msg, ok });
@@ -858,15 +861,26 @@ export function AdminProducts() {
     setEditId(null);
     setForm(EMPTY_FORM);
     setGallery([]);
+    setAttributeValues({});
     setPanelOpen(true);
   };
 
-  const openEdit = (row: ProductRow) => {
+  const openEdit = async (row: ProductRow) => {
     setEditId(row.id);
     setForm({ ...row });
     // Populate gallery from images[] or fall back to image_url
     const imgs = row.images?.length ? row.images : (row.image_url ? [row.image_url] : []);
     setGallery(imgs);
+    const { data } = await supabase.from('product_attribute_values').select('*').eq('product_id', row.id);
+    const values = ((data as ProductAttributeValue[] | null) ?? []).reduce<Record<string, string | boolean>>((result, value) => {
+      result[value.attribute_id] = value.numeric_value != null
+        ? String(value.numeric_value)
+        : value.boolean_value != null
+        ? value.boolean_value
+        : (value.text_value ?? '');
+      return result;
+    }, {});
+    setAttributeValues(values);
     setPanelOpen(true);
   };
 
@@ -875,6 +889,25 @@ export function AdminProducts() {
     setEditId(null);
     setForm(EMPTY_FORM);
     setGallery([]);
+    setAttributeValues({});
+  };
+
+  const saveAttributeValues = async (productId: string) => {
+    if (categoryAttributes.length === 0) return;
+    const filled = categoryAttributes.flatMap((attribute) => {
+      const value = attributeValues[attribute.id];
+      if (value === '' || value == null) return [];
+      return [{
+        product_id: productId,
+        attribute_id: attribute.id,
+        numeric_value: attribute.value_type === 'number' ? Number(value) : null,
+        text_value: attribute.value_type === 'select' || attribute.value_type === 'text' ? String(value).trim() : null,
+        boolean_value: attribute.value_type === 'boolean' ? Boolean(value) : null,
+      }];
+    });
+    const ids = categoryAttributes.map((attribute) => attribute.id);
+    await supabase.from('product_attribute_values').delete().eq('product_id', productId).in('attribute_id', ids);
+    if (filled.length > 0) await supabase.from('product_attribute_values').insert(filled);
   };
 
   // ─── Image upload ─────────────────────────────────────────────────────────────
@@ -965,6 +998,7 @@ export function AdminProducts() {
       const { error } = await supabase.from('products').update(payload).eq('id', editId);
       if (error) { showToast(error.message, false); }
       else {
+        await saveAttributeValues(editId);
         invalidateProductCaches();
         await load();
         showToast('Produsul a fost actualizat!');
@@ -999,6 +1033,7 @@ export function AdminProducts() {
       const { data, error } = await supabase.from('products').insert(insertPayload).select().single();
       if (error) { showToast(error.message, false); }
       else {
+        await saveAttributeValues(data.id);
         invalidateProductCaches();
         setPage(1);
         await load();
@@ -1661,6 +1696,65 @@ export function AdminProducts() {
                 />
               </div>
             </div>
+
+            {form.category && categoryAttributes.length > 0 && (
+              <div className="border border-gray-200 bg-gray-50 p-4">
+                <div className="mb-3">
+                  <p className="text-xs text-gray-900">{l('Caracteristici produs', 'Характеристики товара')}</p>
+                  <p className="text-[10px] text-gray-400 mt-0.5">
+                    {l('Aceste valori apar în pagina produsului și în filtrele categoriei.', 'Эти значения появятся на странице товара и в фильтрах категории.')}
+                  </p>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {categoryAttributes.map((attribute) => (
+                    <label key={attribute.id} className="text-[10px] uppercase tracking-wider text-gray-400">
+                      {lang === 'ru' ? attribute.name_ru : attribute.name_ro}
+                      {attribute.unit ? ` (${attribute.unit})` : ''}
+                      {attribute.value_type === 'boolean' ? (
+                        <select
+                          value={attributeValues[attribute.id] === '' || attributeValues[attribute.id] == null ? '' : String(attributeValues[attribute.id])}
+                          onChange={(event) => setAttributeValues((values) => ({
+                            ...values,
+                            [attribute.id]: event.target.value === '' ? '' : event.target.value === 'true',
+                          }))}
+                          className="mt-1 w-full h-9 px-3 text-xs border border-gray-200 bg-white"
+                        >
+                          <option value="">{l('Nespecificat', 'Не указано')}</option>
+                          <option value="true">{l('Da', 'Да')}</option>
+                          <option value="false">{l('Nu', 'Нет')}</option>
+                        </select>
+                      ) : attribute.value_type === 'select' ? (
+                        <select
+                          value={String(attributeValues[attribute.id] ?? '')}
+                          onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.value }))}
+                          className="mt-1 w-full h-9 px-3 text-xs border border-gray-200 bg-white"
+                        >
+                          <option value="">{l('Selectați valoarea', 'Выберите значение')}</option>
+                          {(attribute.options ?? []).map((option) => (
+                            <option key={option} value={option}>{option}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type={attribute.value_type === 'number' ? 'number' : 'text'}
+                          step={attribute.value_type === 'number' ? 'any' : undefined}
+                          placeholder={
+                            attribute.value_type === 'number'
+                              ? l('De ex.: 120', 'Например: 120')
+                              : attribute.value_type === 'select'
+                              ? l('De ex.: Oțel', 'Например: Сталь')
+                              : l('De ex.: Motor cu curent alternativ', 'Например: Двигатель переменного тока')
+                          }
+                          value={String(attributeValues[attribute.id] ?? '')}
+                          onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.value }))}
+                          className="mt-1 w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black"
+                        />
+                      )}
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
 
             {/* ── Price / unit / qty ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
