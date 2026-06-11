@@ -11,11 +11,13 @@ type SitemapEntry = {
   lastmod?: string | null;
   changefreq?: string;
   priority?: string;
+  alternates?: Array<{ hreflang: 'ro' | 'ru' | 'x-default'; href: string }>;
 };
 
 type ProductRow = {
   id: string | number;
   name_ro: string | null;
+  name_ru: string | null;
   sku: string | null;
   updated_at: string | null;
 };
@@ -38,17 +40,16 @@ type BrandRow = {
   created_at: string | null;
 };
 
-const STATIC_PAGES: SitemapEntry[] = [
-  { loc: '/', changefreq: 'weekly', priority: '1.0' },
-  { loc: '/ru', changefreq: 'weekly', priority: '0.8' },
-  { loc: '/catalog', changefreq: 'daily', priority: '0.9' },
-  { loc: '/turnkey-solutions', changefreq: 'monthly', priority: '0.8' },
-  { loc: '/maintenance-service', changefreq: 'monthly', priority: '0.8' },
-  { loc: '/about', changefreq: 'monthly', priority: '0.7' },
-  { loc: '/contacts', changefreq: 'monthly', priority: '0.8' },
-  { loc: '/terms-of-cooperation', changefreq: 'yearly', priority: '0.4' },
-  { loc: '/delivery-terms', changefreq: 'yearly', priority: '0.4' },
-  { loc: '/privacy-policy', changefreq: 'yearly', priority: '0.3' },
+const STATIC_PAGES = [
+  { path: '/', ruPath: '/ru', changefreq: 'weekly', priority: '1.0' },
+  { path: '/catalog', changefreq: 'daily', priority: '0.9' },
+  { path: '/turnkey-solutions', changefreq: 'monthly', priority: '0.8' },
+  { path: '/maintenance-service', changefreq: 'monthly', priority: '0.8' },
+  { path: '/about', changefreq: 'monthly', priority: '0.7' },
+  { path: '/contacts', changefreq: 'monthly', priority: '0.8' },
+  { path: '/terms-of-cooperation', changefreq: 'yearly', priority: '0.4' },
+  { path: '/delivery-terms', changefreq: 'yearly', priority: '0.4' },
+  { path: '/privacy-policy', changefreq: 'yearly', priority: '0.3' },
 ];
 
 function escapeXml(value: string): string {
@@ -86,11 +87,36 @@ function absoluteUrl(path: string): string {
   return new URL(path, SITE_URL).toString();
 }
 
-function catalogUrl(category: string, subcategory?: string): string {
+function localizedUrl(path: string, language: 'ro' | 'ru'): string {
+  const url = new URL(path, SITE_URL);
+  if (language === 'ru' && path !== '/ru') url.searchParams.set('lang', 'ru');
+  return url.toString();
+}
+
+function catalogUrl(category: string, subcategory?: string, language: 'ro' | 'ru' = 'ro'): string {
   const url = new URL('/catalog', SITE_URL);
   url.searchParams.set('category', category);
   if (subcategory) url.searchParams.set('subcategory', subcategory);
+  if (language === 'ru') url.searchParams.set('lang', 'ru');
   return url.toString();
+}
+
+function localizedEntries(
+  roLoc: string,
+  ruLoc: string,
+  metadata: Omit<SitemapEntry, 'loc' | 'alternates'>,
+): SitemapEntry[] {
+  if (roLoc === ruLoc) return [{ ...metadata, loc: roLoc }];
+
+  const alternates: SitemapEntry['alternates'] = [
+    { hreflang: 'ro', href: roLoc },
+    { hreflang: 'ru', href: ruLoc },
+    { hreflang: 'x-default', href: roLoc },
+  ];
+  return [
+    { ...metadata, loc: roLoc, alternates },
+    { ...metadata, loc: ruLoc, alternates },
+  ];
 }
 
 async function fetchAllRows<T>(table: string, select: string, filters: Record<string, string> = {}): Promise<T[]> {
@@ -121,6 +147,9 @@ async function fetchAllRows<T>(table: string, select: string, filters: Record<st
 
 function renderEntry(entry: SitemapEntry): string {
   const lines = ['  <url>', `    <loc>${escapeXml(entry.loc)}</loc>`];
+  entry.alternates?.forEach((alternate) => {
+    lines.push(`    <xhtml:link rel="alternate" hreflang="${alternate.hreflang}" href="${escapeXml(alternate.href)}" />`);
+  });
   if (entry.lastmod) lines.push(`    <lastmod>${escapeXml(entry.lastmod)}</lastmod>`);
   if (entry.changefreq) lines.push(`    <changefreq>${entry.changefreq}</changefreq>`);
   if (entry.priority) lines.push(`    <priority>${entry.priority}</priority>`);
@@ -136,7 +165,7 @@ export default async function handler(_req: unknown, res: {
 
   try {
     const [products, categories, subcategories, brands] = await Promise.all([
-      fetchAllRows<ProductRow>('products', 'id,name_ro,sku,updated_at', { active: 'eq.true' }),
+      fetchAllRows<ProductRow>('products', 'id,name_ro,name_ru,sku,updated_at', { active: 'eq.true' }),
       fetchAllRows<CategoryRow>('categories', 'slug,active,created_at'),
       fetchAllRows<SubcategoryRow>('subcategories', 'category_slug,slug,created_at'),
       fetchAllRows<BrandRow>('brands', 'slug,active,created_at'),
@@ -146,40 +175,53 @@ export default async function handler(_req: unknown, res: {
     const activeCategorySlugs = new Set(activeCategories.map((category) => category.slug));
 
     dynamicEntries = [
-      ...activeCategories.map((category) => ({
-        loc: catalogUrl(category.slug),
-        lastmod: category.created_at,
-        changefreq: 'weekly',
-        priority: '0.8',
-      })),
+      ...activeCategories.flatMap((category) => localizedEntries(
+        catalogUrl(category.slug, undefined, 'ro'),
+        catalogUrl(category.slug, undefined, 'ru'),
+        {
+          lastmod: category.created_at,
+          changefreq: 'weekly',
+          priority: '0.8',
+        },
+      )),
       ...subcategories
         .filter((subcategory) => subcategory.slug && activeCategorySlugs.has(subcategory.category_slug))
-        .map((subcategory) => ({
-          loc: catalogUrl(subcategory.category_slug, subcategory.slug),
-          lastmod: subcategory.created_at,
-          changefreq: 'weekly',
-          priority: '0.7',
-        })),
+        .flatMap((subcategory) => localizedEntries(
+          catalogUrl(subcategory.category_slug, subcategory.slug, 'ro'),
+          catalogUrl(subcategory.category_slug, subcategory.slug, 'ru'),
+          {
+            lastmod: subcategory.created_at,
+            changefreq: 'weekly',
+            priority: '0.7',
+          },
+        )),
       ...products
         .filter((product) => product.id && product.name_ro)
-        .map((product) => {
+        .flatMap((product) => {
           const routeKey = product.sku?.trim() || String(product.id);
-          const slug = slugify(product.name_ro || '') || 'produs';
-          return {
-            loc: absoluteUrl(`/product/${encodeURIComponent(slug)}/${encodeURIComponent(routeKey)}`),
+          const roSlug = slugify(product.name_ro || '') || 'produs';
+          const ruSlug = slugify(product.name_ru || product.name_ro || '') || 'produs';
+          return localizedEntries(
+            absoluteUrl(`/product/${encodeURIComponent(roSlug)}/${encodeURIComponent(routeKey)}`),
+            absoluteUrl(`/product/${encodeURIComponent(ruSlug)}/${encodeURIComponent(routeKey)}`),
+            {
             lastmod: product.updated_at,
             changefreq: 'weekly',
             priority: '0.7',
-          };
+            },
+          );
         }),
       ...brands
         .filter((brand) => brand.slug && brand.active !== false)
-        .map((brand) => ({
-          loc: absoluteUrl(`/brands/${encodeURIComponent(brand.slug)}`),
-          lastmod: brand.created_at,
-          changefreq: 'weekly',
-          priority: '0.6',
-        })),
+        .flatMap((brand) => localizedEntries(
+          localizedUrl(`/brands/${encodeURIComponent(brand.slug)}`, 'ro'),
+          localizedUrl(`/brands/${encodeURIComponent(brand.slug)}`, 'ru'),
+          {
+            lastmod: brand.created_at,
+            changefreq: 'weekly',
+            priority: '0.6',
+          },
+        )),
     ];
   } catch (error) {
     console.error('[sitemap] failed to load dynamic entries', error);
@@ -189,13 +231,18 @@ export default async function handler(_req: unknown, res: {
     return;
   }
 
-  const entries = [
-    ...STATIC_PAGES.map((entry) => ({ ...entry, loc: absoluteUrl(entry.loc) })),
+  const entriesWithDuplicates = [
+    ...STATIC_PAGES.flatMap((entry) => localizedEntries(
+      localizedUrl(entry.path, 'ro'),
+      entry.ruPath ? absoluteUrl(entry.ruPath) : localizedUrl(entry.path, 'ru'),
+      { changefreq: entry.changefreq, priority: entry.priority },
+    )),
     ...dynamicEntries,
   ];
+  const entries = [...new Map(entriesWithDuplicates.map((entry) => [entry.loc, entry])).values()];
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
+    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">',
     ...entries.map(renderEntry),
     '</urlset>',
     '',
