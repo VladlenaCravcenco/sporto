@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { supabase } from '../../lib/supabase';
-import { sendWelcomeEmail } from '../../lib/emailService';
+import { SITE_URL, supabase } from '../../lib/supabase';
 import { ensureClientRecord } from '../../lib/clients';
 
 export interface UserProfile {
@@ -18,11 +17,13 @@ interface AuthContextType {
   user: UserProfile | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login:         (email: string, password: string) => Promise<boolean>;
+  login:         (email: string, password: string) => Promise<LoginResult>;
   register:      (data: RegisterData) => Promise<boolean | 'already_exists' | 'server_error'>;
   updateProfile: (data: Partial<UserProfile>) => Promise<void>;
   logout:        () => Promise<void>;
 }
+
+export type LoginResult = 'success' | 'email_not_confirmed' | 'invalid_credentials' | 'error';
 
 export interface RegisterData {
   email:       string;
@@ -70,11 +71,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // On mount: restore session if Supabase has one (but NOT if it's an admin session)
   useEffect(() => {
     const ADMIN_FLAG = 'sporto_admin_ok';
+    const ADMIN_EMAIL = (
+      import.meta.env.VITE_ADMIN_LOGIN_EMAIL ||
+      import.meta.env.VITE_ADMIN_EMAIL ||
+      ''
+    ).toLowerCase();
+
+    const isActualAdminSession = (email?: string | null) =>
+      !!ADMIN_EMAIL && email?.toLowerCase() === ADMIN_EMAIL;
 
     supabase.auth.getSession().then(async ({ data }) => {
       const session = data.session;
-      // If session belongs to admin, don't hijack it for the public user context
-      if (session && localStorage.getItem(ADMIN_FLAG) !== 'true') {
+      if (session && !isActualAdminSession(session.user.email)) {
+        localStorage.removeItem(ADMIN_FLAG);
         const profile = await loadProfile(session.user.id, session.user.email ?? '');
         setUser(profile);
       }
@@ -83,11 +92,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     // Keep user state in sync with Supabase auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      const ADMIN = localStorage.getItem(ADMIN_FLAG) === 'true';
-      if (event === 'SIGNED_IN' && session && !ADMIN) {
+      const actualAdmin = isActualAdminSession(session?.user.email);
+      if (event === 'SIGNED_IN' && session && !actualAdmin) {
+        localStorage.removeItem(ADMIN_FLAG);
         const profile = await loadProfile(session.user.id, session.user.email ?? '');
         setUser(profile);
-      } else if (event === 'SIGNED_OUT' && !ADMIN) {
+      } else if (event === 'SIGNED_OUT' && !actualAdmin) {
         setUser(null);
       }
     });
@@ -96,9 +106,18 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // ── Login ─────────────────────────────────────────────────────────────────
-  const login = async (email: string, password: string): Promise<boolean> => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error || !data.user) return false;
+  const login = async (email: string, password: string): Promise<LoginResult> => {
+    localStorage.removeItem('sporto_admin_ok');
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: email.trim().toLowerCase(),
+      password,
+    });
+    if (error) {
+      if (error.message.toLowerCase().includes('email not confirmed')) return 'email_not_confirmed';
+      if (error.message.toLowerCase().includes('invalid login credentials')) return 'invalid_credentials';
+      return 'error';
+    }
+    if (!data.user) return 'error';
 
     const profile = await loadProfile(data.user.id, email);
     if (profile) {
@@ -112,7 +131,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         phone:   '',
       });
     }
-    return true;
+    return 'success';
   };
 
   // ── Register ──────────────────────────────────────────────────────────────
@@ -120,7 +139,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const { data: authData, error: signUpError } = await supabase.auth.signUp({
       email:    data.email,
       password: data.password,
-      options:  { data: { name: data.name } },
+      options:  {
+        emailRedirectTo: `${SITE_URL}/account`,
+        data: {
+          name: data.name,
+          company: data.company,
+          phone: data.phone,
+          client_type: data.clientType || 'company',
+        },
+      },
     });
 
     if (signUpError) {
@@ -140,6 +167,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (!authData.user) return false;
+    if (authData.user.identities?.length === 0) return 'already_exists';
 
     try {
       await ensureClientRecord({
@@ -165,16 +193,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       clientType:    data.clientType || 'company',
       emailVerified: false,
     };
-    setUser(profile);
-
-    const verificationToken = crypto.randomUUID().replace(/-/g, '');
-    const verificationLink  = `${window.location.origin}/verify?token=${verificationToken}`;
-    sendWelcomeEmail({
-      email:            data.email,
-      name:             data.name,
-      verificationLink,
-      language:         (data.language as 'ru' | 'ro') || 'ru',
-    });
+    if (authData.session) setUser(profile);
 
     return true;
   };

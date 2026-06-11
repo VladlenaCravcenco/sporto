@@ -81,11 +81,11 @@
       "destination": "/index.html"
     },
     {
-      "source": "/register",
+      "source": "/forgot-password",
       "destination": "/index.html"
     },
     {
-      "source": "/forgot-password",
+      "source": "/reset-password",
       "destination": "/index.html"
     },
     {

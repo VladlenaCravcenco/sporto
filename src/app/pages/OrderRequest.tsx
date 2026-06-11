@@ -7,17 +7,18 @@ import { supabase } from '../../lib/supabase';
 import {
   Trash2, Plus, Minus, ShoppingCart, Package, ArrowRight,
   ChevronRight, CheckCircle2, Eye, EyeOff, User, Lock,
-  Building2, Phone, Mail, MapPin, Pencil, Check, Truck,
+  Building2, Phone, Mail, MapPin, Pencil, Truck,
   UserCircle, Briefcase,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { sendAdminOrderNotification, sendOrderConfirmation } from '../../lib/emailService';
 import { SeoHead } from '../components/SeoHead';
 import { trackGoogleAdsLead } from '../../lib/googleAds';
-import { ensureClientRecord } from '../../lib/clients';
+import { ensureClientRecord, findClientConflict } from '../../lib/clients';
+import { PhoneInput } from '../components/PhoneInput';
 
 type AuthTab = 'new' | 'login';
-type Step = 'cart' | 'success';
+type Step = 'cart' | 'registration' | 'success';
 
 interface GuestForm {
   name: string;
@@ -25,18 +26,18 @@ interface GuestForm {
   phone: string;
   email: string;
   notes: string;
-  saveProfile: boolean;
-  password: string;
   deliveryAddress: string;
   clientType: 'individual' | 'company';
 }
 
 const emptyGuest: GuestForm = {
   name: '', company: '', phone: '', email: '',
-  notes: '', saveProfile: false, password: '',
+  notes: '',
   deliveryAddress: '',
   clientType: 'company',
 };
+
+const isCompletePhone = (phone: string) => phone.replace(/\D/g, '').length === 11;
 
 export function OrderRequest() {
   const { language } = useLanguage();
@@ -53,6 +54,10 @@ export function OrderRequest() {
   const [loginEmail, setLoginEmail] = useState('');
   const [loginPassword, setLoginPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [registrationPassword, setRegistrationPassword] = useState('');
+  const [registrationPasswordConfirm, setRegistrationPasswordConfirm] = useState('');
+  const [registrationConsent, setRegistrationConsent] = useState(false);
+  const [registrationError, setRegistrationError] = useState('');
   const [showLoginPass, setShowLoginPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
@@ -113,6 +118,10 @@ export function OrderRequest() {
       toast.error(L('Completează numele și telefonul', 'Заполните имя и телефон'));
       return;
     }
+    if (!isCompletePhone(profileDraft.phone)) {
+      toast.error(L('Introduceți numărul complet în format +373', 'Введите полный номер в формате +373'));
+      return;
+    }
 
     if (profileDraft.clientType === 'company' && !profileDraft.company.trim()) {
       toast.error(L('Completează compania', 'Заполните компанию'));
@@ -170,7 +179,7 @@ export function OrderRequest() {
       image_url: item.image || null,
     }));
 
-    const { data: inserted } = await supabase.from('order_requests').insert({
+    const { data: inserted, error: insertError } = await supabase.from('order_requests').insert({
       client_name:      clientData.name,
       client_company:   clientData.company   || null,
       client_email:     clientData.email,
@@ -183,6 +192,7 @@ export function OrderRequest() {
       total_items:      totalItems,
       status:           'new',
     }).select('id').single();
+    if (insertError) throw insertError;
 
     const orderId = inserted?.id || crypto.randomUUID();
     const emailData = {
@@ -214,24 +224,20 @@ export function OrderRequest() {
       toast.error(L('Completează câmpurile obligatorii', 'Заполните обязательные поля'));
       return;
     }
+    if (!isCompletePhone(guest.phone)) {
+      toast.error(L('Introduceți numărul complet în format +373', 'Введите полный номер в формате +373'));
+      return;
+    }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 900));
     try {
-      if (guest.saveProfile && guest.password) {
-        const ok = await register({
-          email:      guest.email,
-          password:   guest.password,
-          name:       guest.name,
-          company:    guest.company,
-          phone:      guest.phone,
-          address:    guest.deliveryAddress,
-          clientType: guest.clientType,
-        });
-        if (!ok) {
-          toast.error(L('Email deja înregistrat', 'Email уже зарегистрирован'));
-          setLoading(false);
-          return;
-        }
+      const conflict = await findClientConflict(guest.email, guest.phone);
+      if (conflict) {
+        toast.error(conflict === 'email'
+          ? L('Există deja un cont cu acest email. Autentificați-vă.', 'Аккаунт с этой почтой уже существует. Войдите в аккаунт.')
+          : L('Există deja un cont cu acest telefon. Autentificați-vă.', 'Аккаунт с этим телефоном уже существует. Войдите в аккаунт.'));
+        setAuthTab('login');
+        setLoginEmail(guest.email.trim().toLowerCase());
+        return;
       }
 
       await saveRequestToSupabase({
@@ -245,12 +251,57 @@ export function OrderRequest() {
       });
       clearCart();
       trackGoogleAdsLead();
-      setStep('success');
+      setStep('registration');
     } catch (error) {
       toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleRegistrationSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setRegistrationError('');
+
+    if (registrationPassword.length < 6) {
+      setRegistrationError(L('Parola trebuie să conțină cel puțin 6 caractere', 'Пароль должен содержать минимум 6 символов'));
+      return;
+    }
+    if (registrationPassword !== registrationPasswordConfirm) {
+      setRegistrationError(L('Parolele nu coincid', 'Пароли не совпадают'));
+      return;
+    }
+    if (!registrationConsent) {
+      setRegistrationError(L('Confirmați acordul pentru prelucrarea datelor', 'Подтвердите согласие на обработку данных'));
+      return;
+    }
+
+    setLoading(true);
+    const result = await register({
+      email: guest.email.trim().toLowerCase(),
+      password: registrationPassword,
+      name: guest.name,
+      company: guest.company,
+      phone: guest.phone,
+      address: guest.deliveryAddress,
+      clientType: guest.clientType,
+      language: language as 'ru' | 'ro',
+    });
+    setLoading(false);
+
+    if (result === true) {
+      toast.success(L('Verificați emailul pentru confirmarea contului', 'Проверьте почту для подтверждения аккаунта'));
+      setStep('success');
+      return;
+    }
+    if (result === 'already_exists') {
+      setRegistrationError(L(
+        'Există deja un cont cu acest email. Autentificați-vă sau resetați parola.',
+        'Аккаунт с этой почтой уже существует. Войдите или восстановите пароль.',
+      ));
+      return;
+    }
+    setRegistrationError(L('Contul nu a putut fi creat. Încercați din nou.', 'Не удалось создать аккаунт. Попробуйте ещё раз.'));
   };
 
   // ✅ FIX 2: передаём user.address в заявку для залогиненного пользователя
@@ -286,9 +337,11 @@ export function OrderRequest() {
     e.preventDefault();
     setLoginError('');
     setLoading(true);
-    const ok = await login(loginEmail, loginPassword);
-    if (!ok) {
-      setLoginError(L('Email sau parolă incorecte', 'Неверный email или пароль'));
+    const result = await login(loginEmail, loginPassword);
+    if (result !== 'success') {
+      setLoginError(result === 'email_not_confirmed'
+        ? L('Confirmați mai întâi adresa de email', 'Сначала подтвердите адрес электронной почты')
+        : L('Email sau parolă incorecte', 'Неверный email или пароль'));
       setLoading(false);
       return;
     }
@@ -341,10 +394,10 @@ export function OrderRequest() {
                  'Ваши данные сохранены. В следующий раз форма заполнится автоматически.')}
             </p>
           )}
-          {!isAuthenticated && guest.saveProfile && (
+          {!isAuthenticated && (
             <p className="text-xs text-gray-500 border border-gray-200 px-4 py-3 mb-8">
-              {L('Profil creat! Data viitoare te autentifici rapid cu email și parolă.',
-                 'Профиль создан! В следующий раз войдите быстро по email и паролю.')}
+              {L('Datele au fost salvate. Dacă acesta este un cont nou, confirmați adresa folosind linkul primit prin email.',
+                 'Данные сохранены. Если это новый аккаунт, подтвердите почту по ссылке из письма.')}
             </p>
           )}
           <div className="flex gap-3 justify-center">
@@ -357,6 +410,87 @@ export function OrderRequest() {
               {L('Acasă', 'Главная')}
             </button>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === 'registration') {
+    return (
+      <div className="fixed inset-0 z-[300] bg-black/60 flex items-center justify-center p-4">
+        <div className="w-full max-w-md bg-white border border-gray-200 p-6 sm:p-8">
+          <div className="w-12 h-12 bg-black flex items-center justify-center mb-6">
+            <CheckCircle2 className="w-6 h-6 text-white" />
+          </div>
+          <h1 className="text-xl text-gray-900 mb-2">{L('Cererea a fost trimisă', 'Заявка отправлена')}</h1>
+          <p className="text-xs text-gray-400 leading-relaxed mb-6">
+            {L(
+              'Finalizați crearea contului pentru ca datele și cererile viitoare să fie salvate.',
+              'Завершите создание аккаунта, чтобы данные и будущие заявки сохранялись.',
+            )}
+          </p>
+
+          <form onSubmit={handleRegistrationSubmit} className="space-y-3">
+            <div className="flex items-center border border-gray-200 bg-gray-50">
+              <Mail className="w-3.5 h-3.5 text-gray-400 ml-3" />
+              <input value={guest.email} readOnly className="w-full h-10 px-3 text-xs bg-transparent text-gray-500 outline-none" />
+            </div>
+            <div className="flex items-center border border-gray-200">
+              <Lock className="w-3.5 h-3.5 text-gray-400 ml-3" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={registrationPassword}
+                onChange={(event) => setRegistrationPassword(event.target.value)}
+                placeholder={L('Creați o parolă', 'Придумайте пароль')}
+                minLength={6}
+                required
+                className="w-full h-10 px-3 text-xs outline-none"
+              />
+              <button type="button" onClick={() => setShowPassword((value) => !value)} className="px-3 text-gray-400 hover:text-black">
+                {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+              </button>
+            </div>
+            <div className="flex items-center border border-gray-200">
+              <Lock className="w-3.5 h-3.5 text-gray-400 ml-3" />
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={registrationPasswordConfirm}
+                onChange={(event) => setRegistrationPasswordConfirm(event.target.value)}
+                placeholder={L('Repetați parola', 'Повторите пароль')}
+                minLength={6}
+                required
+                className="w-full h-10 px-3 text-xs outline-none"
+              />
+            </div>
+            <label className="flex items-start gap-2 text-[11px] text-gray-500 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={registrationConsent}
+                onChange={(event) => setRegistrationConsent(event.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                {L('Sunt de acord cu prelucrarea datelor personale și ', 'Я согласен с обработкой персональных данных и ')}
+                <Link to="/privacy-policy" target="_blank" className="text-black underline underline-offset-2">
+                  {L('politica de confidențialitate', 'политикой конфиденциальности')}
+                </Link>
+              </span>
+            </label>
+            {registrationError && <p className="text-xs text-red-500 leading-relaxed">{registrationError}</p>}
+            {registrationError && (
+              <div className="flex gap-4 text-[11px]">
+                <Link to="/login" className="underline underline-offset-2">{L('Autentificare', 'Войти')}</Link>
+                <Link to="/forgot-password" className="underline underline-offset-2">{L('Resetare parolă', 'Восстановить пароль')}</Link>
+              </div>
+            )}
+            <button
+              type="submit"
+              disabled={loading}
+              className="w-full bg-black text-white py-3 text-xs uppercase tracking-wider disabled:opacity-50"
+            >
+              {loading ? L('Se creează contul...', 'Создание аккаунта...') : L('Finalizează înregistrarea', 'Завершить регистрацию')}
+            </button>
+          </form>
         </div>
       </div>
     );
@@ -635,13 +769,9 @@ export function OrderRequest() {
                         />
                       )}
 
-                      <FastField
-                        icon={<Phone className="w-3.5 h-3.5" />}
-                        placeholder={L('Telefon *', 'Телефон *')}
+                      <MaskedPhoneField
                         value={profileDraft.phone}
                         onChange={(v) => handleProfileDraftChange('phone', v)}
-                        type="tel"
-                        required
                       />
 
                       <div className="flex items-center border border-gray-200 bg-gray-50">
@@ -792,20 +922,15 @@ export function OrderRequest() {
                         {guest.clientType === 'company' && (
                           <FastField
                             icon={<Building2 className="w-3.5 h-3.5" />}
-                            placeholder={L('Companie / Organizație *', 'Компания / Организация *')}
+                            placeholder={L('Companie / Organizație', 'Компания / Организация')}
                             value={guest.company}
                             onChange={v => handleGuestChange('company', v)}
-                            required
                           />
                         )}
 
-                        <FastField
-                          icon={<Phone className="w-3.5 h-3.5" />}
-                          placeholder={L('Telefon *', 'Телефон *')}
+                        <MaskedPhoneField
                           value={guest.phone}
                           onChange={v => handleGuestChange('phone', v)}
-                          type="tel"
-                          required
                         />
                         <FastField
                           icon={<Mail className="w-3.5 h-3.5" />}
@@ -817,10 +942,9 @@ export function OrderRequest() {
                         />
                         <FastField
                           icon={<MapPin className="w-3.5 h-3.5" />}
-                          placeholder={L('Adresa de livrare *', 'Адрес доставки *')}
+                          placeholder={L('Adresa de livrare (opțional)', 'Адрес доставки (необязательно)')}
                           value={guest.deliveryAddress}
                           onChange={v => handleGuestChange('deliveryAddress', v)}
-                          required
                         />
 
                         <textarea
@@ -831,50 +955,6 @@ export function OrderRequest() {
                           placeholder={L('Notă (opțional)', 'Примечание (necesar)')}
                         />
 
-                        {/* Save profile toggle */}
-                        <div className="border border-gray-100 bg-gray-50 p-3">
-                          <label className="flex items-start gap-3 cursor-pointer">
-                            <div className="relative flex-shrink-0 mt-0.5">
-                              <input type="checkbox" className="sr-only"
-                                checked={guest.saveProfile}
-                                onChange={e => handleGuestChange('saveProfile', e.target.checked)} />
-                              <div className={`w-4 h-4 border transition-colors flex items-center justify-center ${
-                                guest.saveProfile ? 'bg-black border-black' : 'border-gray-300 bg-white'
-                              }`}>
-                                {guest.saveProfile && <Check className="w-2.5 h-2.5 text-white" />}
-                              </div>
-                            </div>
-                            <div>
-                              <p className="text-xs text-gray-900">
-                                {L('Salvează datele pentru viitor', 'Сохранить данные для будущих заявок')}
-                              </p>
-                              <p className="text-[10px] text-gray-400 mt-0.5">
-                                {L('Completare automată la următoarea comandă', 'Автозаполнение при следующей заявке')}
-                              </p>
-                            </div>
-                          </label>
-                          {guest.saveProfile && (
-                            <div className="mt-3">
-                              <div className="flex items-center border border-gray-200 bg-white">
-                                <div className="pl-3 text-gray-400 flex-shrink-0"><Lock className="w-3.5 h-3.5" /></div>
-                                <input
-                                  type={showPassword ? 'text' : 'password'}
-                                  placeholder={L('Creează o parolă', 'Создайте пароль')}
-                                  value={guest.password}
-                                  onChange={e => handleGuestChange('password', e.target.value)}
-                                  minLength={6}
-                                  required={guest.saveProfile}
-                                  className="flex-1 h-9 px-2.5 text-xs text-gray-900 placeholder-gray-400 outline-none bg-transparent"
-                                />
-                                <button type="button" onClick={() => setShowPassword(v => !v)}
-                                  className="px-3 text-gray-400 hover:text-black transition-colors">
-                                  {showPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                                </button>
-                              </div>
-                              <p className="text-[10px] text-gray-400 mt-1.5">{L('Minim 6 caractere', 'Минимум 6 символов')}</p>
-                            </div>
-                          )}
-                        </div>
                       </div>
 
                       <OrderSummaryMini totalPrice={totalPrice} isFreeDelivery={isFreeDelivery} totalWithDelivery={totalWithDelivery} L={L} />
@@ -884,7 +964,7 @@ export function OrderRequest() {
                           className="w-full bg-black text-white text-xs uppercase tracking-wider py-3.5 hover:bg-gray-800 transition-colors disabled:opacity-50 flex items-center justify-center gap-2 whitespace-normal break-words">
                           {loading
                             ? <><span className="w-3 h-3 border border-white border-t-transparent rounded-full animate-spin" />{L('Se trimite...', 'Отправка...')}</>
-                            : <>{guest.saveProfile ? L('Trimite și salvează profilul', 'Отправить и сохранить профиль') : L('Trimite cererea', 'Отправить запрос')}<ChevronRight className="w-3.5 h-3.5" /></>
+                            : <>{L('Trimite cererea', 'Отправить запрос')}<ChevronRight className="w-3.5 h-3.5" /></>
                           }
                         </button>
                         <p className="text-[10px] text-gray-400 text-center mt-2.5">
@@ -1002,6 +1082,21 @@ function FastField({
         onChange={e => onChange(e.target.value)}
         required={required}
         className="flex-1 h-9 px-2.5 text-xs text-gray-900 placeholder-gray-400 outline-none bg-transparent"
+      />
+    </div>
+  );
+}
+
+function MaskedPhoneField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="flex items-center border border-gray-200 focus-within:border-black transition-colors">
+      <div className="pl-3 text-gray-400 flex-shrink-0"><Phone className="w-3.5 h-3.5" /></div>
+      <PhoneInput
+        value={value}
+        onChange={onChange}
+        required
+        aria-label="Telefon"
+        className="flex-1 h-9 border-0 rounded-none px-2.5 text-xs shadow-none focus-visible:ring-0 focus-visible:border-0"
       />
     </div>
   );

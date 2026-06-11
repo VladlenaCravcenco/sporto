@@ -259,12 +259,6 @@ export function Header() {
                   >
                     {t('nav.login')}
                   </Link>
-                  <Link
-                    to="/register"
-                    className="px-4 h-full flex items-center text-xs uppercase tracking-wider bg-black text-white hover:bg-gray-800 transition-colors"
-                  >
-                    {t('nav.register')}
-                  </Link>
                 </div>
               )}
 
@@ -492,13 +486,6 @@ export function Header() {
                       className="flex-1 text-center text-xs uppercase tracking-wider border border-gray-200 py-2.5 text-gray-600 hover:border-black hover:text-black transition-colors"
                     >
                       {t('nav.login')}
-                    </Link>
-                    <Link
-                      to="/register"
-                      onClick={closeMobileMenu}
-                      className="flex-1 text-center text-xs uppercase tracking-wider bg-black text-white py-2.5 hover:bg-gray-800 transition-colors"
-                    >
-                      {t('nav.register')}
                     </Link>
                   </div>
                 )}

@@ -11,13 +11,17 @@ const SQL_SETUP = `CREATE TABLE IF NOT EXISTS public.clients (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   name text NOT NULL,
   company text,
-  email text NOT NULL,
+  email text NOT NULL UNIQUE,
   phone text,
   address text,
   client_type text DEFAULT 'company',
   notes text,
   created_at timestamptz DEFAULT now()
 );
+CREATE UNIQUE INDEX IF NOT EXISTS clients_email_unique_idx ON public.clients (email);
+CREATE UNIQUE INDEX IF NOT EXISTS clients_phone_unique_idx
+  ON public.clients (REGEXP_REPLACE(phone, '\\D', '', 'g'))
+  WHERE NULLIF(REGEXP_REPLACE(phone, '\\D', '', 'g'), '') IS NOT NULL;
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
 DO $$ BEGIN
   IF NOT EXISTS (

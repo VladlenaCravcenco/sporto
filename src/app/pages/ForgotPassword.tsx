@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { useLanguage } from '../contexts/LanguageContext';
-import { supabase } from '../../lib/supabase';
+import { SITE_URL, supabase } from '../../lib/supabase';
 import { SeoHead } from '../components/SeoHead';
 import { ArrowRight, ArrowLeft, Mail, Check, AlertCircle } from 'lucide-react';
 
@@ -56,7 +56,7 @@ export function ForgotPassword() {
 
     setLoading(true);
     const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
-      redirectTo: `${window.location.origin}/account`,
+      redirectTo: `${SITE_URL}/reset-password`,
     });
     setLoading(false);
 

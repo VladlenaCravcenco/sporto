@@ -100,13 +100,13 @@ export function EmailVerify() {
             <h1 className="text-xl text-gray-900 mb-2">Ссылка недействительна</h1>
             <p className="text-sm text-gray-400 mb-6 leading-relaxed">
               Ссылка для подтверждения устарела или уже использована.
-              Обратитесь к менеджеру или попробуйте зарегистрироваться заново.
+              Обратитесь к менеджеру или отправьте новую заявку на покупку.
             </p>
             <Link
-              to="/register"
+              to="/catalog"
               className="inline-block bg-black text-white text-xs uppercase tracking-wider px-6 py-2.5 hover:bg-gray-800 transition-colors"
             >
-              Зарегистрироваться
+              Перейти в каталог
             </Link>
           </>
         )}

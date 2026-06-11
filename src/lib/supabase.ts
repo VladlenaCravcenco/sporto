@@ -11,6 +11,9 @@ const SUPABASE_ANON_KEY =
   (import.meta.env.VITE_SUPABASE_ANON_KEY as string) ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1dmhsbGJieXRqa3hrenZ1c3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5NjcxNzMsImV4cCI6MjA4ODU0MzE3M30.eCoWdTSOe8E4xEH7vy9q9lKc6AJWx3G0UbpU0ev-DgE';
 
+export const SITE_URL =
+  ((import.meta.env.VITE_SITE_URL as string) || 'https://www.sporto.md').replace(/\/+$/, '');
+
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // PostgREST / Supabase often caps a single response at 1000 rows.

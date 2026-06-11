@@ -23,12 +23,16 @@ export function Login() {
     setLoading(true);
 
     try {
-      const success = await login(formData.email, formData.password);
-      if (success) {
-        toast.success('Successfully logged in!');
+      const result = await login(formData.email, formData.password);
+      if (result === 'success') {
+        toast.success(language === 'ro' ? 'Autentificare reușită' : 'Вход выполнен');
         navigate('/');
-      } else {
+      } else if (result === 'email_not_confirmed') {
+        toast.error(language === 'ro' ? 'Confirmați mai întâi adresa de email' : 'Сначала подтвердите адрес электронной почты');
+      } else if (result === 'invalid_credentials') {
         toast.error(t('auth.error'));
+      } else {
+        toast.error(t('common.error'));
       }
     } catch (error) {
       toast.error(t('common.error'));
@@ -90,14 +94,6 @@ export function Login() {
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-400">
-              {t('auth.noAccount')}{' '}
-              <Link to="/register" className="text-gray-900 underline underline-offset-4">
-                {t('nav.register')}
-              </Link>
-            </p>
-          </div>
         </div>
       </div>
     </div>

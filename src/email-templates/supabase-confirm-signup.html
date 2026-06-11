@@ -1,0 +1,70 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Подтвердите email — SPORTOSFERA</title>
+  </head>
+  <body style="margin:0;background:#f3f4f6;font-family:Arial,Helvetica,sans-serif;color:#111111;">
+    <div style="display:none;max-height:0;overflow:hidden;opacity:0;">
+      Подтвердите email, чтобы завершить создание аккаунта SPORTOSFERA.
+    </div>
+
+    <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="background:#f3f4f6;">
+      <tr>
+        <td align="center" style="padding:32px 12px;">
+          <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0" style="max-width:560px;background:#ffffff;border:1px solid #e5e7eb;">
+            <tr>
+              <td style="background:#000000;padding:22px 28px;">
+                <table role="presentation" width="100%" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td style="color:#ffffff;font-size:18px;font-weight:700;letter-spacing:2px;">SPORTOSFERA</td>
+                    <td align="right" style="color:#9ca3af;font-size:10px;letter-spacing:1.5px;text-transform:uppercase;">Аккаунт клиента</td>
+                  </tr>
+                </table>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:38px 28px 18px;">
+                <div style="font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#9ca3af;margin-bottom:14px;">Завершение регистрации</div>
+                <h1 style="margin:0 0 14px;font-size:26px;line-height:1.2;font-weight:500;color:#111111;">Подтвердите вашу почту</h1>
+                <p style="margin:0;color:#6b7280;font-size:14px;line-height:1.7;">
+                  Заявка успешно отправлена. Подтвердите адрес
+                  <strong style="color:#111111;">{{ .Email }}</strong>, чтобы активировать аккаунт и сохранить ваши данные для следующих заявок.
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:12px 28px 26px;">
+                <a href="{{ .ConfirmationURL }}" style="display:block;background:#000000;color:#ffffff;text-decoration:none;text-align:center;padding:15px 20px;font-size:12px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;">
+                  Подтвердить email
+                </a>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="padding:0 28px 32px;">
+                <p style="margin:0 0 8px;color:#9ca3af;font-size:11px;line-height:1.6;">
+                  Если кнопка не работает, откройте эту ссылку:
+                </p>
+                <p style="margin:0;word-break:break-all;color:#6b7280;font-size:11px;line-height:1.6;">
+                  <a href="{{ .ConfirmationURL }}" style="color:#111111;">{{ .ConfirmationURL }}</a>
+                </p>
+              </td>
+            </tr>
+
+            <tr>
+              <td style="border-top:1px solid #e5e7eb;padding:20px 28px;color:#9ca3af;font-size:10px;line-height:1.6;">
+                Если вы не отправляли заявку на сайте SPORTOSFERA, просто проигнорируйте это письмо.
+                <br>
+                <a href="https://www.sporto.md" style="color:#111111;text-decoration:none;">www.sporto.md</a>
+              </td>
+            </tr>
+          </table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

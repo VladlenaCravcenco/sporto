@@ -5,13 +5,13 @@ import { Home } from './pages/Home';
 import { Catalog } from './pages/Catalog';
 import { ProductDetail } from './pages/ProductDetail';
 import { Login } from './pages/Login';
-import { Register } from './pages/Register';
 import { TurnkeySolutions } from './pages/TurnkeySolutions';
 import { MaintenanceService } from './pages/MaintenanceService';
 import { OrderRequest } from './pages/OrderRequest';
 import { NotFound } from './pages/NotFound';
 import { Account } from './pages/Account';
 import { ForgotPassword } from './pages/ForgotPassword';
+import { ResetPassword } from './pages/ResetPassword';
 import { Contacts } from './pages/Contacts';
 import { About } from './pages/About';
 import { TermsOfCooperation } from './pages/TermsOfCooperation';
@@ -78,8 +78,8 @@ export const router = createBrowserRouter([
       { path: 'product/:id', Component: ProductDetail },
       { path: 'brands/:brandId', Component: BrandPage },
       { path: 'login', Component: Login },
-      { path: 'register', Component: Register },
       { path: 'forgot-password', Component: ForgotPassword },
+      { path: 'reset-password', Component: ResetPassword },
       { path: 'verify', Component: EmailVerify },
       { path: 'account', Component: Account },
       { path: 'turnkey-solutions', Component: TurnkeySolutions },
