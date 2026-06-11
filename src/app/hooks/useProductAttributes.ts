@@ -10,6 +10,8 @@ export interface ProductAttributeDefinition {
   name_ru: string;
   value_type: ProductAttributeType;
   unit: string | null;
+  unit_ro: string | null;
+  unit_ru: string | null;
   options: string[];
   category_ids: string[];
   filter_enabled: boolean;
@@ -23,14 +25,18 @@ export interface ProductAttributeValue {
   attribute_id: string;
   numeric_value: number | null;
   text_value: string | null;
+  text_value_ro: string | null;
+  text_value_ru: string | null;
   boolean_value: boolean | null;
 }
 
 export interface CatalogAttributeFilter {
   attribute: ProductAttributeDefinition;
-  min: number | null;
-  max: number | null;
   options: string[];
+}
+
+export function getAttributeUnit(attribute: ProductAttributeDefinition, language: 'ro' | 'ru'): string {
+  return (language === 'ro' ? attribute.unit_ro : attribute.unit_ru) || attribute.unit || '';
 }
 
 export function useProductAttributeDefinitions(category?: string, includeInactive = false) {
@@ -115,7 +121,6 @@ export function useCatalogAttributeFilters(category?: string) {
           const rows = (data ?? []) as unknown as ProductAttributeValue[];
           setFilters(filterDefinitions.map((attribute) => {
             const values = rows.filter((value) => value.attribute_id === attribute.id);
-            const numbers = values.map((value) => value.numeric_value).filter((value): value is number => value != null);
             const options = [...new Set(values.flatMap((value) => {
               if (attribute.value_type === 'number' && value.numeric_value != null) return [`num:${value.numeric_value}`];
               if (attribute.value_type === 'boolean' && value.boolean_value != null) return [String(value.boolean_value)];
@@ -126,11 +131,9 @@ export function useCatalogAttributeFilters(category?: string) {
             });
             return {
               attribute,
-              min: numbers.length ? Math.min(...numbers) : null,
-              max: numbers.length ? Math.max(...numbers) : null,
               options,
             };
-          }).filter((filter) => filter.min != null || filter.options.length > 0));
+          }).filter((filter) => filter.options.length > 0));
         }
         setLoading(false);
       });
@@ -151,12 +154,8 @@ export async function resolveProductIdsForAttributeFilters(filters: Record<strin
       .select('product_id')
       .eq('attribute_id', attributeId);
 
-    const min = values.find((value) => value.startsWith('min:'));
-    const max = values.find((value) => value.startsWith('max:'));
     const numericExact = values.filter((value) => value.startsWith('num:')).map((value) => Number(value.slice(4)));
-    const exact = values.filter((value) => !value.startsWith('min:') && !value.startsWith('max:') && !value.startsWith('num:'));
-    if (min) query = query.gte('numeric_value', Number(min.slice(4)));
-    if (max) query = query.lte('numeric_value', Number(max.slice(4)));
+    const exact = values.filter((value) => !value.startsWith('num:'));
     if (numericExact.length) {
       query = query.in('numeric_value', numericExact);
     } else if (exact.length && exact.every((value) => value === 'true' || value === 'false')) {

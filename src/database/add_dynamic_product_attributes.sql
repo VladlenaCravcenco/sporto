@@ -8,6 +8,8 @@ CREATE TABLE IF NOT EXISTS product_attributes (
   name_ru TEXT NOT NULL,
   value_type TEXT NOT NULL CHECK (value_type IN ('number', 'select', 'boolean', 'text')),
   unit TEXT,
+  unit_ro TEXT,
+  unit_ru TEXT,
   options TEXT[] NOT NULL DEFAULT '{}',
   category_ids TEXT[] NOT NULL DEFAULT '{}',
   filter_enabled BOOLEAN NOT NULL DEFAULT FALSE,
@@ -19,22 +21,56 @@ CREATE TABLE IF NOT EXISTS product_attributes (
 );
 
 ALTER TABLE product_attributes
-  ADD COLUMN IF NOT EXISTS options TEXT[] NOT NULL DEFAULT '{}';
+  ADD COLUMN IF NOT EXISTS options TEXT[] NOT NULL DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS unit_ro TEXT,
+  ADD COLUMN IF NOT EXISTS unit_ru TEXT;
+
+UPDATE product_attributes
+SET
+  unit_ro = COALESCE(unit_ro, unit),
+  unit_ru = COALESCE(unit_ru, unit)
+WHERE unit IS NOT NULL;
 
 CREATE TABLE IF NOT EXISTS product_attribute_values (
   product_id TEXT NOT NULL REFERENCES products(id) ON DELETE CASCADE,
   attribute_id UUID NOT NULL REFERENCES product_attributes(id) ON DELETE CASCADE,
   numeric_value NUMERIC,
   text_value TEXT,
+  text_value_ro TEXT,
+  text_value_ru TEXT,
   boolean_value BOOLEAN,
   updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
   PRIMARY KEY (product_id, attribute_id),
   CHECK (
     numeric_value IS NOT NULL
     OR NULLIF(BTRIM(text_value), '') IS NOT NULL
+    OR NULLIF(BTRIM(text_value_ro), '') IS NOT NULL
+    OR NULLIF(BTRIM(text_value_ru), '') IS NOT NULL
     OR boolean_value IS NOT NULL
   )
 );
+
+ALTER TABLE product_attribute_values
+  ADD COLUMN IF NOT EXISTS text_value_ro TEXT,
+  ADD COLUMN IF NOT EXISTS text_value_ru TEXT;
+
+ALTER TABLE product_attribute_values
+  DROP CONSTRAINT IF EXISTS product_attribute_values_check;
+
+ALTER TABLE product_attribute_values
+  ADD CONSTRAINT product_attribute_values_check CHECK (
+    numeric_value IS NOT NULL
+    OR NULLIF(BTRIM(text_value), '') IS NOT NULL
+    OR NULLIF(BTRIM(text_value_ro), '') IS NOT NULL
+    OR NULLIF(BTRIM(text_value_ru), '') IS NOT NULL
+    OR boolean_value IS NOT NULL
+  );
+
+UPDATE product_attribute_values
+SET
+  text_value_ro = COALESCE(text_value_ro, text_value),
+  text_value_ru = COALESCE(text_value_ru, text_value)
+WHERE text_value IS NOT NULL;
 
 CREATE INDEX IF NOT EXISTS product_attributes_categories_idx
   ON product_attributes USING GIN (category_ids);

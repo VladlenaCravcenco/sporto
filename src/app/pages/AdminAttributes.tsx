@@ -11,6 +11,8 @@ const EMPTY: Omit<ProductAttributeDefinition, 'id'> = {
   name_ru: '',
   value_type: 'number',
   unit: '',
+  unit_ro: '',
+  unit_ru: '',
   options: [],
   category_ids: [],
   filter_enabled: true,
@@ -47,7 +49,9 @@ export function AdminAttributes() {
     const payload = {
       ...form,
       code: editId ? form.code : `attribute_${crypto.randomUUID().replaceAll('-', '')}`,
-      unit: form.unit?.trim() || null,
+      unit: form.unit_ru?.trim() || form.unit_ro?.trim() || null,
+      unit_ro: form.unit_ro?.trim() || null,
+      unit_ru: form.unit_ru?.trim() || null,
       options: form.value_type === 'select'
         ? (form.options ?? []).map((option) => option.trim()).filter(Boolean)
         : [],
@@ -109,7 +113,7 @@ export function AdminAttributes() {
             <button onClick={() => edit(row)} className="flex-1 text-left min-w-0">
               <div className="text-sm text-gray-900">{lang === 'ru' ? row.name_ru : row.name_ro}</div>
               <div className="text-[10px] text-gray-400 mt-0.5">
-                {row.value_type}{row.unit ? ` · ${row.unit}` : ''} · {row.category_ids.length} cat.
+                {row.value_type}{(lang === 'ru' ? row.unit_ru : row.unit_ro) || row.unit ? ` · ${(lang === 'ru' ? row.unit_ru : row.unit_ro) || row.unit}` : ''} · {row.category_ids.length} cat.
               </div>
             </button>
             <span className={`text-[10px] px-2 py-1 ${row.filter_enabled ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
@@ -135,7 +139,7 @@ export function AdminAttributes() {
                 <Field label="Nume RO" placeholder="De ex.: Greutatea maximă a utilizatorului" value={form.name_ro} onChange={(name_ro) => setForm({ ...form, name_ro })} />
                 <Field label="Название RU" placeholder="Например: Максимальный вес пользователя" value={form.name_ru} onChange={(name_ru) => setForm({ ...form, name_ru })} />
               </div>
-              <div className="grid grid-cols-2 gap-3">
+              <div className={form.value_type === 'number' ? 'space-y-3' : 'grid grid-cols-2 gap-3'}>
                 <label className="text-xs text-gray-500">
                   {l('Tip valoare', 'Тип значения')}
                   <select
@@ -146,19 +150,24 @@ export function AdminAttributes() {
                         ...form,
                         value_type,
                         unit: value_type === 'number' ? form.unit : '',
+                        unit_ro: value_type === 'number' ? form.unit_ro : '',
+                        unit_ru: value_type === 'number' ? form.unit_ru : '',
                         options: value_type === 'select' ? form.options : [],
                       });
                     }}
                     className="mt-1 w-full h-10 border border-gray-200 px-3 text-sm bg-white"
                   >
-                    <option value="number">{l('Număr / interval', 'Число / диапазон')}</option>
+                    <option value="number">{l('Număr / valori exacte', 'Число / точные значения')}</option>
                     <option value="select">{l('Listă de valori', 'Список значений')}</option>
                     <option value="boolean">{l('Da / Nu', 'Да / Нет')}</option>
                     <option value="text">{l('Text fără filtru', 'Текст без фильтра')}</option>
                   </select>
                 </label>
                 {form.value_type === 'number' ? (
-                  <Field label={l('Unitate', 'Единица')} placeholder={l('De ex.: kg, cm, W', 'Например: кг, см, Вт')} value={form.unit ?? ''} onChange={(unit) => setForm({ ...form, unit })} />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Field label="Unitate RO" placeholder="De ex.: kg, cm, W" value={form.unit_ro ?? form.unit ?? ''} onChange={(unit_ro) => setForm({ ...form, unit_ro })} />
+                    <Field label="Единица RU" placeholder="Например: кг, см, Вт" value={form.unit_ru ?? form.unit ?? ''} onChange={(unit_ru) => setForm({ ...form, unit_ru })} />
+                  </div>
                 ) : form.value_type === 'select' ? (
                   <Field
                     label={l('Valori separate prin virgulă', 'Варианты через запятую')}

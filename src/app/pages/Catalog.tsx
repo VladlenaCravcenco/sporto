@@ -26,7 +26,7 @@ import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useCategories } from '../contexts/CategoriesContext';
 import { ProductCard } from '../components/ProductCard';
 import { AnimatePresence, motion } from 'motion/react';
-import { resolveProductIdsForAttributeFilters, useCatalogAttributeFilters } from '../hooks/useProductAttributes';
+import { getAttributeUnit, resolveProductIdsForAttributeFilters, useCatalogAttributeFilters } from '../hooks/useProductAttributes';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
 type FilterSectionId = 'sort' | 'stock' | 'category' | 'subcategory' | 'brand' | 'offers';
@@ -1331,22 +1331,23 @@ export function Catalog() {
               {mobileDynamicCatalogFilters.map((filter) => {
                 const selected = mobileAttributeDraft[filter.attribute.id] ?? [];
                 const title = language === 'ro' ? filter.attribute.name_ro : filter.attribute.name_ru;
+                const unit = getAttributeUnit(filter.attribute, language === 'ro' ? 'ro' : 'ru');
                 const summary = selected.length > 0
                   ? selected.map((value) => {
                     const displayValue = value.replace(/^num:/, '');
-                    return `${displayValue}${filter.attribute.unit ? ` ${filter.attribute.unit}` : ''}`;
+                    return `${displayValue}${unit ? ` ${unit}` : ''}`;
                   }).join(', ')
                   : (language === 'ro' ? 'Toate valorile' : 'Все значения');
                 return filterSection(
                   `attribute-${filter.attribute.id}` as FilterSectionId,
-                  `${title}${filter.attribute.unit ? `, ${filter.attribute.unit}` : ''}`,
+                  `${title}${unit ? `, ${unit}` : ''}`,
                   summary,
                   <>
                       {filter.options.map((option) => {
                         const active = selected.includes(option);
                         const label = filter.attribute.value_type === 'boolean'
                           ? option === 'true' ? (language === 'ro' ? 'Da' : 'Да') : (language === 'ro' ? 'Nu' : 'Нет')
-                          : `${option.replace(/^num:/, '')}${filter.attribute.unit ? ` ${filter.attribute.unit}` : ''}`;
+                          : `${option.replace(/^num:/, '')}${unit ? ` ${unit}` : ''}`;
                         return (
                           <button
                             key={option}
@@ -1495,11 +1496,12 @@ export function Catalog() {
 
                 {dynamicCatalogFilters.map((filter) => {
                   const selected = attributeSelections[filter.attribute.id] ?? [];
+                  const unit = getAttributeUnit(filter.attribute, language === 'ro' ? 'ro' : 'ru');
                   return (
                     <div key={filter.attribute.id} className="border-b border-gray-100 p-4">
                       <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">
                         {language === 'ro' ? filter.attribute.name_ro : filter.attribute.name_ru}
-                        {filter.attribute.unit ? `, ${filter.attribute.unit}` : ''}
+                        {unit ? `, ${unit}` : ''}
                       </p>
                       <div className="space-y-1">
                           {filter.options.map((option) => {
@@ -1508,7 +1510,7 @@ export function Catalog() {
                               ? option === 'true'
                                 ? (language === 'ro' ? 'Da' : 'Да')
                                 : (language === 'ro' ? 'Nu' : 'Нет')
-                              : `${option.replace(/^num:/, '')}${filter.attribute.unit ? ` ${filter.attribute.unit}` : ''}`;
+                              : `${option.replace(/^num:/, '')}${unit ? ` ${unit}` : ''}`;
                             return (
                               <button
                                 key={option}

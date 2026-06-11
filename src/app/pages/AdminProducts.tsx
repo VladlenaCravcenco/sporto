@@ -13,7 +13,7 @@ import { logoutAdmin } from '../../lib/adminAuth';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { buildProductPath } from '../lib/product-url';
 import { cacheInvalidate } from '../../lib/queryCache';
-import { useProductAttributeDefinitions, type ProductAttributeValue } from '../hooks/useProductAttributes';
+import { getAttributeUnit, useProductAttributeDefinitions, type ProductAttributeValue } from '../hooks/useProductAttributes';
 
 // ─── Brand Combobox ───────────────────────────────────────────────────────────
 
@@ -47,6 +47,17 @@ function generateProductId() {
     return crypto.randomUUID();
   }
   return `prod_${Date.now()}_${Math.random().toString(36).slice(2, 10)}`;
+}
+
+function formatSupabaseError(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (error && typeof error === 'object') {
+    const value = error as { message?: unknown; details?: unknown; hint?: unknown; code?: unknown };
+    return [value.message, value.details, value.hint, value.code ? `Code: ${value.code}` : null]
+      .filter((part): part is string => typeof part === 'string' && part.trim().length > 0)
+      .join(' · ');
+  }
+  return String(error);
 }
 
 function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, lang }: BrandComboboxProps) {
@@ -175,8 +186,8 @@ function CategoryCombobox({ value, onChange, categories, onCreate, lang }: Categ
   const selected = categories.find((c) => c.id === value);
 
   useEffect(() => {
-    setQuery(selected?.name.ro || '');
-  }, [selected?.name.ro, value]);
+    setQuery(selected?.name[lang] || '');
+  }, [selected?.name.ro, selected?.name.ru, lang, value]);
 
   useEffect(() => {
     if (!open) return;
@@ -273,10 +284,7 @@ function CategoryCombobox({ value, onChange, categories, onCreate, lang }: Categ
               >
                 <span className="flex items-center gap-2">
                   {cat.id === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
-                  <span className={cat.id === value ? 'text-black' : 'text-gray-700'}>{cat.name.ro}</span>
-                </span>
-                <span className="text-[9px] uppercase tracking-wider text-gray-300 flex-shrink-0 font-mono">
-                  {cat.id}
+                  <span className={cat.id === value ? 'text-black' : 'text-gray-700'}>{cat.name[lang]}</span>
                 </span>
               </button>
             ))
@@ -298,8 +306,8 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
   const selected = subcategories.find((s) => s.id === value);
 
   useEffect(() => {
-    setQuery(selected?.name.ro || '');
-  }, [selected?.name.ro, value]);
+    setQuery(selected?.name[lang] || '');
+  }, [selected?.name.ro, selected?.name.ru, lang, value]);
 
   useEffect(() => {
     if (!open) return;
@@ -398,10 +406,7 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
               >
                 <span className="flex items-center gap-2">
                   {sub.id === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
-                  <span className={sub.id === value ? 'text-black' : 'text-gray-700'}>{sub.name.ro}</span>
-                </span>
-                <span className="text-[9px] uppercase tracking-wider text-gray-300 flex-shrink-0 font-mono">
-                  {sub.id}
+                  <span className={sub.id === value ? 'text-black' : 'text-gray-700'}>{sub.name[lang]}</span>
                 </span>
               </button>
             ))
@@ -518,6 +523,7 @@ export function AdminProducts() {
   const [toast, setToast] = useState<{ msg: string; ok: boolean } | null>(null);
   const [storageNote, setStorageNote] = useState(false);
   const [attributeValues, setAttributeValues] = useState<Record<string, string | boolean>>({});
+  const [attributeTextValues, setAttributeTextValues] = useState<Record<string, { ro: string; ru: string }>>({});
   const fileInputRef = useRef<HTMLInputElement>(null);
   const uploadSlotRef = useRef<number>(0); // which slot triggered the file picker
   const navigate = useNavigate();
@@ -862,6 +868,7 @@ export function AdminProducts() {
     setForm(EMPTY_FORM);
     setGallery([]);
     setAttributeValues({});
+    setAttributeTextValues({});
     setPanelOpen(true);
   };
 
@@ -871,7 +878,13 @@ export function AdminProducts() {
     // Populate gallery from images[] or fall back to image_url
     const imgs = row.images?.length ? row.images : (row.image_url ? [row.image_url] : []);
     setGallery(imgs);
-    const { data } = await supabase.from('product_attribute_values').select('*').eq('product_id', row.id);
+    const { data, error: attributeValuesError } = await supabase.from('product_attribute_values').select('*').eq('product_id', row.id);
+    if (attributeValuesError) {
+      showToast(
+        `${l('Caracteristicile produsului nu au putut fi încărcate', 'Не удалось загрузить характеристики товара')}: ${attributeValuesError.message}`,
+        false,
+      );
+    }
     const values = ((data as ProductAttributeValue[] | null) ?? []).reduce<Record<string, string | boolean>>((result, value) => {
       result[value.attribute_id] = value.numeric_value != null
         ? String(value.numeric_value)
@@ -880,7 +893,17 @@ export function AdminProducts() {
         : (value.text_value ?? '');
       return result;
     }, {});
+    const textValues = ((data as ProductAttributeValue[] | null) ?? []).reduce<Record<string, { ro: string; ru: string }>>((result, value) => {
+      if (value.text_value_ro != null || value.text_value_ru != null) {
+        result[value.attribute_id] = {
+          ro: value.text_value_ro ?? value.text_value ?? '',
+          ru: value.text_value_ru ?? value.text_value ?? '',
+        };
+      }
+      return result;
+    }, {});
     setAttributeValues(values);
+    setAttributeTextValues(textValues);
     setPanelOpen(true);
   };
 
@@ -890,24 +913,54 @@ export function AdminProducts() {
     setForm(EMPTY_FORM);
     setGallery([]);
     setAttributeValues({});
+    setAttributeTextValues({});
   };
 
   const saveAttributeValues = async (productId: string) => {
     if (categoryAttributes.length === 0) return;
     const filled = categoryAttributes.flatMap((attribute) => {
       const value = attributeValues[attribute.id];
-      if (value === '' || value == null) return [];
-      return [{
+      const localizedText = attributeTextValues[attribute.id] ?? { ro: '', ru: '' };
+      if (attribute.value_type === 'text' && !localizedText.ro.trim() && !localizedText.ru.trim()) return [];
+      if (attribute.value_type !== 'text' && (value === '' || value == null)) return [];
+      const base = {
         product_id: productId,
         attribute_id: attribute.id,
+      };
+      if (attribute.value_type === 'text') {
+        return [{
+          ...base,
+          text_value_ro: localizedText.ro.trim() || null,
+          text_value_ru: localizedText.ru.trim() || null,
+        }];
+      }
+      return [{
+        ...base,
         numeric_value: attribute.value_type === 'number' ? Number(value) : null,
-        text_value: attribute.value_type === 'select' || attribute.value_type === 'text' ? String(value).trim() : null,
+        text_value: attribute.value_type === 'select' ? String(value).trim() : null,
         boolean_value: attribute.value_type === 'boolean' ? Boolean(value) : null,
       }];
     });
-    const ids = categoryAttributes.map((attribute) => attribute.id);
-    await supabase.from('product_attribute_values').delete().eq('product_id', productId).in('attribute_id', ids);
-    if (filled.length > 0) await supabase.from('product_attribute_values').insert(filled);
+
+    for (const value of filled) {
+      const { error } = await supabase
+        .from('product_attribute_values')
+        .upsert(value, { onConflict: 'product_id,attribute_id' });
+      if (error) throw error;
+    }
+
+    const filledIds = new Set(filled.map((value) => value.attribute_id));
+    const clearedIds = categoryAttributes
+      .map((attribute) => attribute.id)
+      .filter((attributeId) => !filledIds.has(attributeId));
+    if (clearedIds.length > 0) {
+      const { error } = await supabase
+        .from('product_attribute_values')
+        .delete()
+        .eq('product_id', productId)
+        .in('attribute_id', clearedIds);
+      if (error) throw error;
+    }
   };
 
   // ─── Image upload ─────────────────────────────────────────────────────────────
@@ -998,7 +1051,18 @@ export function AdminProducts() {
       const { error } = await supabase.from('products').update(payload).eq('id', editId);
       if (error) { showToast(error.message, false); }
       else {
-        await saveAttributeValues(editId);
+        try {
+          await saveAttributeValues(editId);
+        } catch (attributeError) {
+          showToast(
+            `${l('Produsul a fost salvat, dar caracteristicile nu au fost salvate', 'Товар сохранён, но характеристики не сохранились')}: ${
+              formatSupabaseError(attributeError)
+            }`,
+            false,
+          );
+          setSaving(false);
+          return;
+        }
         invalidateProductCaches();
         await load();
         showToast('Produsul a fost actualizat!');
@@ -1033,7 +1097,18 @@ export function AdminProducts() {
       const { data, error } = await supabase.from('products').insert(insertPayload).select().single();
       if (error) { showToast(error.message, false); }
       else {
-        await saveAttributeValues(data.id);
+        try {
+          await saveAttributeValues(data.id);
+        } catch (attributeError) {
+          showToast(
+            `${l('Produsul a fost creat, dar caracteristicile nu au fost salvate', 'Товар создан, но характеристики не сохранились')}: ${
+              formatSupabaseError(attributeError)
+            }`,
+            false,
+          );
+          setSaving(false);
+          return;
+        }
         invalidateProductCaches();
         setPage(1);
         await load();
@@ -1086,18 +1161,18 @@ export function AdminProducts() {
 
   const selectedCatSubs = categories.find(c => c.id === form.category)?.subcategories ?? [];
   const allCategoryOptions = useMemo(
-    () => categories.map((c) => ({ value: c.id, label: c.name.ro })),
-    [categories]
+    () => categories.map((c) => ({ value: c.id, label: c.name[lang] })),
+    [categories, lang]
   );
   const allSubcategoryOptions = useMemo(
     () => categories.flatMap((category) =>
       category.subcategories.map((subcategory) => ({
         value: subcategory.id,
-        label: subcategory.name.ro,
+        label: subcategory.name[lang],
         categoryId: category.id,
       }))
     ),
-    [categories]
+    [categories, lang]
   );
 
   const createCategory = async (name: string): Promise<string | null> => {
@@ -1239,24 +1314,19 @@ export function AdminProducts() {
           </div>
 
           <div className="relative min-w-0">
-            <input
-              type="text"
-              list="admin-products-category-filter"
+            <select
               value={catFilter}
-              onChange={e => setCatFilter(e.target.value)}
-              placeholder={l('Categorie...', 'Категория...')}
-              className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
-            />
-            {catFilter && (
-              <button onClick={() => setCatFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            <datalist id="admin-products-category-filter">
+              onChange={e => {
+                setCatFilter(e.target.value);
+                setSubcatFilter('');
+              }}
+              className="w-full h-9 px-3 text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-black transition-colors"
+            >
+              <option value="">{l('Toate categoriile', 'Все категории')}</option>
               {allCategoryOptions.map((category) => (
-                <option key={category.value} value={category.value} label={category.label} />
+                <option key={category.value} value={category.value}>{category.label}</option>
               ))}
-            </datalist>
+            </select>
           </div>
 
           <div className="relative min-w-0">
@@ -1283,26 +1353,18 @@ export function AdminProducts() {
           </div>
 
           <div className="relative min-w-0">
-            <input
-              type="text"
-              list="admin-products-subcategory-filter"
+            <select
               value={subcatFilter}
               onChange={e => setSubcatFilter(e.target.value)}
-              placeholder={l('Subcategorie...', 'Подкатегория...')}
-              className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
-            />
-            {subcatFilter && (
-              <button onClick={() => setSubcatFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
-                <X className="w-3 h-3" />
-              </button>
-            )}
-            <datalist id="admin-products-subcategory-filter">
+              className="w-full h-9 px-3 text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-black transition-colors"
+            >
+              <option value="">{l('Toate subcategoriile', 'Все подкатегории')}</option>
               {allSubcategoryOptions
                 .filter((subcategory) => !catFilter.trim() || subcategory.categoryId === catFilter.trim())
                 .map((subcategory) => (
-                  <option key={`${subcategory.categoryId}-${subcategory.value}`} value={subcategory.value} label={subcategory.label} />
+                  <option key={`${subcategory.categoryId}-${subcategory.value}`} value={subcategory.value}>{subcategory.label}</option>
                 ))}
-            </datalist>
+            </select>
           </div>
 
           <div className="flex border border-gray-200 bg-white min-w-0">
@@ -1707,9 +1769,9 @@ export function AdminProducts() {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {categoryAttributes.map((attribute) => (
-                    <label key={attribute.id} className="text-[10px] uppercase tracking-wider text-gray-400">
+                    <label key={attribute.id} className={`text-[10px] uppercase tracking-wider text-gray-400 ${attribute.value_type === 'text' ? 'sm:col-span-2' : ''}`}>
                       {lang === 'ru' ? attribute.name_ru : attribute.name_ro}
-                      {attribute.unit ? ` (${attribute.unit})` : ''}
+                      {getAttributeUnit(attribute, lang) ? ` (${getAttributeUnit(attribute, lang)})` : ''}
                       {attribute.value_type === 'boolean' ? (
                         <select
                           value={attributeValues[attribute.id] === '' || attributeValues[attribute.id] == null ? '' : String(attributeValues[attribute.id])}
@@ -1734,6 +1796,29 @@ export function AdminProducts() {
                             <option key={option} value={option}>{option}</option>
                           ))}
                         </select>
+                      ) : attribute.value_type === 'text' ? (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-1">
+                          <textarea
+                            value={attributeTextValues[attribute.id]?.ro ?? ''}
+                            onChange={(event) => setAttributeTextValues((values) => ({
+                              ...values,
+                              [attribute.id]: { ro: event.target.value, ru: values[attribute.id]?.ru ?? '' },
+                            }))}
+                            rows={4}
+                            placeholder="Descriere RO"
+                            className="w-full px-3 py-2 text-xs normal-case tracking-normal border border-gray-200 bg-white resize-y focus:outline-none focus:border-black"
+                          />
+                          <textarea
+                            value={attributeTextValues[attribute.id]?.ru ?? ''}
+                            onChange={(event) => setAttributeTextValues((values) => ({
+                              ...values,
+                              [attribute.id]: { ro: values[attribute.id]?.ro ?? '', ru: event.target.value },
+                            }))}
+                            rows={4}
+                            placeholder="Описание RU"
+                            className="w-full px-3 py-2 text-xs normal-case tracking-normal border border-gray-200 bg-white resize-y focus:outline-none focus:border-black"
+                          />
+                        </div>
                       ) : (
                         <input
                           type={attribute.value_type === 'number' ? 'number' : 'text'}

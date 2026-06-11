@@ -19,7 +19,7 @@ import { ServicesBento } from '../components/ServicesBento';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
 import { buildProductPath, extractProductIdFromParam, getProductRouteKey, inferProductRouteLanguage } from '../lib/product-url';
-import { useProductAttributeDefinitions, useProductAttributeValues } from '../hooks/useProductAttributes';
+import { getAttributeUnit, useProductAttributeDefinitions, useProductAttributeValues } from '../hooks/useProductAttributes';
 
 // ─── Brand Products Carousel ──────────────────────────────────────────────────
 function BrandCarousel({
@@ -322,11 +322,14 @@ export function ProductDetail() {
         ? String(value.numeric_value)
         : value.boolean_value != null
         ? (value.boolean_value ? (language === 'ro' ? 'Da' : 'Да') : (language === 'ro' ? 'Nu' : 'Нет'))
+        : attribute.value_type === 'text'
+        ? ((language === 'ro' ? value.text_value_ro : value.text_value_ru) || value.text_value)
         : value.text_value;
       if (!raw) return [];
+      const unit = getAttributeUnit(attribute, language === 'ro' ? 'ro' : 'ru');
       return [{
         name: language === 'ro' ? attribute.name_ro : attribute.name_ru,
-        value: `${raw}${attribute.unit ? ` ${attribute.unit}` : ''}`,
+        value: `${raw}${unit ? ` ${unit}` : ''}`,
       }];
     });
 
