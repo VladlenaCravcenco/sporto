@@ -10,10 +10,10 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+          "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
         }
       ],
-      "destination": "/api/site-meta?lang=ro"
+      "destination": "/api/seo-page?page=home&lang=ro"
     },
     {
       "source": "/ru",
@@ -21,10 +21,32 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+          "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
         }
       ],
-      "destination": "/api/site-meta?lang=ru"
+      "destination": "/api/seo-page?page=home&lang=ru"
+    },
+    {
+      "source": "/catalog",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+        }
+      ],
+      "destination": "/api/seo-page?page=catalog"
+    },
+    {
+      "source": "/brands/:brandId",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+        }
+      ],
+      "destination": "/api/seo-page?page=brand&brand=:brandId"
     },
     {
       "source": "/product/:slug/:sku",
@@ -32,7 +54,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+          "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
         }
       ],
       "destination": "/api/product-meta?slug=:slug&sku=:sku"
@@ -43,10 +65,45 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
+          "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*"
         }
       ],
       "destination": "/api/product-meta?id=:id"
+    },
+    {
+      "source": "/about",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=about"
+    },
+    {
+      "source": "/contacts",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=contacts"
+    },
+    {
+      "source": "/turnkey-solutions",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=turnkey-solutions"
+    },
+    {
+      "source": "/maintenance-service",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=maintenance-service"
+    },
+    {
+      "source": "/terms-of-cooperation",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=terms-of-cooperation"
+    },
+    {
+      "source": "/delivery-terms",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=delivery-terms"
+    },
+    {
+      "source": "/privacy-policy",
+      "has": [{ "type": "header", "key": "user-agent", "value": ".*(Googlebot|Google-InspectionTool|bingbot|BingPreview|YandexBot|DuckDuckBot|Applebot|Baiduspider|facebookexternalhit|Facebot|Twitterbot|LinkedInBot|Slackbot|TelegramBot|Discordbot|WhatsApp|SkypeUriPreview|Viber|vkShare).*" }],
+      "destination": "/api/seo-page?page=privacy-policy"
     },
     {
       "source": "/",

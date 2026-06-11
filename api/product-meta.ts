@@ -1,6 +1,6 @@
 const SITE_URL = 'https://www.sporto.md';
 const SITE_NAME = 'Sporto';
-const DEFAULT_OG_IMAGE = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_OG_IMAGE = `${SITE_URL}/og-site.png`;
 const SUPABASE_URL =
   process.env.VITE_SUPABASE_URL ||
   'https://ruvhllbbytjkxkzvusyb.supabase.co';
@@ -203,32 +203,38 @@ async function fetchProduct(slug: string): Promise<ProductRow | null> {
 }
 
 function renderHtml(path: string, slug: string | undefined, language: ProductLanguage, product: ProductRow | null): string {
-  const canonicalUrl = `${SITE_URL}${path}`;
+  const requestedUrl = `${SITE_URL}${path}`;
 
   if (!product) {
     const title = 'Produs | Sporto';
     const description = 'Echipament sportiv disponibil la comandă prin Sporto în Moldova.';
     return `<!DOCTYPE html>
-<html lang="ro">
+<html lang="${language}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>${escapeHtml(title)}</title>
     <meta name="description" content="${escapeHtml(description)}" />
     <meta name="robots" content="noindex,follow" />
-    <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    <link rel="canonical" href="${escapeHtml(requestedUrl)}" />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="${SITE_NAME}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
     <meta property="og:description" content="${escapeHtml(description)}" />
     <meta property="og:image" content="${DEFAULT_OG_IMAGE}" />
-    <meta property="og:url" content="${escapeHtml(canonicalUrl)}" />
+    <meta property="og:url" content="${escapeHtml(requestedUrl)}" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${escapeHtml(title)}" />
     <meta name="twitter:description" content="${escapeHtml(description)}" />
     <meta name="twitter:image" content="${DEFAULT_OG_IMAGE}" />
   </head>
-  <body></body>
+  <body>
+    <main>
+      <h1>${language === 'ru' ? 'Товар не найден' : 'Produsul nu a fost găsit'}</h1>
+      <p>${escapeHtml(description)}</p>
+      <a href="${SITE_URL}/catalog">${language === 'ru' ? 'Открыть каталог' : 'Vezi catalogul'}</a>
+    </main>
+  </body>
 </html>`;
   }
 
@@ -242,6 +248,10 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
   const keywords = buildKeywords(product, language);
   const imageUrl = normalizeImageUrl(product.images?.[0] || product.image_url);
   const price = getPrice(product);
+  const routeKey = product.sku?.trim() || String(product.id);
+  const roUrl = `${SITE_URL}/product/${encodeURIComponent(getLocalizedProductSlug(product, 'ro'))}/${encodeURIComponent(routeKey)}`;
+  const ruUrl = `${SITE_URL}/product/${encodeURIComponent(getLocalizedProductSlug(product, 'ru'))}/${encodeURIComponent(routeKey)}`;
+  const canonicalUrl = language === 'ru' ? ruUrl : roUrl;
   const structuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
@@ -263,7 +273,7 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
   };
 
   return `<!DOCTYPE html>
-<html lang="ro">
+<html lang="${language}">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -271,6 +281,9 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
     <meta name="description" content="${escapeHtml(description)}" />
     <meta name="keywords" content="${escapeHtml(keywords)}" />
     <link rel="canonical" href="${escapeHtml(canonicalUrl)}" />
+    <link rel="alternate" hreflang="ro" href="${escapeHtml(roUrl)}" />
+    <link rel="alternate" hreflang="ru" href="${escapeHtml(ruUrl)}" />
+    <link rel="alternate" hreflang="x-default" href="${escapeHtml(roUrl)}" />
     <meta property="og:type" content="product" />
     <meta property="og:site_name" content="${SITE_NAME}" />
     <meta property="og:title" content="${escapeHtml(title)}" />
@@ -285,7 +298,19 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
     <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
     <script type="application/ld+json">${escapeJsonForHtml(JSON.stringify(structuredData))}</script>
   </head>
-  <body></body>
+  <body>
+    <main>
+      <nav><a href="${SITE_URL}/">${language === 'ru' ? 'Главная' : 'Acasă'}</a> / <a href="${SITE_URL}/catalog">${language === 'ru' ? 'Каталог' : 'Catalog'}</a></nav>
+      <article>
+        <h1>${escapeHtml(name)}</h1>
+        <p>${escapeHtml(description)}</p>
+        <img src="${escapeHtml(imageUrl)}" alt="${escapeHtml(name)}" />
+        ${product.brand ? `<p>${language === 'ru' ? 'Бренд' : 'Brand'}: ${escapeHtml(product.brand)}</p>` : ''}
+        ${product.sku ? `<p>SKU: ${escapeHtml(product.sku)}</p>` : ''}
+        ${price != null ? `<p>${language === 'ru' ? 'Цена' : 'Preț'}: ${price} MDL</p>` : ''}
+      </article>
+    </main>
+  </body>
 </html>`;
 }
 
@@ -311,16 +336,18 @@ export default async function handler(req: { query?: { slug?: string } }, res: {
 
   try {
     const product = await fetchProduct(routeKey || slug || '');
-    const language = product ? inferProductLanguage(product, slug, rawLang) : 'ro';
+    const language = product ? inferProductLanguage(product, slug, rawLang) : (rawLang === 'ru' ? 'ru' : 'ro');
     const html = renderHtml(path, slug, language, product);
 
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=86400');
+    res.setHeader('Vary', 'User-Agent');
     res.status(product ? 200 : 404).send(html);
   } catch {
     const html = renderHtml(path, slug, 'ro', null);
     res.setHeader('Content-Type', 'text/html; charset=utf-8');
     res.setHeader('Cache-Control', 'public, s-maxage=60, stale-while-revalidate=3600');
+    res.setHeader('Vary', 'User-Agent');
     res.status(500).send(html);
   }
 }
