@@ -370,14 +370,14 @@ export function useSupabaseProduct(id: string | undefined) {
           .eq('active', true)
           .maybeSingle();
 
-      const { data: skuData, error: skuErr } = await withRetry<ProductRow>(fetchBySku);
-      const { data, error: err } = skuData
-        ? { data: skuData, error: null }
-        : await withRetry<ProductRow>(fetchById);
+      const { data: idData, error: idErr } = await withRetry<ProductRow>(fetchById);
+      const { data, error: err } = idData
+        ? { data: idData, error: null }
+        : await withRetry<ProductRow>(fetchBySku);
 
       if (cancelled) return;
-      if (skuErr && !skuData) {
-        setError(skuErr.message);
+      if (idErr && !data) {
+        setError(idErr.message);
         setProduct(null);
       } else if (err || !data) {
         setError(err?.message || 'Not found');

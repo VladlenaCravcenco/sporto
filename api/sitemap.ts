@@ -198,7 +198,7 @@ export default async function handler(_req: unknown, res: {
       ...products
         .filter((product) => product.id && product.name_ro)
         .flatMap((product) => {
-          const routeKey = product.sku?.trim() || String(product.id);
+          const routeKey = String(product.id);
           const roSlug = slugify(product.name_ro || '') || 'produs';
           const ruSlug = slugify(product.name_ru || product.name_ro || '') || 'produs';
           return localizedEntries(

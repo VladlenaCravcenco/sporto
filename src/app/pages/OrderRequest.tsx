@@ -14,7 +14,7 @@ import { toast } from 'sonner';
 import { sendAdminOrderNotification, sendOrderConfirmation } from '../../lib/emailService';
 import { SeoHead } from '../components/SeoHead';
 import { trackGoogleAdsLead } from '../../lib/googleAds';
-import { ensureClientRecord, findClientConflict } from '../../lib/clients';
+import { OrderRequestSubmissionError, submitOrderRequest } from '../../lib/orderRequests';
 import { PhoneInput } from '../components/PhoneInput';
 
 type AuthTab = 'new' | 'login';
@@ -62,6 +62,7 @@ export function OrderRequest() {
   const [loading, setLoading] = useState(false);
   const [loginError, setLoginError] = useState('');
   const [notes, setNotes] = useState('');
+  const [website, setWebsite] = useState('');
   const [editingProfile, setEditingProfile] = useState(false);
   const [savingProfile, setSavingProfile] = useState(false);
   const [profileDraft, setProfileDraft] = useState({
@@ -156,19 +157,10 @@ export function OrderRequest() {
     }
   };
 
-  const saveRequestToSupabase = async (clientData: {
+  const submitRequest = async (clientData: {
     name: string; company: string; email: string; phone: string;
     clientType: 'individual' | 'company'; deliveryAddress: string; notes: string;
   }) => {
-    await ensureClientRecord({
-      name: clientData.name,
-      company: clientData.company,
-      email: clientData.email,
-      phone: clientData.phone,
-      address: clientData.deliveryAddress,
-      clientType: clientData.clientType,
-    });
-
     const items = cart.map(item => ({
       id:        item.id,
       name_ro:   item.name.ro,
@@ -179,22 +171,18 @@ export function OrderRequest() {
       image_url: item.image || null,
     }));
 
-    const { data: inserted, error: insertError } = await supabase.from('order_requests').insert({
-      client_name:      clientData.name,
-      client_company:   clientData.company   || null,
-      client_email:     clientData.email,
-      client_phone:     clientData.phone     || null,
-      client_type:      clientData.clientType || 'company',
-      delivery_address: clientData.deliveryAddress || null,
-      notes:            clientData.notes     || null,
-      cart_items:       items,
-      total_price:      totalPrice,
-      total_items:      totalItems,
-      status:           'new',
-    }).select('id').single();
-    if (insertError) throw insertError;
-
-    const orderId = inserted?.id || crypto.randomUUID();
+    const { orderId } = await submitOrderRequest({
+      name: clientData.name,
+      company: clientData.company,
+      email: clientData.email,
+      phone: clientData.phone,
+      clientType: clientData.clientType,
+      deliveryAddress: clientData.deliveryAddress,
+      notes: clientData.notes,
+      language: language as 'ru' | 'ro',
+      website,
+      items,
+    });
     const emailData = {
       orderId,
       clientName:      clientData.name,
@@ -218,6 +206,17 @@ export function OrderRequest() {
     sendOrderConfirmation(emailData);
   };
 
+  const showSubmissionError = (error: unknown) => {
+    if (error instanceof OrderRequestSubmissionError && error.code === 'rate_limited') {
+      toast.error(L(
+        'Ați trimis prea multe cereri. Încercați din nou peste 10 minute.',
+        'Слишком много заявок. Попробуйте снова через 10 минут.',
+      ));
+      return;
+    }
+    toast.error(L('Cererea nu a putut fi trimisă', 'Не удалось отправить заявку'));
+  };
+
   const handleGuestSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!guest.name || !guest.phone || !guest.email) {
@@ -230,17 +229,7 @@ export function OrderRequest() {
     }
     setLoading(true);
     try {
-      const conflict = await findClientConflict(guest.email, guest.phone);
-      if (conflict) {
-        toast.error(conflict === 'email'
-          ? L('Există deja un cont cu acest email. Autentificați-vă.', 'Аккаунт с этой почтой уже существует. Войдите в аккаунт.')
-          : L('Există deja un cont cu acest telefon. Autentificați-vă.', 'Аккаунт с этим телефоном уже существует. Войдите в аккаунт.'));
-        setAuthTab('login');
-        setLoginEmail(guest.email.trim().toLowerCase());
-        return;
-      }
-
-      await saveRequestToSupabase({
+      await submitRequest({
         name:            guest.name,
         company:         guest.company,
         email:           guest.email,
@@ -253,7 +242,7 @@ export function OrderRequest() {
       trackGoogleAdsLead();
       setStep('registration');
     } catch (error) {
-      toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
+      showSubmissionError(error);
     } finally {
       setLoading(false);
     }
@@ -311,7 +300,7 @@ export function OrderRequest() {
     setLoading(true);
     try {
       if (user) {
-        await saveRequestToSupabase({
+        await submitRequest({
           name:            user.name,
           company:         user.company,
           email:           user.email,
@@ -326,7 +315,7 @@ export function OrderRequest() {
       trackGoogleAdsLead();
       setStep('success');
     } catch (error) {
-      toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
+      showSubmissionError(error);
     } finally {
       setLoading(false);
     }
@@ -354,7 +343,7 @@ export function OrderRequest() {
       .maybeSingle();
 
     try {
-      await saveRequestToSupabase({
+      await submitRequest({
         name:            profile?.name        || loginEmail,
         company:         profile?.company     || '',
         email:           loginEmail,
@@ -367,7 +356,7 @@ export function OrderRequest() {
       trackGoogleAdsLead();
       setStep('success');
     } catch (error) {
-      toast.error(L('Nu am putut salva datele clientului', 'Не удалось сохранить данные клиента'));
+      showSubmissionError(error);
     } finally {
       setLoading(false);
     }
@@ -425,8 +414,8 @@ export function OrderRequest() {
           <h1 className="text-xl text-gray-900 mb-2">{L('Cererea a fost trimisă', 'Заявка отправлена')}</h1>
           <p className="text-xs text-gray-400 leading-relaxed mb-6">
             {L(
-              'Finalizați crearea contului pentru ca datele și cererile viitoare să fie salvate.',
-              'Завершите создание аккаунта, чтобы данные и будущие заявки сохранялись.',
+              'Contul este opțional. Îl puteți crea pentru completarea automată a cererilor viitoare.',
+              'Аккаунт необязателен. Его можно создать для автозаполнения будущих заявок.',
             )}
           </p>
 
@@ -489,6 +478,14 @@ export function OrderRequest() {
               className="w-full bg-black text-white py-3 text-xs uppercase tracking-wider disabled:opacity-50"
             >
               {loading ? L('Se creează contul...', 'Создание аккаунта...') : L('Finalizează înregistrarea', 'Завершить регистрацию')}
+            </button>
+            <button
+              type="button"
+              onClick={() => setStep('success')}
+              disabled={loading}
+              className="w-full border border-gray-200 text-gray-600 py-3 text-xs uppercase tracking-wider hover:border-black hover:text-black disabled:opacity-50"
+            >
+              {L('Continuă fără cont', 'Продолжить без аккаунта')}
             </button>
           </form>
         </div>
@@ -682,6 +679,7 @@ export function OrderRequest() {
               {/* ══ STATE A: Logged in ══════════════════════════════════════ */}
               {isAuthenticated && user ? (
                 <form onSubmit={handleAuthSubmit}>
+                  <SpamTrapField value={website} onChange={setWebsite} />
                   <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                     <h2 className="text-xs uppercase tracking-wider text-gray-900">
                       {L('Date contact', 'Данные контакта')}
@@ -881,6 +879,7 @@ export function OrderRequest() {
                   {/* ── Tab: New Client ── */}
                   {authTab === 'new' && (
                     <form onSubmit={handleGuestSubmit}>
+                      <SpamTrapField value={website} onChange={setWebsite} />
                       <div className="p-5 space-y-3">
 
                         {/* Client type toggle */}
@@ -977,6 +976,7 @@ export function OrderRequest() {
                   {/* ── Tab: Login ── */}
                   {authTab === 'login' && (
                     <form onSubmit={handleLoginAndSubmit}>
+                      <SpamTrapField value={website} onChange={setWebsite} />
                       <div className="p-5 space-y-3">
                         <p className="text-xs text-gray-400 leading-relaxed">
                           {L('Autentifică-te pentru a completa automat datele de contact.',
@@ -1028,6 +1028,23 @@ export function OrderRequest() {
           </div>
         )}
       </div>
+    </div>
+  );
+}
+
+function SpamTrapField({ value, onChange }: { value: string; onChange: (value: string) => void }) {
+  return (
+    <div className="absolute left-[-10000px] top-auto w-px h-px overflow-hidden" aria-hidden="true">
+      <label htmlFor="order-website">Website</label>
+      <input
+        id="order-website"
+        name="website"
+        type="text"
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        tabIndex={-1}
+        autoComplete="off"
+      />
     </div>
   );
 }

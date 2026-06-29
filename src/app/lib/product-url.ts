@@ -41,8 +41,7 @@ function slugify(value: string): string {
 }
 
 export function getProductRouteKey(product: Pick<Product, 'id' | 'sku'>): string {
-  const sku = normalizeKey(product.sku || '');
-  return sku || String(product.id);
+  return normalizeKey(String(product.id));
 }
 
 export function getLocalizedProductSlug(

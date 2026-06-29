@@ -169,18 +169,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!authData.user) return false;
     if (authData.user.identities?.length === 0) return 'already_exists';
 
-    try {
-      await ensureClientRecord({
-        name: data.name,
-        company: data.company,
-        email: data.email,
-        phone: data.phone,
-        address: data.address,
-        clientType: data.clientType,
-      });
-    } catch (clientError) {
-      console.warn('[AuthContext] clients save failed:', clientError);
-      return false;
+    if (authData.session) {
+      try {
+        await ensureClientRecord({
+          authUserId: authData.user.id,
+          name: data.name,
+          company: data.company,
+          email: data.email,
+          phone: data.phone,
+          address: data.address,
+          clientType: data.clientType,
+        });
+      } catch (clientError) {
+        console.warn('[AuthContext] clients save failed:', clientError);
+      }
     }
 
     const profile: UserProfile = {

@@ -135,6 +135,7 @@ export interface SubcategoryRow {
 // ─── Client (registered user) row ─────────────────────────────────────────────
 export interface ClientRow {
   id: string;
+  auth_user_id: string | null;
   name: string;
   company: string | null;
   email: string;
@@ -148,6 +149,7 @@ export interface ClientRow {
 // ─── Order request row ────────────────────────────────────────────────────────
 export interface OrderRequestRow {
   id: string;
+  client_id: string | null;
   client_name: string;
   client_company: string | null;
   client_email: string;

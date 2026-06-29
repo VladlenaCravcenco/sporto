@@ -1,31 +1,13 @@
 import { supabase } from './supabase';
 
 export interface ClientDraft {
+  authUserId?: string;
   name: string;
   email: string;
   company?: string;
   phone?: string;
   address?: string;
   clientType?: 'individual' | 'company';
-}
-
-export type ClientConflict = 'email' | 'phone' | null;
-
-export async function findClientConflict(emailInput: string, phoneInput: string): Promise<ClientConflict> {
-  const email = emailInput.trim().toLowerCase();
-  const phoneDigits = phoneInput.replace(/\D/g, '');
-
-  const { data, error } = await supabase
-    .from('clients')
-    .select('email,phone');
-
-  if (error) throw error;
-
-  for (const client of data ?? []) {
-    if (client.email?.trim().toLowerCase() === email) return 'email';
-    if (phoneDigits && client.phone?.replace(/\D/g, '') === phoneDigits) return 'phone';
-  }
-  return null;
 }
 
 /**
@@ -37,6 +19,7 @@ export async function ensureClientRecord(input: ClientDraft): Promise<void> {
   if (!email) throw new Error('Client email is required');
 
   const payload = {
+    auth_user_id: input.authUserId || undefined,
     name: input.name.trim(),
     company: input.company?.trim() || null,
     email,

@@ -11,6 +11,7 @@ import { dispatchClearAdminRequestUnread } from '../hooks/useAdminNotifications'
 
 const SQL_SETUP = `CREATE TABLE IF NOT EXISTS public.order_requests (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  client_id uuid,
   client_name text NOT NULL,
   client_company text,
   client_email text NOT NULL,
@@ -26,11 +27,15 @@ const SQL_SETUP = `CREATE TABLE IF NOT EXISTS public.order_requests (
   created_at timestamptz DEFAULT now()
 );
 ALTER TABLE public.order_requests ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all" ON public.order_requests;
 DO $$ BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'order_requests' AND policyname = 'Allow all'
+    SELECT 1 FROM pg_policies WHERE tablename = 'order_requests' AND policyname = 'Sporto admin manages order requests'
   ) THEN
-    CREATE POLICY "Allow all" ON public.order_requests FOR ALL USING (true) WITH CHECK (true);
+    CREATE POLICY "Sporto admin manages order requests"
+      ON public.order_requests FOR ALL TO authenticated
+      USING (lower(coalesce(auth.jwt() ->> 'email', '')) = 'sporto-admin@gmail.com')
+      WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = 'sporto-admin@gmail.com');
   END IF;
 END $$;`;
 

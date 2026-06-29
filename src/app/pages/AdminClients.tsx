@@ -9,6 +9,7 @@ import { useAdminLang } from '../contexts/AdminLangContext';
 
 const SQL_SETUP = `CREATE TABLE IF NOT EXISTS public.clients (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
+  auth_user_id uuid REFERENCES auth.users(id) ON DELETE SET NULL,
   name text NOT NULL,
   company text,
   email text NOT NULL UNIQUE,
@@ -23,11 +24,15 @@ CREATE UNIQUE INDEX IF NOT EXISTS clients_phone_unique_idx
   ON public.clients (REGEXP_REPLACE(phone, '\\D', '', 'g'))
   WHERE NULLIF(REGEXP_REPLACE(phone, '\\D', '', 'g'), '') IS NOT NULL;
 ALTER TABLE public.clients ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "Allow all" ON public.clients;
 DO $$ BEGIN
   IF NOT EXISTS (
-    SELECT 1 FROM pg_policies WHERE tablename = 'clients' AND policyname = 'Allow all'
+    SELECT 1 FROM pg_policies WHERE tablename = 'clients' AND policyname = 'Sporto admin manages clients'
   ) THEN
-    CREATE POLICY "Allow all" ON public.clients FOR ALL USING (true) WITH CHECK (true);
+    CREATE POLICY "Sporto admin manages clients"
+      ON public.clients FOR ALL TO authenticated
+      USING (lower(coalesce(auth.jwt() ->> 'email', '')) = 'sporto-admin@gmail.com')
+      WITH CHECK (lower(coalesce(auth.jwt() ->> 'email', '')) = 'sporto-admin@gmail.com');
   END IF;
 END $$;`;
 

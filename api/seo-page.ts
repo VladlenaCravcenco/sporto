@@ -133,7 +133,7 @@ function slugify(value: string): string {
 
 function productPath(product: ProductRow, lang: Language): string {
   const name = lang === 'ru' ? product.name_ru || product.name_ro : product.name_ro || product.name_ru;
-  return `/product/${encodeURIComponent(slugify(name || '') || 'produs')}/${encodeURIComponent(product.sku?.trim() || product.id)}`;
+  return `/product/${encodeURIComponent(slugify(name || '') || 'produs')}/${encodeURIComponent(product.id)}`;
 }
 
 async function fetchRows<T>(table: string, select: string, params: Record<string, string> = {}): Promise<T[]> {

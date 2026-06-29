@@ -1,5 +1,6 @@
 const SITE_URL = 'https://www.sporto.md';
 const SITE_NAME = 'Sporto';
+const LEGAL_NAME = 'SPORTOSFERA S.R.L.';
 const DEFAULT_OG_IMAGE = `${SITE_URL}/og-site.png`;
 const SUPABASE_URL =
   process.env.VITE_SUPABASE_URL ||
@@ -197,9 +198,9 @@ async function fetchProductBy(field: 'sku' | 'id', value: string): Promise<Produ
 async function fetchProduct(slug: string): Promise<ProductRow | null> {
   const resolved = extractProductIdFromParam(slug);
   if (!resolved) return null;
-  const bySku = await fetchProductBy('sku', resolved);
-  if (bySku) return bySku;
-  return fetchProductBy('id', resolved);
+  const byId = await fetchProductBy('id', resolved);
+  if (byId) return byId;
+  return fetchProductBy('sku', resolved);
 }
 
 function renderHtml(path: string, slug: string | undefined, language: ProductLanguage, product: ProductRow | null): string {
@@ -248,7 +249,7 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
   const keywords = buildKeywords(product, language);
   const imageUrl = normalizeImageUrl(product.images?.[0] || product.image_url);
   const price = getPrice(product);
-  const routeKey = product.sku?.trim() || String(product.id);
+  const routeKey = String(product.id);
   const roUrl = `${SITE_URL}/product/${encodeURIComponent(getLocalizedProductSlug(product, 'ro'))}/${encodeURIComponent(routeKey)}`;
   const ruUrl = `${SITE_URL}/product/${encodeURIComponent(getLocalizedProductSlug(product, 'ru'))}/${encodeURIComponent(routeKey)}`;
   const canonicalUrl = language === 'ru' ? ruUrl : roUrl;
@@ -259,6 +260,7 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
     description,
     image: [imageUrl],
     sku: product.sku || String(product.id),
+    mpn: product.sku || String(product.id),
     brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
     offers: {
       '@type': 'Offer',
@@ -269,6 +271,46 @@ function renderHtml(path: string, slug: string | undefined, language: ProductLan
           ? 'https://schema.org/InStock'
           : 'https://schema.org/OutOfStock',
       url: canonicalUrl,
+      shippingDetails: {
+        '@type': 'OfferShippingDetails',
+        shippingDestination: {
+          '@type': 'DefinedRegion',
+          addressCountry: 'MD',
+        },
+        shippingRate: {
+          '@type': 'MonetaryAmount',
+          value: '0',
+          currency: 'MDL',
+        },
+        deliveryTime: {
+          '@type': 'ShippingDeliveryTime',
+          handlingTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 0,
+            maxValue: 2,
+            unitCode: 'DAY',
+          },
+          transitTime: {
+            '@type': 'QuantitativeValue',
+            minValue: 1,
+            maxValue: 5,
+            unitCode: 'DAY',
+          },
+        },
+      },
+      hasMerchantReturnPolicy: {
+        '@type': 'MerchantReturnPolicy',
+        applicableCountry: 'MD',
+        returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+        merchantReturnDays: 14,
+        returnMethod: 'https://schema.org/ReturnByMail',
+        returnFees: 'https://schema.org/FreeReturn',
+      },
+      seller: {
+        '@type': 'Organization',
+        name: LEGAL_NAME,
+        alternateName: SITE_NAME,
+      },
     },
   };
 
