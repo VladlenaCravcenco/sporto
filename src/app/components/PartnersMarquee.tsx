@@ -168,15 +168,14 @@ export function PartnersMarquee() {
                 onClick={() => navigate(`/brands/${brand.slug}`)}
                 onMouseEnter={() => setHoveredId(key)}
                 onMouseLeave={() => setHoveredId(null)}
-                className="relative flex-shrink-0 select-none focus:outline-none px-8 flex items-center justify-center"
-                style={{ height: 48 }}
+                className="relative flex-shrink-0 select-none focus:outline-none w-[180px] h-12 flex items-center justify-center"
               >
                 {brand.logo_url ? (
                   <img
                     src={brand.logo_url}
                     alt={brand.name}
                     draggable={false}
-                    className="max-h-8 max-w-[130px] object-contain transition-all duration-300"
+                    className="max-h-8 max-w-[120px] object-contain transition-all duration-300"
                     style={{
                       opacity: isHovered ? 1 : 0.35,
                       filter: isHovered ? 'none' : 'grayscale(100%)',

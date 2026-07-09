@@ -295,6 +295,10 @@ export function ProductDetail() {
   const subcategory = category?.subcategories.find((s) => s.id === product.subcategory);
   const currentPrice = getCurrentPrice(product);
   const showSalePrice = hasSalePrice(product);
+  const inStock = isProductInStock(product);
+  const stockLabel = inStock
+    ? (language === 'ro' ? 'Disponibil' : 'В наличии')
+    : (language === 'ro' ? 'La comandă' : 'Под заказ');
   const routeLanguage = inferProductRouteLanguage(product, slug) || (language as 'ro' | 'ru');
   const productPath = buildProductPath(product, routeLanguage);
   const productUrl = `https://www.sporto.md${productPath}`;
@@ -349,6 +353,15 @@ export function ProductDetail() {
     );
   };
 
+  const stockBadge = (
+    <span className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wider px-1.5 py-0.5 ${
+      inStock ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'
+    }`}>
+      <span className={`w-1 h-1 rounded-full ${inStock ? 'bg-white' : 'bg-gray-400'}`} />
+      {stockLabel}
+    </span>
+  );
+
   return (
     <div className="min-h-screen bg-white">
       <SeoHead
@@ -365,7 +378,7 @@ export function ProductDetail() {
             image: product.image || undefined,
             images: product.images,
             url: productUrl,
-            availability: isProductInStock(product)
+            availability: inStock
               ? 'https://schema.org/InStock'
               : 'https://schema.org/OutOfStock',
           }),
@@ -537,19 +550,25 @@ export function ProductDetail() {
                     </span>
                     <span className="text-sm text-gray-300">MDL</span>
                   </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl text-red-600 tabular-nums">
-                      {currentPrice.toLocaleString()}
-                    </span>
-                    <span className="text-red-500">MDL</span>
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl text-red-600 tabular-nums">
+                        {currentPrice.toLocaleString()}
+                      </span>
+                      <span className="text-red-500">MDL</span>
+                    </div>
+                    {stockBadge}
                   </div>
                 </div>
               ) : (
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl text-gray-900 tabular-nums">
-                    {currentPrice.toLocaleString()}
-                  </span>
-                  <span className="text-gray-400">MDL</span>
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl text-gray-900 tabular-nums">
+                      {currentPrice.toLocaleString()}
+                    </span>
+                    <span className="text-gray-400">MDL</span>
+                  </div>
+                  {stockBadge}
                 </div>
               )}
               <p className="text-xs text-gray-400 mt-1">
