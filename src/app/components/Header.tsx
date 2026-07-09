@@ -164,7 +164,7 @@ export function Header() {
                   onClick={handleSearchClick}
                   onBlur={handleBlur}
                   placeholder={language === 'ro' ? 'Caută produse, categorii...' : 'Поиск товаров, категорий...'}
-                  className={`w-full h-9 pl-4 pr-20 text-sm border bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white transition-colors ${
+                  className={`w-full h-9 pl-4 pr-20 text-[16px] border bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white transition-colors ${
                     showDropdown ? 'border-black' : 'border-gray-200 focus:border-black'
                   }`}
                 />
@@ -402,9 +402,9 @@ export function Header() {
             onClick={handleMobileClick}
             onBlur={handleMobileBlur}
             placeholder={language === 'ro' ? 'Caută produse...' : 'Поиск товаров...'}
-            className="flex-1 h-8 pl-3 text-xs bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none border-0 focus:bg-white transition-colors"
+            className="flex-1 h-9 pl-3 text-[16px] bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none border-0 focus:bg-white transition-colors"
           />
-          <button type="submit" className="w-10 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors border-l border-gray-100">
+          <button type="submit" className="w-10 h-9 flex items-center justify-center text-gray-400 hover:text-black transition-colors border-l border-gray-100">
             <Search className="w-3 h-3" />
           </button>
         </form>
