@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Clock, Truck, Package, WarehouseIcon, Globe } from '
 import { SeoHead, SEO_PAGES } from '../components/SeoHead';
 import type { ReactNode } from 'react';
 import { usePageContent } from '../hooks/usePageContent';
+import { LegalMarkdownContent } from '../components/LegalMarkdownContent';
 
 type Lang = 'ro' | 'ru';
 
@@ -196,6 +197,8 @@ export function DeliveryTerms() {
   const content = C[lang];
 
   if (managed) {
+    const managedBody = lang === 'ro' ? managed.content_ro : managed.content_ru;
+
     return (
       <div className="min-h-screen bg-white">
         <SeoHead
@@ -206,18 +209,22 @@ export function DeliveryTerms() {
           lang={lang}
         />
         <section className="border-b border-gray-100">
-          <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
             <Link to="/" className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               {content.back}
             </Link>
-            <p className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
-            <h1 className="text-4xl lg:text-5xl text-black mb-6">{lang === 'ro' ? managed.title_ro : managed.title_ru}</h1>
-            <div className="whitespace-pre-wrap text-gray-600 leading-relaxed text-sm lg:text-base">
-              {lang === 'ro' ? managed.content_ro : managed.content_ru}
+
+            <div className="max-w-3xl">
+              <p className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
+              <h1 className="text-4xl lg:text-5xl text-black mb-6">{lang === 'ro' ? managed.title_ro : managed.title_ru}</h1>
             </div>
           </div>
         </section>
+        <LegalMarkdownContent
+          content={managedBody}
+          tocTitle={lang === 'ro' ? 'Cuprins' : 'Содержание'}
+        />
       </div>
     );
   }
