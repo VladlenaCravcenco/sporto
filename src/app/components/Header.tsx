@@ -3,14 +3,34 @@ import { Link, useLocation, useNavigate } from 'react-router';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useAuth } from '../contexts/AuthContext';
 import { useCart } from '../contexts/CartContext';
-import { Menu, X, User, LogOut, ShoppingCart, Search, ChevronDown, ChevronRight, ChevronLeft, Phone, ArrowRight } from 'lucide-react';
+import { Menu, X, User, LogOut, ShoppingCart, Search, ChevronDown, ChevronRight, ChevronLeft, Phone, ArrowRight, Activity, Dumbbell, Weight, PersonStanding, Trophy, Medal, Swords, Waves, Puzzle, TreePine, School } from 'lucide-react';
 import { Logo } from './Logo';
 import { useCategories } from '../contexts/CategoriesContext';
 import { SearchDropdown, VoiceSearchButton } from './SearchDropdown';
 import { addToHistory } from '../../lib/searchEngine';
 import { useContacts } from '../hooks/useContacts';
+import { supabase, type ProductRow } from '../../lib/supabase';
+import { rowToProduct } from '../hooks/useSupabaseProducts';
+import { buildProductPath } from '../lib/product-url';
+import type { Product } from '../data/products';
+import { getCategoryIcon } from '../lib/category-icons';
 
 type Lang = 'ro' | 'ru';
+
+const categoryFallbackIcons: Record<string, React.ReactNode> = {
+  'aparate-cardio': <Activity className="w-4 h-4" />,
+  'aparate-forta': <Dumbbell className="w-4 h-4" />,
+  greutati: <Weight className="w-4 h-4" />,
+  'fitness-yoga': <PersonStanding className="w-4 h-4" />,
+  'sporturi-colective': <Trophy className="w-4 h-4" />,
+  'sporturi-individuale': <Medal className="w-4 h-4" />,
+  'arte-martiale': <Swords className="w-4 h-4" />,
+  inot: <Waves className="w-4 h-4" />,
+  'tenis-masa': <Trophy className="w-4 h-4" />,
+  jocuri: <Puzzle className="w-4 h-4" />,
+  'forta-exterior': <TreePine className="w-4 h-4" />,
+  'inventar-institutii': <School className="w-4 h-4" />,
+};
 
 export function Header() {
   const { language, setLanguage, t } = useLanguage();
@@ -24,6 +44,9 @@ export function Header() {
   const [searchOpen, setSearchOpen] = useState(false);
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [hoveredCatId, setHoveredCatId] = useState<string>(categories[0].id);
+  const [hoveredSubId, setHoveredSubId] = useState<string>(categories[0].subcategories[0]?.id ?? '');
+  const [menuProducts, setMenuProducts] = useState<Product[]>([]);
+  const [menuProductsLoading, setMenuProductsLoading] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   // Mobile multi-level menu
   const [menuLevel, setMenuLevel] = useState(0);
@@ -54,15 +77,22 @@ export function Header() {
     setSelectedMobileCat(null);
   };
 
-  // Lock body scroll when menu is open
+  // Keep the page behind open navigation panels fixed. The mega-menu columns
+  // have their own scroll containers, so the wheel remains useful inside it.
   useEffect(() => {
-    if (mobileMenuOpen) {
+    if (mobileMenuOpen || catalogOpen) {
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
     } else {
       document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
     }
-    return () => { document.body.style.overflow = ''; };
-  }, [mobileMenuOpen]);
+    return () => {
+      document.body.style.overflow = '';
+      document.body.style.paddingRight = '';
+    };
+  }, [mobileMenuOpen, catalogOpen]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -122,6 +152,39 @@ export function Header() {
   }, []);
 
   const activeCat = categories.find(c => c.id === hoveredCatId) ?? categories[0];
+  const activeSub = activeCat.subcategories.find(sub => sub.id === hoveredSubId) ?? activeCat.subcategories[0];
+
+  useEffect(() => {
+    if (!catalogOpen || !activeSub) return;
+
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      setMenuProductsLoading(true);
+      const { data, error } = await supabase
+        .from('products')
+        .select('*')
+        .eq('active', true)
+        .eq('category', activeCat.id)
+        .eq('subcategory', activeSub.id)
+        .order('featured', { ascending: false })
+        .limit(60);
+
+      if (cancelled) return;
+      setMenuProducts(error ? [] : ((data ?? []) as ProductRow[]).map(rowToProduct));
+      setMenuProductsLoading(false);
+    }, 100);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timer);
+    };
+  }, [catalogOpen, activeCat.id, activeSub?.id]);
+
+  const selectDesktopCategory = (category: typeof categories[0]) => {
+    setHoveredCatId(category.id);
+    setHoveredSubId(category.subcategories[0]?.id ?? '');
+    setMenuProducts([]);
+  };
 
   const navLinks = [
     { path: '/about', label: t('nav.about') },
@@ -131,7 +194,7 @@ export function Header() {
   ];
 
   return (
-    <header ref={headerRef} className="bg-white sticky top-0 z-50 shadow-[0_1px_0_0_#f3f4f6]">
+    <header ref={headerRef} className="bg-white sticky top-0 z-50 shadow-[0_1px_0_0_#f3f4f6] flex flex-col md:flex-col-reverse">
 
       {/* ── Mobile backdrop overlay ── */}
       {mobileMenuOpen && (
@@ -151,6 +214,136 @@ export function Header() {
             <Link to={homePath} className="flex items-center flex-shrink-0">
               <Logo className="h-5 md:h-8 w-auto" color="#111111" />
             </Link>
+
+            <div
+              className="hidden md:block relative"
+              onMouseEnter={openDropdown}
+              onMouseLeave={closeDropdown}
+            >
+              <button
+                type="button"
+                onClick={() => setCatalogOpen(open => !open)}
+                className="h-9 px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 text-xs uppercase tracking-wider transition-colors"
+              >
+                {t('nav.catalog')}
+                <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${catalogOpen ? 'rotate-180' : ''}`} />
+              </button>
+
+              {catalogOpen && (
+                <div
+                  className="absolute top-9 left-0 flex min-h-0 bg-white border border-gray-100 shadow-2xl z-50 overflow-hidden"
+                  style={{ width: 'min(1120px, calc(100vw - 2rem))', height: 'min(680px, calc(100vh - 110px))' }}
+                  onMouseEnter={cancelClose}
+                  onMouseLeave={closeDropdown}
+                >
+                  <div className="w-[250px] min-h-0 flex-shrink-0 border-r border-gray-100 py-1 overflow-y-auto overscroll-contain">
+                    {categories.map(cat => (
+                      <button
+                        key={cat.id}
+                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${
+                          hoveredCatId === cat.id ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                        onMouseEnter={() => selectDesktopCategory(cat)}
+                        onClick={() => { navigate(`/catalog?category=${cat.id}`); setCatalogOpen(false); }}
+                      >
+                        <span className="flex items-center gap-3 min-w-0">
+                          <span className={`w-5 flex items-center justify-center flex-shrink-0 ${hoveredCatId === cat.id ? 'text-white' : 'text-gray-400'}`}>
+                            {getCategoryIcon(cat.icon) ?? categoryFallbackIcons[cat.id] ?? <Dumbbell className="w-4 h-4" />}
+                          </span>
+                          <span className="text-xs tracking-wide truncate">{cat.name[language as Lang]}</span>
+                        </span>
+                        <ChevronRight className={`w-3 h-3 flex-shrink-0 ${hoveredCatId === cat.id ? 'text-gray-400' : 'text-gray-300'}`} />
+                      </button>
+                    ))}
+                    <div className="border-t border-gray-100 mt-1">
+                      <Link to="/catalog" className="flex items-center px-4 py-2.5 text-xs text-gray-400 hover:text-black tracking-wide transition-colors" onClick={() => setCatalogOpen(false)}>
+                        {language === 'ro' ? '← Toate produsele' : '← Все товары'}
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="w-[285px] min-h-0 flex-shrink-0 border-r border-gray-100 py-3 px-3 overflow-y-auto overscroll-contain">
+                    <div className="px-2 pb-2 mb-1 border-b border-gray-100">
+                      <span className="text-xs text-gray-400 uppercase tracking-[0.15em]">{activeCat.name[language as Lang]}</span>
+                    </div>
+                    <div>
+                      {activeCat.subcategories.map(sub => (
+                        <button
+                          key={sub.id}
+                          type="button"
+                          onMouseEnter={() => { setHoveredSubId(sub.id); setMenuProducts([]); }}
+                          onClick={() => { navigate(`/catalog?category=${activeCat.id}&subcategory=${sub.id}`); setCatalogOpen(false); }}
+                          className={`w-full flex items-center justify-between gap-3 px-2 py-2.5 text-left text-xs transition-colors ${activeSub?.id === sub.id ? 'bg-gray-100 text-black' : 'text-gray-600 hover:bg-gray-50 hover:text-black'}`}
+                        >
+                          <span>{sub.name[language as Lang]}</span>
+                          <ChevronRight className="w-3 h-3 flex-shrink-0 text-gray-300" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 min-w-0 min-h-0 py-3 px-4 overflow-y-auto overscroll-contain">
+                    <div className="flex items-center justify-between gap-4 pb-2 mb-3 border-b border-gray-100">
+                      <span className="text-xs text-gray-400 uppercase tracking-[0.15em] line-clamp-1">
+                        {activeSub?.name[language as Lang]}
+                      </span>
+                      {activeSub && (
+                        <Link
+                          to={`/catalog?category=${activeCat.id}&subcategory=${activeSub.id}`}
+                          onClick={() => setCatalogOpen(false)}
+                          className="text-[10px] text-gray-400 hover:text-black uppercase tracking-wider whitespace-nowrap transition-colors"
+                        >
+                          {language === 'ro' ? 'Vezi toate' : 'Смотреть все'}
+                        </Link>
+                      )}
+                    </div>
+
+                    {menuProductsLoading ? (
+                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
+                        {Array.from({ length: 12 }).map((_, index) => (
+                          <div key={index} className="animate-pulse">
+                            <div className="aspect-square bg-gray-50" />
+                            <div className="h-2 bg-gray-100 mt-2 w-4/5" />
+                          </div>
+                        ))}
+                      </div>
+                    ) : menuProducts.length > 0 ? (
+                      <div className="grid grid-cols-2 xl:grid-cols-4 gap-x-3 gap-y-5">
+                        {menuProducts.map(product => (
+                          <Link
+                            key={product.id}
+                            to={buildProductPath(product, language as Lang)}
+                            onClick={() => setCatalogOpen(false)}
+                            className="group/product min-w-0"
+                          >
+                            <div className="aspect-square bg-gray-50 overflow-hidden flex items-center justify-center">
+                              {product.image ? (
+                                <img src={product.image} alt={product.name[language as Lang]} className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/product:scale-105" loading="lazy" />
+                              ) : (
+                                <span className="text-[10px] text-gray-300 uppercase tracking-wider">Sporto</span>
+                              )}
+                            </div>
+                            <div className="mt-2 text-[11px] leading-snug text-gray-700 group-hover/product:text-black line-clamp-2 transition-colors">
+                              {product.name[language as Lang]}
+                            </div>
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <div className="h-full min-h-[220px] flex flex-col items-center justify-center text-center px-6">
+                        <span className="text-xs text-gray-400">
+                          {language === 'ro' ? 'Produsele vor apărea în curând' : 'Товары скоро появятся'}
+                        </span>
+                        {activeSub && (
+                          <Link to={`/catalog?category=${activeCat.id}&subcategory=${activeSub.id}`} onClick={() => setCatalogOpen(false)} className="mt-3 text-[10px] uppercase tracking-wider text-black border-b border-black pb-0.5">
+                            {language === 'ro' ? 'Deschide categoria' : 'Открыть категорию'}
+                          </Link>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Search — desktop */}
             <div className="hidden md:block flex-1 max-w-2xl relative">
@@ -195,7 +388,7 @@ export function Header() {
               {/* Phone — desktop only */}
               <a
                 href={`tel:${CONTACTS.phone}`}
-                className="hidden lg:flex items-center gap-2 px-4 h-16 border-r border-gray-100 text-gray-600 hover:text-black transition-colors group"
+                className="hidden"
               >
                 <div className="w-6 h-6 bg-black flex items-center justify-center flex-shrink-0 group-hover:bg-gray-800 transition-colors">
                   <Phone className="w-3 h-3 text-white" />
@@ -204,7 +397,7 @@ export function Header() {
               </a>
 
               {/* Language Switcher */}
-              <div className="flex items-center border-l border-r border-gray-100 h-12 md:h-16">
+              <div className="flex md:hidden items-center border-l border-r border-gray-100 h-12 md:h-16">
                 <button
                   onClick={() => setLanguage('ro')}
                   className={`px-2 md:px-3 h-full text-[10px] md:text-xs tracking-wider transition-colors ${language === 'ro' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}
@@ -257,7 +450,7 @@ export function Header() {
                     to="/login"
                     className="px-4 h-full flex items-center text-xs uppercase tracking-wider text-gray-400 hover:text-black transition-colors"
                   >
-                    {t('nav.login')}
+                    {language === 'ro' ? 'Cont' : 'Аккаунт'}
                   </Link>
                 </div>
               )}
@@ -297,74 +490,34 @@ export function Header() {
               {t('nav.home')}
             </Link>
 
-            {/* ── CATALOG with mega-dropdown ── */}
             <div
-              className="relative h-10"
+              className="hidden"
               onMouseEnter={openDropdown}
               onMouseLeave={closeDropdown}
             >
-              <Link
-                to="/catalog"
-                onClick={() => setCatalogOpen(false)}
-                className={`relative px-4 h-10 flex items-center gap-1.5 text-xs uppercase tracking-wider transition-colors ${
-                  isActive('/catalog') || catalogOpen
-                    ? 'text-black after:absolute after:bottom-0 after:left-0 after:right-0 after:h-0.5 after:bg-black'
-                    : 'text-gray-400 hover:text-black'
-                }`}
+              <button
+                type="button"
+                onClick={() => setCatalogOpen(open => !open)}
+                className="h-10 px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 text-xs uppercase tracking-wider transition-colors"
               >
                 {t('nav.catalog')}
                 <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${catalogOpen ? 'rotate-180' : ''}`} />
-              </Link>
-
+              </button>
               {catalogOpen && (
-                <div
-                  className="absolute top-10 left-0 flex bg-white border border-gray-100 shadow-2xl z-50"
-                  style={{ width: 680 }}
-                  onMouseEnter={cancelClose}
-                  onMouseLeave={closeDropdown}
-                >
+                <div className="absolute top-10 left-0 flex bg-white border border-gray-100 shadow-2xl z-50" style={{ width: 680 }} onMouseEnter={cancelClose} onMouseLeave={closeDropdown}>
                   <div className="w-[260px] flex-shrink-0 border-r border-gray-100 py-1">
                     {categories.map(cat => (
-                      <button
-                        key={cat.id}
-                        className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${
-                          hoveredCatId === cat.id ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'
-                        }`}
-                        onMouseEnter={() => setHoveredCatId(cat.id)}
-                        onClick={() => { navigate(`/catalog?category=${cat.id}`); setCatalogOpen(false); }}
-                      >
-                        <span className="text-xs tracking-wide">{cat.name[language as Lang]}</span>
-                        <ChevronRight className={`w-3 h-3 flex-shrink-0 ${hoveredCatId === cat.id ? 'text-gray-400' : 'text-gray-300'}`} />
+                      <button key={cat.id} className={`w-full flex items-center justify-between px-4 py-2.5 text-left transition-colors ${hoveredCatId === cat.id ? 'bg-black text-white' : 'text-gray-700 hover:bg-gray-50'}`} onMouseEnter={() => setHoveredCatId(cat.id)} onClick={() => { navigate(`/catalog?category=${cat.id}`); setCatalogOpen(false); }}>
+                        <span className="text-xs tracking-wide">{cat.name[language as Lang]}</span><ChevronRight className={`w-3 h-3 flex-shrink-0 ${hoveredCatId === cat.id ? 'text-gray-400' : 'text-gray-300'}`} />
                       </button>
                     ))}
-                    <div className="border-t border-gray-100 mt-1">
-                      <Link
-                        to="/catalog"
-                        className="flex items-center px-4 py-2.5 text-xs text-gray-400 hover:text-black tracking-wide transition-colors"
-                        onClick={() => setCatalogOpen(false)}
-                      >
-                        {language === 'ro' ? '← Toate produsele' : '← Все товары'}
-                      </Link>
-                    </div>
+                    <Link to="/catalog" className="flex items-center border-t border-gray-100 mt-1 px-4 py-2.5 text-xs text-gray-400 hover:text-black tracking-wide transition-colors" onClick={() => setCatalogOpen(false)}>{language === 'ro' ? '← Toate produsele' : '← Все товары'}</Link>
                   </div>
-
                   <div className="flex-1 py-3 px-3">
-                    <div className="px-2 pb-2 mb-1 border-b border-gray-100">
-                      <span className="text-xs text-gray-400 uppercase tracking-[0.15em]">
-                        {activeCat.name[language as Lang]}
-                      </span>
-                    </div>
+                    <div className="px-2 pb-2 mb-1 border-b border-gray-100"><span className="text-xs text-gray-400 uppercase tracking-[0.15em]">{activeCat.name[language as Lang]}</span></div>
                     <div className="columns-2 gap-0">
                       {activeCat.subcategories.map(sub => (
-                        <Link
-                          key={sub.id}
-                          to={`/catalog?category=${activeCat.id}&subcategory=${sub.id}`}
-                          className="flex items-center gap-2 px-2 py-2 text-xs text-gray-600 hover:text-black hover:bg-gray-50 transition-colors break-inside-avoid"
-                          onClick={() => setCatalogOpen(false)}
-                        >
-                          <span className="w-1 h-1 bg-gray-300 rounded-full flex-shrink-0" />
-                          {sub.name[language as Lang]}
-                        </Link>
+                        <Link key={sub.id} to={`/catalog?category=${activeCat.id}&subcategory=${sub.id}`} className="flex items-center gap-2 px-2 py-2 text-xs text-gray-600 hover:text-black hover:bg-gray-50 transition-colors break-inside-avoid" onClick={() => setCatalogOpen(false)}><span className="w-1 h-1 bg-gray-300 rounded-full flex-shrink-0" />{sub.name[language as Lang]}</Link>
                       ))}
                     </div>
                   </div>
@@ -385,6 +538,15 @@ export function Header() {
                 {label}
               </Link>
             ))}
+
+            <div className="flex items-center gap-0 ml-auto h-10">
+              <a href={`tel:${CONTACTS.phone}`} className="hidden lg:flex items-center gap-2 px-3 h-10 border-x border-gray-100 text-gray-600 hover:text-black transition-colors group">
+                <div className="w-6 h-6 bg-black flex items-center justify-center flex-shrink-0 group-hover:bg-gray-800 transition-colors"><Phone className="w-3 h-3 text-white" /></div>
+                <span className="text-xs font-mono tracking-wide">{CONTACTS.phoneDisplay}</span>
+              </a>
+              <button onClick={() => setLanguage('ro')} className={`px-3 h-10 text-xs tracking-wider transition-colors ${language === 'ro' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}>RO</button>
+              <button onClick={() => setLanguage('ru')} className={`px-3 h-10 text-xs tracking-wider transition-colors border-r border-gray-100 ${language === 'ru' ? 'bg-black text-white' : 'text-gray-400 hover:text-black'}`}>RU</button>
+            </div>
 
           </nav>
         </div>
@@ -485,7 +647,7 @@ export function Header() {
                       onClick={closeMobileMenu}
                       className="flex-1 text-center text-xs uppercase tracking-wider border border-gray-200 py-2.5 text-gray-600 hover:border-black hover:text-black transition-colors"
                     >
-                      {t('nav.login')}
+                      {language === 'ro' ? 'Cont' : 'Аккаунт'}
                     </Link>
                   </div>
                 )}

@@ -22,6 +22,9 @@ In progress:
 - [ ] Устранить или запланировать устранение широкого `anon`/`authenticated` write-доступа к products и attributes.
   - Depends on: live RLS audit.
   - Verify: обычный anonymous/regular user не может выполнять admin mutations.
+  - Prepared: `src/database/2026-08-20_harden_public_access.sql`.
+  - Staging checklist: `docs/audits/2026-08-20_SECURITY_MIGRATION_STAGING_CHECKLIST.md`.
+  - Не закрывать пункт до успешного staging test и отдельного production deployment.
 - [ ] Зафиксировать текущий Vercel production baseline.
   - Verify: проверены public routes, Auth, admin, catalog, product, forms, Storage, Realtime и order submission.
 - [ ] Зафиксировать SEO baseline текущего production.
@@ -48,10 +51,14 @@ In progress:
 
 ## Phase 2 — Основа Next.js App Router
 
-- [ ] Создать Next.js App Router application в migration branch, сохранив старое SPA до replacement.
+- [x] Создать Next.js App Router application в migration branch, сохранив старое SPA до replacement.
+  - Next.js добавлен параллельно Vite SPA; публичные страницы и утверждённый UI не изменены.
+  - Первый App Router endpoint: `/api/health`; перенос пользовательских routes начнётся отдельными задачами.
 - [ ] Настроить TypeScript, ESLint, build и start commands.
 - [ ] Перенести global styles без изменения утверждённого UI до Phase 7.
+  - In progress: существующие fonts/Tailwind/theme подключены к Next root layout; визуальные страницы ещё не переносились.
 - [ ] Создать root layout и минимальный набор global providers из `src/main.tsx`/`src/app/App.tsx`.
+  - In progress: создан изолированный `/migration/header` для pixel-parity переноса Header; он не заменяет public Home и закрыт от индексации.
 - [ ] Создать отдельные public locale layout и admin layout.
 - [ ] Разделить Server Components, Client Components и shared modules на основе реальных browser dependencies.
 - [ ] Изолировать `window`, `document`, storage, History API, matchMedia, Notification, Speech Recognition и file APIs в Client Components/effects.

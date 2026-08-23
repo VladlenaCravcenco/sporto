@@ -1,5 +1,22 @@
 # Migration Changelog
 
+## 2026-08-20 — Next.js App Router foundation without UI changes
+
+- Добавлен минимальный Next.js App Router runtime параллельно текущему Vite SPA.
+- Добавлен server health endpoint `/api/health` для проверки нового runtime.
+- Next root layout использует существующие global fonts, Tailwind utilities и theme styles.
+- Добавлен изолированный preview route `/migration/header` для переноса существующего Header без редизайна.
+- Пользовательские маршруты, компоненты, стили и утверждённый дизайн не изменялись.
+- React Router остаётся активным до последовательного переноса и проверки каждой страницы.
+
+## 2026-08-20 — Security migration prepared for staging
+
+- Подготовлена транзакционная RLS/grants/Storage migration без применения к production.
+- Публичное чтение сохранено; mutations ограничены текущим подтверждённым admin email.
+- Закрыт application RPC-доступ к event-trigger helper `rls_auto_enable`.
+- Добавлены аварийный staging rollback и отдельный access/functional checklist.
+- Пункт Phase 0 остаётся открытым до успешной проверки на закрытом staging.
+
 ## 2026-08-11 — Live Supabase audit completed
 
 - Получены полные table/function grants, definition `rls_auto_enable` и Storage bucket settings.

@@ -16,6 +16,7 @@ import {
   Tag,
   Zap,
   Package,
+  ShieldCheck,
   ArrowUpRight,
   Check,
 } from 'lucide-react';
@@ -29,7 +30,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { getAttributeUnit, resolveProductIdsForAttributeFilters, useCatalogAttributeFilters } from '../hooks/useProductAttributes';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
-type FilterSectionId = 'sort' | 'stock' | 'category' | 'subcategory' | 'brand' | 'offers';
+type FilterSectionId = 'sort' | 'stock' | 'category' | 'subcategory' | 'brand' | 'offers' | 'warranty';
 type StockFilter = 'all' | 'inStock' | 'onOrder';
 type MobileFilterDraft = {
   categories: string[];
@@ -38,6 +39,7 @@ type MobileFilterDraft = {
   sortBy: SortOption;
   stockFilter: StockFilter;
   saleOnly: boolean;
+  warrantyOnly: boolean;
 };
 
 const PAGE_SIZE = 24;
@@ -59,6 +61,7 @@ export function Catalog() {
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [page, setPage] = useState(1);
   const [saleOnly, setSaleOnly] = useState(searchParams.get('sale') === 'true');
+  const [warrantyOnly, setWarrantyOnly] = useState(searchParams.get('warranty') === 'true');
 
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -69,6 +72,7 @@ export function Catalog() {
     sortBy,
     stockFilter: (searchParams.get('stock') as StockFilter) || 'all',
     saleOnly,
+    warrantyOnly,
   });
   const [mobileAttributeDraft, setMobileAttributeDraft] = useState<Record<string, string[]>>({});
   const [openFilterSections, setOpenFilterSections] = useState<Record<FilterSectionId, boolean>>({
@@ -78,6 +82,7 @@ export function Catalog() {
     subcategory: false,
     brand: false,
     offers: false,
+    warranty: false,
   });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [stockFilter, setStockFilter] = useState<StockFilter>(
@@ -100,6 +105,7 @@ export function Catalog() {
     const q = searchParams.get('search') || '';
     const br = searchParams.get('brand') || '';
     const sale = searchParams.get('sale') === 'true';
+    const warranty = searchParams.get('warranty') === 'true';
     const sort = searchParams.get('sort');
     const stock = searchParams.get('stock');
     setSelectedCategory(cat);
@@ -107,13 +113,14 @@ export function Catalog() {
     setSearchTerm(q);
     setSelectedBrand(br);
     setSaleOnly(sale);
+    setWarrantyOnly(warranty);
     setSortBy(sort === 'price-asc' || sort === 'price-desc' ? sort : 'default');
     setStockFilter(stock === 'inStock' || stock === 'onOrder' ? stock : 'all');
     setPage(1);
   }, [searchParams]);
 
   // ── Reset page on filter change ──────────────────────────────────────────
-  useEffect(() => { setPage(1); }, [selectedCategory, selectedSubcategory, sortBy, selectedBrand, saleOnly, stockFilter, searchTerm]);
+  useEffect(() => { setPage(1); }, [selectedCategory, selectedSubcategory, sortBy, selectedBrand, saleOnly, warrantyOnly, stockFilter, searchTerm]);
 
   // ── Close popovers on outside click ─────────────────────────────────
   useEffect(() => {
@@ -254,9 +261,21 @@ export function Catalog() {
     brand: appliedBrands.length > 1 ? appliedBrands : (selectedBrand || undefined),
     productIds: attributeProductIds,
     saleOnly,
+    warrantyOnly,
     stockFilter,
     searchTerm: deferredSearchTerm,
     sortBy,
+    prioritizeBrand: selectedCategory === 'all'
+      && selectedSubcategory === 'all'
+      && !selectedBrand
+      && !saleOnly
+      && !warrantyOnly
+      && stockFilter === 'all'
+      && !deferredSearchTerm.trim()
+      && sortBy === 'default'
+      && Object.keys(attributeSelections).length === 0
+        ? 'inSPORTline'
+        : undefined,
   });
   const {
     total: mobileFilterTotal,
@@ -269,6 +288,7 @@ export function Catalog() {
     brand: mobileFilterDraft.brands,
     productIds: mobileAttributeProductIds,
     saleOnly: mobileFilterDraft.saleOnly,
+    warrantyOnly: mobileFilterDraft.warrantyOnly,
     stockFilter: mobileFilterDraft.stockFilter,
     searchTerm: deferredSearchTerm,
     sortBy: mobileFilterDraft.sortBy,
@@ -325,6 +345,7 @@ export function Catalog() {
     setSelectedBrand('');
     setStockFilter('all');
     setSaleOnly(false);
+    setWarrantyOnly(false);
     setSearchParams({});
   };
 
@@ -354,6 +375,7 @@ export function Catalog() {
       sortBy,
       stockFilter,
       saleOnly,
+      warrantyOnly,
     });
     setMobileAttributeDraft(attributeSelections);
     setFilterSheetOpen(true);
@@ -367,6 +389,7 @@ export function Catalog() {
       sortBy: 'default',
       stockFilter: 'all',
       saleOnly: false,
+      warrantyOnly: false,
     });
     setMobileAttributeDraft({});
   };
@@ -382,6 +405,7 @@ export function Catalog() {
       values.forEach((value) => params.append(`attr.${attributeId}`, value));
     });
     if (mobileFilterDraft.saleOnly) params.set('sale', 'true');
+    if (mobileFilterDraft.warrantyOnly) params.set('warranty', 'true');
     if (mobileFilterDraft.sortBy !== 'default') params.set('sort', mobileFilterDraft.sortBy);
     if (mobileFilterDraft.stockFilter !== 'all') params.set('stock', mobileFilterDraft.stockFilter);
 
@@ -399,6 +423,7 @@ export function Catalog() {
     || mobileFilterDraft.sortBy !== 'default'
     || mobileFilterDraft.stockFilter !== 'all'
     || mobileFilterDraft.saleOnly
+    || mobileFilterDraft.warrantyOnly
     || Object.keys(mobileAttributeDraft).length > 0;
 
   const scrollCats = (dir: 'left' | 'right') => {
@@ -501,7 +526,7 @@ export function Catalog() {
   };
 
   const isPriceFiltered = sortBy !== 'default';
-  const hasActiveFilters = searchTerm !== '' || selectedCategory !== 'all' || selectedSubcategory !== 'all' || isPriceFiltered || !!selectedBrand || stockFilter !== 'all' || saleOnly || Object.keys(attributeSelections).length > 0;
+  const hasActiveFilters = searchTerm !== '' || selectedCategory !== 'all' || selectedSubcategory !== 'all' || isPriceFiltered || !!selectedBrand || stockFilter !== 'all' || saleOnly || warrantyOnly || Object.keys(attributeSelections).length > 0;
 
   const sortIcon = sortBy === 'price-asc'
     ? <ArrowUp className="w-3.5 h-3.5" />
@@ -517,6 +542,7 @@ export function Catalog() {
       ? (language === 'ro' ? 'La comandă' : 'Под заказ')
       : null,
     saleOnly ? (language === 'ro' ? 'Promoție' : 'Акция') : null,
+    warrantyOnly ? (language === 'ro' ? 'Cu garanție' : 'С гарантией') : null,
     sortBy === 'price-asc'
       ? (language === 'ro' ? 'Întâi mai ieftin' : 'Сначала дешевле')
       : sortBy === 'price-desc'
@@ -583,7 +609,7 @@ export function Catalog() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={catalogSeo.title}
         description={catalogSeo.description}
@@ -1249,6 +1275,34 @@ export function Catalog() {
                 </>,
               )}
 
+              {/* ── Warranty ── */}
+              {filterSection(
+                'warranty',
+                language === 'ro' ? 'Garanție' : 'Гарантия',
+                mobileFilterDraft.warrantyOnly
+                  ? (language === 'ro' ? 'Doar produse cu garanție' : 'Только товары с гарантией')
+                  : (language === 'ro' ? 'Toate produsele' : 'Все товары'),
+                <>
+                  <button
+                    onClick={() => setMobileFilterDraft((draft) => ({ ...draft, warrantyOnly: false }))}
+                    className={filterOptionClass()}
+                  >
+                    <span>{language === 'ro' ? 'Toate produsele' : 'Все товары'}</span>
+                    {filterCheckbox(!mobileFilterDraft.warrantyOnly)}
+                  </button>
+                  <button
+                    onClick={() => setMobileFilterDraft((draft) => ({ ...draft, warrantyOnly: true }))}
+                    className={filterOptionClass()}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {language === 'ro' ? 'Doar produse cu garanție' : 'Только товары с гарантией'}
+                    </span>
+                    {filterCheckbox(mobileFilterDraft.warrantyOnly)}
+                  </button>
+                </>,
+              )}
+
               {/* ── Category ── */}
               {filterSection(
                 'category',
@@ -1578,6 +1632,26 @@ export function Catalog() {
                   </button>
                 </div>
 
+                <div className="border-b border-gray-100 p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">
+                    {language === 'ro' ? 'Garanție' : 'Гарантия'}
+                  </p>
+                  <button
+                    onClick={() => setWarrantyOnly((value) => !value)}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
+                      warrantyOnly
+                        ? 'bg-black text-white'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {language === 'ro' ? 'Doar cu garanție' : 'Только с гарантией'}
+                    </span>
+                    {warrantyOnly && <span className="w-1.5 h-1.5 bg-white" />}
+                  </button>
+                </div>
+
                 {availableBrands.length > 0 && (
                   <div className="border-b border-gray-100 p-4">
                     <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">
@@ -1657,7 +1731,7 @@ export function Catalog() {
 
         {/* ── Supabase loading skeleton ── */}
         {displayLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 md:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3">
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="bg-gray-100 aspect-square mb-2" />
@@ -1836,6 +1910,13 @@ export function Catalog() {
                     <button onClick={() => setSaleOnly(false)} className="ml-1 hover:text-gray-300"><X className="w-3 h-3" /></button>
                   </span>
                 )}
+                {warrantyOnly && (
+                  <span className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 uppercase tracking-wider">
+                    <ShieldCheck className="w-3 h-3 text-gray-300" />
+                    {language === 'ro' ? 'Cu garanție' : 'С гарантией'}
+                    <button onClick={() => setWarrantyOnly(false)} className="ml-1 hover:text-gray-300"><X className="w-3 h-3" /></button>
+                  </span>
+                )}
                 {sortBy !== 'default' && (
                   <span className="flex items-center gap-1.5 text-xs border border-gray-300 text-gray-600 px-3 py-1.5 uppercase tracking-wider">
                     {sortBy === 'price-asc'
@@ -1874,8 +1955,8 @@ export function Catalog() {
               <>
                 <div className={
                   viewMode === 'list'
-                    ? 'flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-3 xl:grid-cols-4 2xl:grid-cols-5'
-                    : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 md:gap-3'
+                    ? 'flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-3 xl:grid-cols-4'
+                    : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3'
                 }>
                   {displayProducts.map((product) => (
                     <ProductCard

@@ -42,6 +42,7 @@ export function rowToProduct(row: ProductRow): Product {
     image: row.image_url || '',
     images: row.images?.length ? row.images : (row.image_url ? [row.image_url] : []),
     youtubeId: extractYouTubeId(row.youtube_url),
+    hasWarranty: row.has_warranty ?? false,
     featured: row.featured ?? false,
     specifications: { ro: {}, ru: {} },
     sku: row.sku || undefined,
@@ -63,9 +64,11 @@ interface CatalogProductsParams {
   brand?: string | string[];
   productIds?: string[];
   saleOnly?: boolean;
+  warrantyOnly?: boolean;
   stockFilter?: StockFilter;
   searchTerm?: string;
   sortBy?: CatalogSortOption;
+  prioritizeBrand?: string;
 }
 
 interface CatalogSearchRpcRow extends ProductRow {
@@ -222,10 +225,79 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
       const categories = Array.isArray(params.category) ? params.category : [];
       const subcategories = Array.isArray(params.subcategory) ? params.subcategory : [];
       const brands = Array.isArray(params.brand) ? params.brand : [];
+
+      // The unfiltered catalog has a merchandising order: show every product
+      // from the preferred brand first, then continue with all other brands.
+      // Two ranges keep this order correct across pagination boundaries.
+      if (params.prioritizeBrand) {
+        const preferredBrand = params.prioritizeBrand;
+        const [{ count: preferredCount, error: preferredCountError }, { count: otherCount, error: otherCountError }] = await Promise.all([
+          supabase.from('products').select('id', { count: 'exact', head: true }).eq('active', true).ilike('brand', preferredBrand),
+          supabase.from('products').select('id', { count: 'exact', head: true }).eq('active', true).or(`brand.is.null,brand.not.ilike.${preferredBrand}`),
+        ]);
+
+        if (cancelled) return;
+        const countError = preferredCountError || otherCountError;
+        if (countError) {
+          setProducts([]);
+          setTotal(0);
+          setError(countError.message);
+          setConnected(false);
+          setLoading(false);
+          return;
+        }
+
+        const priorityTotal = preferredCount ?? 0;
+        const offset = (params.page - 1) * params.pageSize;
+        const preferredRowsNeeded = offset < priorityTotal
+          ? Math.min(params.pageSize, priorityTotal - offset)
+          : 0;
+        const preferredFrom = offset;
+        const otherFrom = Math.max(0, offset - priorityTotal);
+
+        const preferredPromise = preferredRowsNeeded > 0
+          ? supabase
+              .from('products')
+              .select('*')
+              .eq('active', true)
+              .ilike('brand', preferredBrand)
+              .order('id', { ascending: true })
+              .range(preferredFrom, preferredFrom + preferredRowsNeeded - 1)
+          : Promise.resolve({ data: [], error: null });
+        const otherRowsNeeded = params.pageSize - preferredRowsNeeded;
+        const otherPromise = otherRowsNeeded > 0
+          ? supabase
+              .from('products')
+              .select('*')
+              .eq('active', true)
+              .or(`brand.is.null,brand.not.ilike.${preferredBrand}`)
+              .order('id', { ascending: true })
+              .range(preferredRowsNeeded > 0 ? 0 : otherFrom, (preferredRowsNeeded > 0 ? 0 : otherFrom) + otherRowsNeeded - 1)
+          : Promise.resolve({ data: [], error: null });
+
+        const [preferredResult, otherResult] = await Promise.all([preferredPromise, otherPromise]);
+        if (cancelled) return;
+        const rowsError = preferredResult.error || otherResult.error;
+        if (rowsError) {
+          setProducts([]);
+          setTotal(0);
+          setError(rowsError.message);
+          setConnected(false);
+        } else {
+          const rows = [...(preferredResult.data ?? []), ...(otherResult.data ?? [])] as ProductRow[];
+          setProducts(rows.map(rowToProduct));
+          setTotal(priorityTotal + (otherCount ?? 0));
+          setConnected(true);
+        }
+        setLoading(false);
+        return;
+      }
+
       const usesMultiSelect = Array.isArray(params.category)
         || Array.isArray(params.subcategory)
         || Array.isArray(params.brand)
-        || Array.isArray(params.productIds);
+        || Array.isArray(params.productIds)
+        || params.warrantyOnly;
 
       if (usesMultiSelect) {
         if (params.productIds && params.productIds.length === 0) {
@@ -245,6 +317,7 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
         if (brands.length > 0) query = query.in('brand', brands);
         if (params.productIds?.length) query = query.in('id', params.productIds);
         if (params.saleOnly) query = query.not('sale_price', 'is', null);
+        if (params.warrantyOnly) query = query.eq('has_warranty', true);
         if (params.stockFilter === 'inStock') query = query.gt('qty', 0);
         if (params.stockFilter === 'onOrder') query = query.lte('qty', 0);
         if (queryText) {
@@ -263,10 +336,13 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
 
         if (cancelled) return;
         if (err) {
+          const warrantyColumnMissing = params.warrantyOnly
+            && err.message.toLowerCase().includes('has_warranty')
+            && err.message.toLowerCase().includes('does not exist');
           setProducts([]);
           setTotal(0);
-          setError(err.message);
-          setConnected(false);
+          setError(warrantyColumnMissing ? null : err.message);
+          setConnected(warrantyColumnMissing);
         } else {
           setProducts(((data as ProductRow[] | null) ?? []).map(rowToProduct));
           setTotal(count ?? 0);
@@ -316,9 +392,11 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
     brandKey,
     productIdsKey,
     params.saleOnly,
+    params.warrantyOnly,
     params.stockFilter,
     params.searchTerm,
     params.sortBy,
+    params.prioritizeBrand,
   ]);
 
   return { products, total, loading, error, connected };
