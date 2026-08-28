@@ -3,21 +3,22 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 import type { BannerRow } from '../_lib/home-data';
-import { HeaderPreview, type Language } from './HeaderPreview';
+import type { Language } from './HeaderPreview';
 import { PartnersMarqueePreview } from './PartnersMarqueePreview';
 import { FeaturedProductsSlider } from './FeaturedProductsSlider';
 
 interface HomeMigrationPreviewProps {
+  language: Language;
   banners: BannerRow[];
   brands: import('../_lib/home-data').BrandItem[];
   featuredProducts: import('../_lib/home-data').FeaturedProduct[];
   promoCount: string;
 }
 
-const production = 'https://www.sporto.md';
 const interval = 5500;
 
 function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Language }) {
+  const localePath = (path = '') => `/${language}${path}`;
   const [active, setActive] = useState(0);
   const [animating, setAnimating] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -62,10 +63,10 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
           {language === 'ro' ? 'Echipamente profesionale pentru afacerea ta.' : 'Профессиональное оборудование для вашего бизнеса.'}
         </p>
         <div className="flex flex-wrap gap-3">
-          <a href={`${production}/order-request`} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
+          <a href={localePath('/order-request')} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
             {language === 'ro' ? 'Solicită Ofertă' : 'Запросить предложение'}<ArrowRight className="w-4 h-4" />
           </a>
-          <a href={`${production}/catalog`} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
+          <a href={localePath('/catalog')} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
             {language === 'ro' ? 'Vezi Catalogul' : 'Каталог'}<ArrowRight className="w-4 h-4" />
           </a>
         </div>
@@ -80,7 +81,7 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
     ? banner.cta_text_ro || 'Solicită Ofertă'
     : banner.cta_text_ru || 'Запросить предложение';
   const ctaLink = banner.cta_link || '/order-request';
-  const ctaHref = ctaLink.startsWith('http') ? ctaLink : `${production}${ctaLink === '#modal' ? '/order-request' : ctaLink}`;
+  const ctaHref = ctaLink.startsWith('http') ? ctaLink : localePath(ctaLink === '#modal' ? '/order-request' : ctaLink);
 
   return (
     <div
@@ -118,7 +119,7 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
             <a href={ctaHref} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
               {ctaText}<ArrowRight className="w-4 h-4" />
             </a>
-            <a href={`${production}/catalog`} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
+            <a href={localePath('/catalog')} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
               {language === 'ro' ? 'Vezi Catalogul' : 'Каталог'}<ArrowRight className="w-4 h-4" />
             </a>
           </div>
@@ -142,19 +143,17 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
   );
 }
 
-export function HomeMigrationPreview({ banners, brands, featuredProducts, promoCount }: HomeMigrationPreviewProps) {
-  const [language, setLanguage] = useState<Language>('ro');
+export function HomeMigrationPreview({ language, banners, brands, featuredProducts, promoCount }: HomeMigrationPreviewProps) {
   return (
     <div className="min-h-screen bg-white">
-      <HeaderPreview language={language} onLanguageChange={setLanguage} />
       <section className="bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
           <div className="grid grid-cols-12 gap-2 md:gap-3">
             <div className="col-span-12 lg:col-span-8 overflow-hidden">
               <HeroSlider banners={banners} language={language} />
             </div>
             <div className="col-span-12 lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-2 md:gap-3">
-              <a href={`${production}/turnkey-solutions`} className="bg-gray-950 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[180px] lg:min-h-0 lg:flex-1 group hover:bg-black transition-colors cursor-pointer">
+              <a href={`/${language}/turnkey-solutions`} className="bg-gray-950 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[180px] lg:min-h-0 lg:flex-1 group hover:bg-black transition-colors cursor-pointer">
                 <div className="flex items-start justify-end mb-6">
                   <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
                 </div>
@@ -163,7 +162,7 @@ export function HomeMigrationPreview({ banners, brands, featuredProducts, promoC
                   <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm mb-5">{language === 'ro' ? 'De la proiectare și selecția echipamentelor până la livrare și instalare.' : 'От проектирования и подбора оборудования до доставки и установки.'}</p>
                 </div>
               </a>
-              <a href={`${production}/catalog?sale=true`} className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[120px] lg:min-h-0 lg:flex-1 group hover:from-red-700 hover:to-red-800 transition-all cursor-pointer">
+              <a href={`/${language}/catalog?sale=true`} className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[120px] lg:min-h-0 lg:flex-1 group hover:from-red-700 hover:to-red-800 transition-all cursor-pointer">
                 <div className="flex items-start justify-end mb-3"><Tag className="w-4 h-4 text-red-300 group-hover:text-white transition-colors" /></div>
                 <div><div className="text-5xl sm:text-6xl md:text-7xl text-white tabular-nums leading-none">{promoCount}</div><div className="text-[10px] sm:text-xs text-red-200 mt-1 uppercase tracking-widest">{language === 'ro' ? 'Promoții cu reducere' : 'Товаров со скидкой'}</div></div>
               </a>

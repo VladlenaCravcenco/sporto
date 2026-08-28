@@ -11,7 +11,9 @@ Completed:
 
 In progress:
 
-- Нет начатой implementation-задачи.
+- Next.js public locale layout и SSR Home для `/ro` и `/ru`.
+- Общие public-компоненты: Header, Footer, contacts sticker, cookie consent; promo popup перенесён, но принудительно отключён.
+- Server data layer каталога и native `/ro/catalog`/`/ru/catalog` готовы для первой выборки; filters, sorting, pagination и cart integration ещё не перенесены.
 
 ## Phase 0 — Безопасность и исходное состояние production
 
@@ -55,14 +57,18 @@ In progress:
   - Next.js добавлен параллельно Vite SPA; публичные страницы и утверждённый UI не изменены.
   - Первый App Router endpoint: `/api/health`; перенос пользовательских routes начнётся отдельными задачами.
 - [ ] Настроить TypeScript, ESLint, build и start commands.
+  - Next TypeScript/build/start scripts настроены и `next:build` проходит; ESLint workflow ещё не зафиксирован.
 - [ ] Перенести global styles без изменения утверждённого UI до Phase 7.
-  - In progress: существующие fonts/Tailwind/theme подключены к Next root layout; визуальные страницы ещё не переносились.
+  - In progress: fonts, Tailwind, theme и необходимые animation styles подключены к Next root layout; полная parity global styles ещё проверяется.
 - [ ] Создать root layout и минимальный набор global providers из `src/main.tsx`/`src/app/App.tsx`.
-  - In progress: создан изолированный `/migration/header` для pixel-parity переноса Header; он не заменяет public Home и закрыт от индексации.
+  - In progress: root layout и public locale layout созданы; Header/Footer/contacts/cookie подключены. Auth и cart providers ещё не мигрированы.
 - [ ] Создать отдельные public locale layout и admin layout.
+  - Public locale layout готов; admin layout ещё не мигрирован.
 - [ ] Разделить Server Components, Client Components и shared modules на основе реальных browser dependencies.
+  - In progress: Home data, footer settings и catalog navigation вынесены на сервер; sliders, menu, contacts и consent изолированы как Client Components.
 - [ ] Изолировать `window`, `document`, storage, History API, matchMedia, Notification, Speech Recognition и file APIs в Client Components/effects.
 - [ ] Проверить browser-only dependencies: EmailJS, analytics, React Helmet replacement, virtual list, DnD и UI libraries.
+  - Vercel Analytics удалён из Vite, Next и dependencies без замены. Остальные зависимости ещё требуют проверки.
 - [ ] Устранить hydration differences в language, responsive и persisted state.
   - Verify: migrated routes не создают hydration warnings.
 
@@ -77,7 +83,9 @@ In progress:
 - [ ] Защитить admin layout и каждую admin mutation на сервере.
   - Verify: regular authenticated user не получает admin UI и не выполняет admin CRUD.
 - [ ] Перенести initial reads products/catalog/product в server data layer.
+  - In progress: Home featured products, catalog navigation и menu products перенесены; полный Catalog и ProductDetail ещё нет.
 - [ ] Перенести initial reads brands, banners, categories, attributes, page content, settings и FAQ, где требуется SSR.
+  - In progress: banners, brands, categories/subcategories, footer settings и popup config имеют server loaders; attributes, FAQ и остальной page content ещё нет.
 - [ ] Оставить Realtime только в Client Components, которым действительно нужны live updates.
 - [ ] Отделить admin CRUD от UI и выполнять его через server-authorized mutations.
 - [ ] Мигрировать `api/order-request.ts` в Next server endpoint без потери validation, honeypot, rate limit, service role и RPC.
@@ -89,10 +97,13 @@ In progress:
 
 ## Phase 4 — Мультиязычные URL и редиректы
 
-- [ ] Реализовать `[lang]` только для существующих языков `ro` и `ru`.
+- [x] Реализовать `[lang]` только для существующих языков `ro` и `ru`.
+  - `/ro` и `/ru` обслуживаются App Router; остальные значения locale возвращают not-found.
 - [ ] Перевести public routes на единую структуру `/ro/...` и `/ru/...`.
+  - In progress: Home и все новые внутренние ссылки используют locale prefix; неперенесённые страницы временно проходят через legacy bridge.
 - [ ] Заменить language localStorage/query synchronization маршрутизацией App Router.
-- [ ] Переключатель языка должен вести на эквивалентную страницу другого языка.
+  - Выполнено для мигрированного Next public layout; legacy SPA пока сохраняется до cutover.
+- [x] Переключатель языка должен вести на эквивалентную страницу другого языка.
 - [ ] Определить locale behavior для auth routes и admin UI.
   - Status: **REVIEW**.
 - [ ] Зафиксировать единый production host: `www` или non-`www`.
@@ -113,8 +124,10 @@ In progress:
 
 - [ ] Мигрировать Home для `ro` и `ru`.
   - Verify: основной контент и H1 присутствуют в HTML без JavaScript.
+  - In progress: hero, promo counter, featured products и brands работают; categories, services, why-us, CTA и полная ProductCard parity ещё не перенесены.
 - [ ] Мигрировать Catalog.
   - Verify: products, categories, filters initial state и H1 присутствуют в server HTML согласно утверждённой indexability policy.
+  - In progress: native localized route, metadata, server product query, 24-product grid, SSR pagination и distinct empty/error states готовы; filters, user-selectable sorting и cart integration ещё не перенесены.
 - [ ] Реализовать SSR category и subcategory states/pages.
   - Verify: уникальные heading, description и product links присутствуют в HTML.
 - [ ] Мигрировать ProductDetail с полным пользовательским контентом:
@@ -140,6 +153,7 @@ In progress:
 ## Phase 6 — Техническое SEO и внутренние ссылки
 
 - [ ] Перенести browser `SeoHead.tsx` и Vercel SEO metadata в Next Metadata API.
+  - In progress: Home `/ro` и `/ru` имеют Metadata API, canonical, hreflang и Open Graph; остальные page types ещё нет.
 - [ ] Для каждого indexable page type и обоих языков обеспечить уникальные:
   - title;
   - description;
@@ -173,16 +187,19 @@ In progress:
 
 ### Header and contacts
 
-- [ ] Реализовать утверждённую кнопку каталога в header.
-- [ ] Реализовать утверждённую нижнюю кнопку контактов.
+- [x] Реализовать утверждённую кнопку каталога в header.
+  - Next Header получает categories/subcategories сервером и products через локальный cached API; mega-menu имеет icons, 3 columns, 4 product cards per row и internal scroll.
+- [x] Реализовать утверждённую нижнюю кнопку контактов.
+  - Красный sticker локализован, использует server-loaded contacts и раскрывает WhatsApp/Telegram/Viber/phone.
 - [ ] Проверить desktop/mobile navigation и доступность элементов управления.
 
 ### Product cards and catalog surface
 
 - [ ] Реализовать утверждённый дизайн product cards во всех местах использования.
-- [ ] Добавить утверждённый contrast background каталога.
-- [ ] Реализовать hover states без ухудшения touch behavior.
-- [ ] Вывести утверждённую информацию о гарантии.
+  - In progress: базовая SSR catalog card готова; общая reusable card и cart behavior ещё не перенесены.
+- [x] Добавить утверждённый contrast background каталога.
+- [x] Реализовать hover states без ухудшения touch behavior.
+- [x] Вывести утверждённую информацию о гарантии.
 - [ ] Реализовать новую кнопку «В корзину», сохранив cart behavior, price, sale и stock states.
 
 ### Filters
@@ -200,6 +217,7 @@ In progress:
 ### Catalog ordering
 
 - [ ] Реализовать утверждённый порядок выдачи товаров.
+  - In progress: SSR pagination сохраняет deterministic порядок inSPORTline → остальные бренды; полный ordering вместе с filters и user-selectable sorting ещё не реализован.
 - [ ] Обеспечить deterministic ordering вместе с filters, search и pagination.
 
 ## Phase 8 — Open Graph, robots, AI-боты и sitemap
@@ -271,6 +289,6 @@ In progress:
 - `vercel.json` — текущие rewrites, headers и production routing.
 - `src/app/components/SeoHead.tsx` — до server metadata parity всех migrated pages.
 - React Router, SPA entry/layouts и старые public/admin pages — до полной page parity.
-- `@vercel/analytics/react` — до решения о replacement/removal.
+- Vercel Analytics уже удалён из runtime и dependencies; replacement сейчас не используется.
 - `scripts/prerender-products.mjs` — до подтверждения, что он не участвует в production process.
 - Любое текущее storage behavior — до реализации и проверки требуемой замены.

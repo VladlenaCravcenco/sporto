@@ -97,7 +97,7 @@ export function Home() {
 
       {/* ─── BENTO HERO ─── */}
       <section className="bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
           <div className="grid grid-cols-12 gap-2 md:gap-3">
 
             {/* Main Hero Card — dark, spans 8 cols */}
@@ -182,7 +182,7 @@ export function Home() {
       <div className="flex flex-col">
       {/* ─── CATEGORIES BENTO ─── */}
       <section className="order-2 py-12 md:py-16 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-6">
             <div>
               <h2 className="text-xl text-gray-900">{t('categories.title')}</h2>
@@ -257,7 +257,7 @@ export function Home() {
 
       {/* ─── FEATURED PRODUCTS BENTO ─── */}
       <section className="order-1 py-12 md:py-16 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-6">
             <div>
               <h2 className="text-xl text-gray-900">{t('products.featured')}</h2>
@@ -345,7 +345,7 @@ export function Home() {
 
       {/* ─── SERVICES BENTO ─── */}
       <section className="py-12 md:py-16 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <h2 className="text-xl text-gray-900">{t('services.title')}</h2>
           </div>
@@ -356,7 +356,7 @@ export function Home() {
 
       {/* ─── WHY US BENTO ─── */}
       <section className="py-12 md:py-16 bg-white border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h2 className="text-xl text-gray-900">{t('about.title')}</h2>
           </div>
@@ -386,7 +386,7 @@ export function Home() {
 
       {/* ── CTA BENTO ─── */}
       <section className="py-12 md:py-16 bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-8 md:grid md:grid-cols-2 md:items-center">
             <div>
               <h2 className="text-2xl md:text-3xl text-white mb-4 leading-tight">{t('cta.title')}</h2>

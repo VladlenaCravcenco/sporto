@@ -5,8 +5,6 @@ import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Package, Tag } fro
 import type { FeaturedProduct } from '../_lib/home-data';
 import type { Language } from './HeaderPreview';
 
-const production = 'https://www.sporto.md';
-
 function slugify(value: string) {
   return value
     .normalize('NFKD')
@@ -20,7 +18,7 @@ function slugify(value: string) {
 
 function productPath(product: FeaturedProduct, language: Language) {
   const name = language === 'ru' ? product.name_ru || product.name_ro : product.name_ro;
-  return `${production}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
+  return `/${language}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
 }
 
 export function FeaturedProductsSlider({ products, language }: { products: FeaturedProduct[]; language: Language }) {
@@ -57,11 +55,11 @@ export function FeaturedProductsSlider({ products, language }: { products: Featu
 
   return (
     <section className="py-12 md:py-16 bg-white">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-xl text-gray-900">{language === 'ro' ? 'Produse Recomandate' : 'Рекомендуемые Продукты'}</h2>
           <div className="flex items-center gap-2">
-            <a href={`${production}/catalog`} className="hidden sm:flex text-xs text-gray-400 hover:text-black items-center gap-1.5 transition-colors uppercase tracking-wider">
+            <a href={`/${language}/catalog`} className="hidden sm:flex text-xs text-gray-400 hover:text-black items-center gap-1.5 transition-colors uppercase tracking-wider">
               {language === 'ro' ? 'Toate Produsele' : 'Все Продукты'}<ArrowRight className="w-3.5 h-3.5" />
             </a>
             <button type="button" aria-label="Previous products" onClick={() => move(-1)} className="w-9 h-9 border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors"><ChevronLeft className="w-4 h-4" /></button>

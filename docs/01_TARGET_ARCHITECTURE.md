@@ -54,7 +54,7 @@ Reverse proxy/server configuration, process manager and deployment mechanics are
 - Product gallery/video/client carousel behavior.
 - Admin forms, drag-and-drop, Excel/CSV download and Realtime subscriptions.
 - Notification API/audio and Web Speech API.
-- Google Ads `gtag`, Vercel Analytics replacement, browser EmailJS calls — final handling **REVIEW**.
+- Google Ads `gtag` and browser EmailJS calls — final handling **REVIEW**. Vercel Analytics has been removed without replacement.
 
 ### Cannot be finalized before implementation
 
@@ -127,7 +127,7 @@ Target model:
 | Bot User-Agent rewrites | Normal SSR response for every client | **REMOVE** after parity |
 | SPA `/index.html` rewrites | App Router routing | **REMOVE** after parity |
 | Vercel headers | Next/server/reverse-proxy headers | **MIGRATE** |
-| `@vercel/analytics/react` | Non-Vercel analytics decision | **REVIEW** |
+| `@vercel/analytics/react` | No replacement during migration | **REMOVED** |
 | Vercel deployment | Host.md self-hosting | **REPLACE** after testing |
 | Supabase backend/Storage/Realtime | Supabase | **KEEP** |
 | `scripts/prerender-products.mjs` | SSR product pages | **REVIEW**, then remove only if confirmed unused |
@@ -144,4 +144,3 @@ Conceptual mapping only; exact folder names are implemented in Phase 2/4:
 - not-found handling through App Router.
 
 No Kubernetes, Redis, Docker, queues or microservices are part of the approved target.
-

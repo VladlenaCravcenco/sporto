@@ -1,5 +1,38 @@
 # Migration Changelog
 
+## 2026-08-27 — Native SSR Catalog pagination
+
+- Добавлена server-side pagination по 24 товара с точным total count из Supabase.
+- URL первой страницы нормализуется до `/[lang]/catalog`; следующие страницы используют `?page=N`.
+- Invalid page values перенаправляются на canonical catalog URL, а страницы за пределами выдачи возвращают `notFound`.
+- Canonical, hreflang и title учитывают номер страницы без создания отдельного `?page=1` URL.
+- Порядок inSPORTline → остальные бренды сохраняется между страницами без загрузки всего каталога в память.
+- Добавлены localized previous/next controls, компактные номера страниц и total product count.
+- `next:build` проходит.
+
+## 2026-08-27 — Native SSR Catalog, iteration 1
+
+- Добавлен native localized route `/[lang]/catalog`, который имеет приоритет над legacy bridge.
+- Первая выборка из 24 active products выполняется на сервере; браузер не обращается к Supabase напрямую.
+- Начальная выдача приоритетно показывает товары inSPORTline, затем остальные бренды в deterministic order.
+- Добавлены localized metadata, H1, четыре карточки в ряд на desktop, серый catalog background и белые cards.
+- Карточки показывают localized name, SKU, brand, stock/order state, sale price и warranty badge.
+- Ошибка подключения и пустой catalog отображаются раздельно; database error details не раскрываются пользователю.
+- Filters, sorting, pagination и cart integration намеренно оставлены для следующих отдельных итераций.
+- `next:build` подтверждает dynamic SSR route `/[lang]/catalog`.
+
+## 2026-08-27 — Localized SSR Home shell and catalog navigation data layer
+
+- Добавлены native App Router Home routes `/ro` и `/ru`; `/` и retired migration preview перенаправляются на `/ro`.
+- Добавлены URL-based language switching, localized canonical/hreflang/Open Graph metadata и request-aware `<html lang>`.
+- Public locale layout включает server-loaded Footer, floating contact sticker и функциональный cookie consent.
+- Promo popup перенесён вместе с Supabase config loader, но принудительно отключён через `PROMO_POPUP_ENABLED = false`; в выключенном состоянии запрос к базе не выполняется.
+- `@vercel/analytics` удалён из Vite, Next, `package.json` и `package-lock.json`; replacement analytics runtime не подключён.
+- Добавлены server reads для categories/subcategories и `/api/catalog/menu-products` для validated cached загрузки товаров mega-menu.
+- Static Next Header preview заменён актуальным трёхколоночным меню с category icons, четырьмя product cards в ряд, internal scroll и body scroll lock.
+- Для ещё не перенесённых public pages добавлен временный localized legacy bridge; native App Router pages будут автоматически иметь приоритет.
+- `next:build` проходит; полная visual Home parity и native SSR Catalog остаются in progress.
+
 ## 2026-08-20 — Next.js App Router foundation without UI changes
 
 - Добавлен минимальный Next.js App Router runtime параллельно текущему Vite SPA.

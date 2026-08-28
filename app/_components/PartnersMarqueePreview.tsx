@@ -4,8 +4,6 @@ import { useEffect, useRef, useState } from 'react';
 import type { BrandItem } from '../_lib/home-data';
 import type { Language } from './HeaderPreview';
 
-const production = 'https://www.sporto.md';
-
 export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem[]; language: Language }) {
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const track = useRef<HTMLDivElement>(null);
@@ -84,7 +82,7 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
 
   return (
     <div className="bg-white border-y border-gray-100 py-5">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 mb-4">
         <p className="text-[10px] uppercase tracking-[0.2em] text-gray-300">
           {language === 'ro' ? 'Mărci partenere — click pentru catalog' : 'Бренды-партнёры — нажмите для каталога'}
         </p>
@@ -114,7 +112,7 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
             return (
               <a
                 key={itemId}
-                href={`${production}/brands/${brand.slug}`}
+                href={`/${language}/brands/${brand.slug}`}
                 onMouseEnter={() => setHoveredId(itemId)}
                 onMouseLeave={() => setHoveredId(null)}
                 className="relative flex-shrink-0 select-none focus:outline-none w-[180px] h-12 flex items-center justify-center"

@@ -52,7 +52,7 @@ Consequences: Functions, headers, deploy, analytics and rollback need explicit r
 
 ## ADR-007 — Isolated migration and delayed cutover
 
-Status: **CONFIRMED**  
+Status: **CONFIRMED**
 Date: 2026-08-10  
 Context: Существующий production должен оставаться стабильным. Branch `feature/next-ssr` и tag `pre-ssr-migration` существуют.  
 Decision: Миграция ведётся в отдельной branch; production не переключается до полной staging/final verification.  
@@ -72,7 +72,13 @@ Consequences: Старые SPA/Vercel paths нельзя удалять до п�
 - Exact treatment of admin UI locale URLs.
 - Indexability/canonical rules for each catalog query parameter.
 - AI crawler allow/disallow policy.
-- Vercel Analytics replacement or removal.
 - Browser EmailJS preservation versus server-side mail submission.
 - Active status of `scripts/prerender-products.mjs` and `api/site-meta.ts`.
 
+## ADR-008 — Remove Vercel Analytics without replacement
+
+Status: **CONFIRMED** — 2026-08-27
+
+Context: Target production moves to self-hosted Host.md and should not retain an unnecessary Vercel runtime dependency.
+Decision: Remove `@vercel/analytics` from both Vite and Next runtimes and from package manifests. Do not add a replacement analytics service during the current migration.
+Consequences: Cookie consent remains available for essential preferences and future integrations, but the Next runtime currently loads no external analytics service.

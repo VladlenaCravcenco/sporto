@@ -2,6 +2,81 @@
 @import './tailwind.css';
 @import './theme.css';
 
+/* Typography: use weight and tone for hierarchy instead of all-caps and
+   artificial letter spacing. These rules intentionally normalize legacy
+   utility classes across the public site and admin interface. */
+body * {
+  letter-spacing: normal !important;
+}
+
+body .uppercase {
+  text-transform: none !important;
+  font-weight: 600;
+}
+
+body .tracking-wider,
+body .tracking-widest {
+  letter-spacing: normal !important;
+}
+
+/* Slightly larger, more legible public typography. */
+body .text-xs {
+  font-size: 0.8125rem !important;
+  line-height: 1.25rem !important;
+}
+
+body .text-sm {
+  font-size: 0.9375rem !important;
+  line-height: 1.4rem !important;
+}
+
+body .text-base {
+  font-size: 1.0625rem !important;
+  line-height: 1.6rem !important;
+}
+
+body .text-xl {
+  font-size: 1.375rem !important;
+  line-height: 1.8rem !important;
+}
+
+body .text-\[9px\] {
+  font-size: 0.6875rem !important;
+  line-height: 1rem !important;
+}
+
+body .text-\[10px\] {
+  font-size: 0.75rem !important;
+  line-height: 1.05rem !important;
+}
+
+body .text-\[11px\] {
+  font-size: 0.8125rem !important;
+  line-height: 1.15rem !important;
+}
+
+body .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+body .text-gray-500 {
+  color: #4b5563 !important;
+}
+
+body h1,
+body h2,
+body h3 {
+  font-weight: 600;
+}
+
+/* Consistent radius for red interactive CTAs only. */
+button[class*="bg-red-"],
+a[class*="bg-red-"],
+button[class*="from-red-"],
+a[class*="from-red-"] {
+  border-radius: 5px !important;
+}
+
 @keyframes bell-ring {
   0%   { transform: rotate(0deg); }
   15%  { transform: rotate(18deg); }

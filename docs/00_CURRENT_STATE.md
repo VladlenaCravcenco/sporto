@@ -4,7 +4,7 @@
 
 SPORTO — React 18 SPA на TypeScript и Vite. Браузер монтирует приложение из `src/main.tsx`, providers определены в `src/app/App.tsx`, маршрутизация работает через React Router в `src/app/routes.tsx`. Клиент напрямую обращается к Supabase через `@supabase/supabase-js`; отдельные SEO и submission-сценарии обслуживают Vercel Functions из `api/`.
 
-Подтверждённый основной stack из `package.json`: React `18.3.1`, React DOM `18.3.1`, TypeScript `5.8.3`, Vite `6.3.5`, React Router `7.13.0`, Supabase JS `^2.98.0`, React Helmet Async `^3.0.0`, Tailwind CSS `4.1.12`, EmailJS Browser `^4.4.1`, Vercel Analytics `^2.0.1`. Runtime requirement: Node.js `>=18.0.0`.
+Подтверждённый основной stack из `package.json`: React `18.3.1`, React DOM `18.3.1`, TypeScript `5.8.3`, Vite `6.3.5`, Next.js `16.2.4`, React Router `7.13.0`, Supabase JS `^2.98.0`, React Helmet Async `^3.0.0`, Tailwind CSS `4.1.12`, EmailJS Browser `^4.4.1`. Vercel Analytics удалён 2026-08-27. Runtime requirement: Node.js `>=18.0.0`.
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,7 @@ flowchart LR
 
 | Path | Назначение |
 |---|---|
-| `src/main.tsx` | `ReactDOM.createRoot`, `HelmetProvider`, Vercel Analytics |
+| `src/main.tsx` | `ReactDOM.createRoot`, `HelmetProvider` для legacy Vite SPA |
 | `src/app/App.tsx` | `AuthProvider`, `LanguageProvider`, `CartProvider`, `CategoriesProvider`, `RouterProvider` |
 | `src/app/routes.tsx` | Все React Router routes |
 | `src/app/Layout.tsx` | Публичный layout |
@@ -212,7 +212,7 @@ Confirmed channels: `categories-realtime`, `site-popup-config`, `admin-order-ins
 | `window.gtag` | `src/lib/googleAds.ts` | Google Ads conversion | Client only |
 | `document.cookie` | `src/app/components/ui/sidebar.tsx` | Sidebar state | Browser mutation; unrelated to current Auth flow |
 
-Browser-oriented dependencies include `@emailjs/browser`, `@vercel/analytics`, `react-helmet-async`, `react-window`, `react-dnd-html5-backend` and UI components that use DOM events. Their exact Next boundary remains **REVIEW** per component.
+Browser-oriented dependencies include `@emailjs/browser`, `react-helmet-async`, `react-window`, `react-dnd-html5-backend` and UI components that use DOM events. Their exact Next boundary remains **REVIEW** per component. `@vercel/analytics` уже удалён.
 
 ## Fetch and external calls
 
@@ -221,7 +221,7 @@ Browser-oriented dependencies include `@emailjs/browser`, `@vercel/analytics`, `
 - `api/product-meta.ts`, `api/seo-page.ts`, `api/sitemap.ts` fetch Supabase REST with anon key.
 - `api/order-request.ts` fetches Supabase REST with `SUPABASE_SERVICE_ROLE_KEY`.
 - `src/lib/emailService.ts`, `Contacts.tsx`, `ConsultationModal.tsx`, `PriceListModal.tsx` call EmailJS in the browser.
-- `src/main.tsx` mounts `@vercel/analytics/react`; `src/lib/googleAds.ts` calls `window.gtag` if present.
+- `src/lib/googleAds.ts` calls `window.gtag` if present. Vercel Analytics больше не монтируется ни в Vite, ни в Next.
 
 ## Vercel
 

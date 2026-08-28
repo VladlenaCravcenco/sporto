@@ -207,7 +207,7 @@ export function Header() {
 
       {/* ── ROW 1: Logo · Search · Actions ── */}
       <div className="border-b border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-2 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-2 sm:px-6 lg:px-8">
           <div className="flex items-center h-12 md:h-16 gap-2 md:gap-6">
 
             {/* Logo */}
@@ -281,8 +281,8 @@ export function Header() {
                     </div>
                   </div>
 
-                  <div className="flex-1 min-w-0 min-h-0 py-3 px-4 overflow-y-auto overscroll-contain">
-                    <div className="flex items-center justify-between gap-4 pb-2 mb-3 border-b border-gray-100">
+                  <div className="flex-1 min-w-0 min-h-0 py-3 px-4 bg-[#f5f6f7] overflow-y-auto overscroll-contain">
+                    <div className="flex items-center justify-between gap-4 pb-2 mb-3 border-b border-gray-200">
                       <span className="text-xs text-gray-400 uppercase tracking-[0.15em] line-clamp-1">
                         {activeSub?.name[language as Lang]}
                       </span>
@@ -300,7 +300,7 @@ export function Header() {
                     {menuProductsLoading ? (
                       <div className="grid grid-cols-2 xl:grid-cols-4 gap-3">
                         {Array.from({ length: 12 }).map((_, index) => (
-                          <div key={index} className="animate-pulse">
+                          <div key={index} className="animate-pulse bg-white p-2">
                             <div className="aspect-square bg-gray-50" />
                             <div className="h-2 bg-gray-100 mt-2 w-4/5" />
                           </div>
@@ -313,9 +313,9 @@ export function Header() {
                             key={product.id}
                             to={buildProductPath(product, language as Lang)}
                             onClick={() => setCatalogOpen(false)}
-                            className="group/product min-w-0"
+                            className="group/product min-w-0 bg-white p-2"
                           >
-                            <div className="aspect-square bg-gray-50 overflow-hidden flex items-center justify-center">
+                            <div className="aspect-square bg-white overflow-hidden flex items-center justify-center">
                               {product.image ? (
                                 <img src={product.image} alt={product.name[language as Lang]} className="w-full h-full object-contain p-2 transition-transform duration-300 group-hover/product:scale-105" loading="lazy" />
                               ) : (
@@ -476,7 +476,7 @@ export function Header() {
 
       {/* ── ROW 2: Nav · Catalog mega-dropdown ── desktop only */}
       <div className="hidden md:block border-b border-gray-100 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <nav className="flex items-center h-10">
 
             <Link
