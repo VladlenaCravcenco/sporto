@@ -69,7 +69,7 @@ export function FeaturedProductsSlider({ products, language }: { products: Featu
 
         <div
           ref={viewport}
-          className="flex gap-3 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+          className="flex items-start gap-3 overflow-x-auto snap-x snap-mandatory pt-2 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
           onMouseEnter={() => { paused.current = true; }}
           onMouseLeave={() => { paused.current = false; }}
           onPointerDown={() => { paused.current = true; }}

@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import { ArrowLeft, ArrowRight, ArrowUpRight, Package, ShieldCheck, Tag } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
-import { getCatalogPageData, type CatalogProduct } from '../../_lib/catalog-data';
+import { getCatalogPageData, type CatalogProduct, type CatalogSort } from '../../_lib/catalog-data';
 import type { Language } from '../../_components/HeaderPreview';
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.VITE_SITE_URL || 'https://www.sporto.md').replace(/\/+$/, '');
@@ -43,8 +43,20 @@ function parsePage(rawValue: string | string[] | undefined) {
   return Number.isSafeInteger(page) && page > 0 ? page : null;
 }
 
-function pageHref(language: Language, page: number) {
-  return page === 1 ? `/${language}/catalog` : `/${language}/catalog?page=${page}`;
+function parseSort(rawValue: string | string[] | undefined): CatalogSort | null {
+  if (rawValue === undefined) return 'recommended';
+  if (Array.isArray(rawValue)) return null;
+  return rawValue === 'recommended' || rawValue === 'price-asc' || rawValue === 'price-desc' || rawValue === 'name-asc'
+    ? rawValue
+    : null;
+}
+
+function catalogHref(language: Language, page: number, sort: CatalogSort) {
+  const params = new URLSearchParams();
+  if (sort !== 'recommended') params.set('sort', sort);
+  if (page > 1) params.set('page', String(page));
+  const query = params.toString();
+  return `/${language}/catalog${query ? `?${query}` : ''}`;
 }
 
 function ProductCard({ product, language }: { product: CatalogProduct; language: Language }) {
@@ -114,7 +126,7 @@ export async function generateMetadata({ params, searchParams }: CatalogPageProp
   const isRo = lang === 'ro';
   const parsedPage = parsePage(query.page);
   const page = parsedPage && parsedPage > 1 ? parsedPage : 1;
-  const canonical = `${siteUrl}${pageHref(lang as Language, page)}`;
+  const canonical = `${siteUrl}${catalogHref(lang as Language, page, 'recommended')}`;
   const pageSuffix = page > 1 ? (isRo ? ` — pagina ${page}` : ` — страница ${page}`) : '';
 
   return {
@@ -127,9 +139,9 @@ export async function generateMetadata({ params, searchParams }: CatalogPageProp
     alternates: {
       canonical,
       languages: {
-        ro: `${siteUrl}${pageHref('ro', page)}`,
-        ru: `${siteUrl}${pageHref('ru', page)}`,
-        'x-default': `${siteUrl}${pageHref('ro', page)}`,
+        ro: `${siteUrl}${catalogHref('ro', page, 'recommended')}`,
+        ru: `${siteUrl}${catalogHref('ru', page, 'recommended')}`,
+        'x-default': `${siteUrl}${catalogHref('ro', page, 'recommended')}`,
       },
     },
   };
@@ -140,10 +152,13 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
   if (!languages.has(lang as Language)) notFound();
   const language = lang as Language;
   const page = parsePage(query.page);
-  if (page === null) redirect(`/${language}/catalog`);
-  if (page === 1 && query.page !== undefined) redirect(`/${language}/catalog`);
+  const sort = parseSort(query.sort);
+  if (page === null || sort === null) redirect(`/${language}/catalog`);
+  if ((page === 1 && query.page !== undefined) || (sort === 'recommended' && query.sort !== undefined)) {
+    redirect(catalogHref(language, page, sort));
+  }
 
-  const data = await getCatalogPageData(page);
+  const data = await getCatalogPageData(page, 24, sort, language);
   if (data.status === 'out-of-range') notFound();
 
   return (
@@ -163,19 +178,39 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
 
         {data.status === 'ready' && data.products.length > 0 && (
           <>
-            <div className="mb-5 flex items-center justify-between gap-4">
+            <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
               <p className="text-sm text-gray-500">
                 {language === 'ro'
                   ? `${data.totalProducts} produse`
                   : `${data.totalProducts} товаров`}
               </p>
-              {data.totalPages > 1 && (
-                <p className="text-sm font-medium text-gray-700">
-                  {language === 'ro'
-                    ? `Pagina ${data.page} din ${data.totalPages}`
-                    : `Страница ${data.page} из ${data.totalPages}`}
-                </p>
-              )}
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+                {data.totalPages > 1 && (
+                  <p className="pb-2.5 text-sm font-medium text-gray-700">
+                    {language === 'ro'
+                      ? `Pagina ${data.page} din ${data.totalPages}`
+                      : `Страница ${data.page} из ${data.totalPages}`}
+                  </p>
+                )}
+                <form action={`/${language}/catalog`} method="get" className="flex items-end gap-2">
+                  <label className="flex min-w-[220px] flex-col gap-1.5 text-sm font-medium text-gray-700">
+                    {language === 'ro' ? 'Sortare' : 'Сортировка'}
+                    <select
+                      name="sort"
+                      defaultValue={sort}
+                      className="h-11 rounded-[5px] border border-gray-300 bg-white px-3 text-sm font-medium text-gray-800 outline-none transition-colors focus:border-gray-900"
+                    >
+                      <option value="recommended">{language === 'ro' ? 'Recomandate' : 'Рекомендуемые'}</option>
+                      <option value="price-asc">{language === 'ro' ? 'Preț crescător' : 'Сначала дешевле'}</option>
+                      <option value="price-desc">{language === 'ro' ? 'Preț descrescător' : 'Сначала дороже'}</option>
+                      <option value="name-asc">{language === 'ro' ? 'După denumire' : 'По названию'}</option>
+                    </select>
+                  </label>
+                  <button type="submit" className="h-11 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
+                    {language === 'ro' ? 'Aplică' : 'Применить'}
+                  </button>
+                </form>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
@@ -187,7 +222,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
             {data.totalPages > 1 && (
               <nav aria-label={language === 'ro' ? 'Paginarea catalogului' : 'Пагинация каталога'} className="mt-10 flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
                 {data.page > 1 ? (
-                  <a href={pageHref(language, data.page - 1)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-900">
+                  <a href={catalogHref(language, data.page - 1, sort)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-900">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     {language === 'ro' ? 'Înapoi' : 'Назад'}
                   </a>
@@ -200,7 +235,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                       <span key={item} className="flex items-center gap-2">
                         {index > 0 && item - visiblePages[index - 1] > 1 && <span className="px-1 text-gray-400">…</span>}
                         <a
-                          href={pageHref(language, item)}
+                          href={catalogHref(language, item, sort)}
                           aria-current={item === data.page ? 'page' : undefined}
                           className={`flex h-11 min-w-11 items-center justify-center rounded-[5px] border px-3 text-sm font-semibold transition-colors ${item === data.page ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-900'}`}
                         >
@@ -211,7 +246,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                 </div>
 
                 {data.page < data.totalPages ? (
-                  <a href={pageHref(language, data.page + 1)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
+                  <a href={catalogHref(language, data.page + 1, sort)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
                     {language === 'ro' ? 'Înainte' : 'Далее'}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>

@@ -282,7 +282,7 @@ export function Home() {
           {/* Products bento grid */}
           <div
             ref={featuredViewport}
-            className="flex gap-3 overflow-x-auto snap-x snap-mandatory [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            className="flex items-start gap-3 overflow-x-auto snap-x snap-mandatory pt-2 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
             onMouseEnter={() => { featuredPaused.current = true; }}
             onMouseLeave={() => { featuredPaused.current = false; }}
           >

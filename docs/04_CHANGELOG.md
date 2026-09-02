@@ -1,5 +1,16 @@
 # Migration Changelog
 
+## 2026-09-02 — Native SSR Catalog sorting
+
+- Добавлены server-side варианты `recommended`, `price-asc`, `price-desc` и `name-asc`.
+- Default recommended order сохраняет merchandising priority inSPORTline → остальные бренды.
+- Price и name sorting применяются ко всему active catalog с deterministic `id` tie-breaker.
+- Выбранный `sort` хранится в URL и сохраняется во всех pagination links; смена sorting начинается с первой страницы.
+- Default `sort=recommended` нормализуется до URL без лишнего query parameter, invalid sort возвращает canonical catalog URL.
+- Sorting form работает как обычный GET и остаётся функциональным без client JavaScript.
+- Sorting query не индексируется как отдельная canonical copy: canonical/hreflang указывают на соответствующую default catalog page.
+- `next:build` проходит.
+
 ## 2026-08-27 — Native SSR Catalog pagination
 
 - Добавлена server-side pagination по 24 товара с точным total count из Supabase.

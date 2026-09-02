@@ -37,6 +37,9 @@ export interface CatalogProduct {
   has_warranty: boolean;
 }
 
+export type CatalogSort = 'recommended' | 'price-asc' | 'price-desc' | 'name-asc';
+export type CatalogLanguage = 'ro' | 'ru';
+
 export type CatalogPageData =
   | {
       status: 'ready';
@@ -127,13 +130,76 @@ export async function getCatalogMenuProducts(
   return error ? [] : (data as CatalogMenuProduct[]);
 }
 
-export async function getCatalogPageData(page = 1, pageSize = 24): Promise<CatalogPageData> {
+export async function getCatalogPageData(
+  page = 1,
+  pageSize = 24,
+  sort: CatalogSort = 'recommended',
+  language: CatalogLanguage = 'ro',
+): Promise<CatalogPageData> {
   const supabase = createServerSupabase();
   if (!supabase) return { status: 'unavailable', products: [] };
 
   const safePage = Math.max(Math.trunc(page), 1);
   const safePageSize = Math.min(Math.max(Math.trunc(pageSize), 1), 48);
   const fields = 'id,name_ro,name_ru,sku,brand,category,subcategory,price,sale_price,image_url,qty,has_warranty';
+
+  if (sort !== 'recommended') {
+    const countResult = await supabase
+      .from('products')
+      .select('id', { count: 'exact', head: true })
+      .eq('active', true);
+
+    if (countResult.error) {
+      return { status: 'error', products: [], message: countResult.error.message };
+    }
+
+    const totalProducts = countResult.count ?? 0;
+    const totalPages = Math.ceil(totalProducts / safePageSize);
+    if (totalPages > 0 && safePage > totalPages) {
+      return { status: 'out-of-range', products: [], totalPages };
+    }
+    if (totalProducts === 0) {
+      return {
+        status: 'ready',
+        products: [],
+        page: 1,
+        pageSize: safePageSize,
+        totalProducts: 0,
+        totalPages: 0,
+      };
+    }
+
+    const from = (safePage - 1) * safePageSize;
+    const to = Math.min(from + safePageSize - 1, totalProducts - 1);
+    let productsQuery = supabase
+      .from('products')
+      .select(fields)
+      .eq('active', true);
+
+    if (sort === 'price-asc') {
+      productsQuery = productsQuery.order('price', { ascending: true }).order('id', { ascending: true });
+    } else if (sort === 'price-desc') {
+      productsQuery = productsQuery.order('price', { ascending: false }).order('id', { ascending: true });
+    } else {
+      productsQuery = productsQuery
+        .order(language === 'ru' ? 'name_ru' : 'name_ro', { ascending: true, nullsFirst: false })
+        .order('id', { ascending: true });
+    }
+
+    const productsResult = await productsQuery.range(from, to);
+    if (productsResult.error) {
+      return { status: 'error', products: [], message: productsResult.error.message };
+    }
+
+    return {
+      status: 'ready',
+      products: productsResult.data as CatalogProduct[],
+      page: safePage,
+      pageSize: safePageSize,
+      totalProducts,
+      totalPages,
+    };
+  }
 
   const [preferredCountResult, remainingCountResult] = await Promise.all([
     supabase

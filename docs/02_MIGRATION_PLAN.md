@@ -13,7 +13,7 @@ In progress:
 
 - Next.js public locale layout и SSR Home для `/ro` и `/ru`.
 - Общие public-компоненты: Header, Footer, contacts sticker, cookie consent; promo popup перенесён, но принудительно отключён.
-- Server data layer каталога и native `/ro/catalog`/`/ru/catalog` готовы для первой выборки; filters, sorting, pagination и cart integration ещё не перенесены.
+- Server data layer каталога и native `/ro/catalog`/`/ru/catalog` поддерживают SSR pagination и sorting; filters и cart integration ещё не перенесены.
 
 ## Phase 0 — Безопасность и исходное состояние production
 
@@ -127,7 +127,7 @@ In progress:
   - In progress: hero, promo counter, featured products и brands работают; categories, services, why-us, CTA и полная ProductCard parity ещё не перенесены.
 - [ ] Мигрировать Catalog.
   - Verify: products, categories, filters initial state и H1 присутствуют в server HTML согласно утверждённой indexability policy.
-  - In progress: native localized route, metadata, server product query, 24-product grid, SSR pagination и distinct empty/error states готовы; filters, user-selectable sorting и cart integration ещё не перенесены.
+  - In progress: native localized route, metadata, server product query, 24-product grid, SSR pagination/sorting и distinct empty/error states готовы; filters и cart integration ещё не перенесены.
 - [ ] Реализовать SSR category и subcategory states/pages.
   - Verify: уникальные heading, description и product links присутствуют в HTML.
 - [ ] Мигрировать ProductDetail с полным пользовательским контентом:
@@ -217,7 +217,7 @@ In progress:
 ### Catalog ordering
 
 - [ ] Реализовать утверждённый порядок выдачи товаров.
-  - In progress: SSR pagination сохраняет deterministic порядок inSPORTline → остальные бренды; полный ordering вместе с filters и user-selectable sorting ещё не реализован.
+  - In progress: default SSR ordering сохраняет deterministic порядок inSPORTline → остальные бренды; price/name sorting и pagination готовы, интеграция ordering с filters ещё не реализована.
 - [ ] Обеспечить deterministic ordering вместе с filters, search и pagination.
 
 ## Phase 8 — Open Graph, robots, AI-боты и sitemap
