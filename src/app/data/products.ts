@@ -26,6 +26,7 @@ export interface Product {
   pricePerSet?: number; // undefined → price × minOrder
   brand?: string;     // Brand name (e.g. "HMS", "Technogym") — from Supabase
   youtubeId?: string;   // extracted from youtube_url in DB
+  hasWarranty?: boolean; // product is sold with a warranty
 }
 
 export interface Category {
