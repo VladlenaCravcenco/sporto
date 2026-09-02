@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { signIn } from '@/lib/auth/actions';
 
 const translations = {
@@ -30,12 +31,14 @@ const translations = {
 } as const;
 
 export default function LoginPage() {
+  const searchParams = useSearchParams();
+  const locale = (searchParams.get('lang') || 'ro') as 'ro' | 'ru';
+  const t = translations[locale];
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const locale = 'ro'; // TODO: Get from URL params or context
-  const t = translations[locale as keyof typeof translations];
 
   async function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -99,12 +102,12 @@ export default function LoginPage() {
       </form>
 
       <div className="mt-6 text-center space-y-2">
-        <Link href="/forgot-password" className="block text-sm text-red-600 hover:text-red-700">
+        <Link href={`/forgot-password?lang=${locale}`} className="block text-sm text-red-600 hover:text-red-700">
           {t.forgotPassword}
         </Link>
         <p className="text-sm text-gray-600">
           {t.noAccount}{' '}
-          <Link href="/register" className="text-red-600 hover:text-red-700 font-medium">
+          <Link href={`/register?lang=${locale}`} className="text-red-600 hover:text-red-700 font-medium">
             {t.register}
           </Link>
         </p>
