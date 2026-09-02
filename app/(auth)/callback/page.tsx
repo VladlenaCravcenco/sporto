@@ -2,8 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBrowserClient } from '@supabase/ssr';
-import type { Database } from '@/lib/supabase/database.types';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CallbackPage() {
   const router = useRouter();
@@ -13,10 +12,7 @@ export default function CallbackPage() {
   useEffect(() => {
     async function handleCallback() {
       try {
-        const supabase = createBrowserClient<Database>(
-          process.env.NEXT_PUBLIC_SUPABASE_URL!,
-          process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-        );
+        const supabase = createClient();
 
         // Get the session from the URL
         const { data: { session }, error } = await supabase.auth.getSession();
