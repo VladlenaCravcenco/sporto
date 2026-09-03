@@ -1,5 +1,5 @@
-import { useState, type ReactNode } from 'react';
-import { useSupabaseFeatured, useProductCount, useCategoryCount, usePromoCount } from '../hooks/useSupabaseProducts';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useSupabaseFeatured, usePromoCount } from '../hooks/useSupabaseProducts';
 import { Link } from 'react-router';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useCategories } from '../contexts/CategoriesContext';
@@ -14,7 +14,6 @@ import { ConsultationModal } from '../components/ConsultationModal';
 import { YinYang } from '../components/icons/YinYang';
 import { TableTennis } from '../components/icons/TableTennis';
 import { getCategoryIcon } from '../lib/category-icons';
-import { buildProductPath } from '../lib/product-url';
 import {
   Dumbbell,
   Bike,
@@ -27,7 +26,6 @@ import {
   Gamepad2,
   Building2,
   TreePine,
-  Package,
   ArrowRight,
   Wrench,
   CheckCircle,
@@ -41,6 +39,8 @@ import {
   Wind,
   Target,
   Sparkles,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 
 export function Home() {
@@ -49,20 +49,39 @@ export function Home() {
   const { products: featuredProducts, loading: featuredLoading } = useSupabaseFeatured();
   const { banners, loading: bannersLoading } = useSupabaseBanners();
   const [modalOpen, setModalOpen] = useState(false);
-  const productCount = useProductCount();
-  const categoryCount = useCategoryCount();
   const promoCount = usePromoCount();
+  const featuredViewport = useRef<HTMLDivElement>(null);
+  const featuredPaused = useRef(false);
+
+  const scrollFeatured = useCallback((direction: 1 | -1) => {
+    if (!featuredViewport.current) return;
+    const card = featuredViewport.current.querySelector<HTMLElement>('[data-featured-card]');
+    const distance = (card?.offsetWidth ?? 280) + 12;
+    const atEnd = featuredViewport.current.scrollLeft + featuredViewport.current.clientWidth >= featuredViewport.current.scrollWidth - 8;
+    const atStart = featuredViewport.current.scrollLeft <= 8;
+
+    if (direction === 1 && atEnd) {
+      featuredViewport.current.scrollTo({ left: 0, behavior: 'smooth' });
+      return;
+    }
+    if (direction === -1 && atStart) {
+      featuredViewport.current.scrollTo({ left: featuredViewport.current.scrollWidth, behavior: 'smooth' });
+      return;
+    }
+    featuredViewport.current.scrollBy({ left: direction * distance, behavior: 'smooth' });
+  }, []);
+
+  useEffect(() => {
+    if (featuredProducts.length < 2) return;
+    const timer = window.setInterval(() => {
+      if (!featuredPaused.current) scrollFeatured(1);
+    }, 4500);
+    return () => window.clearInterval(timer);
+  }, [featuredProducts.length, scrollFeatured]);
 
   const lang = language as Language;
   const seo = SEO_PAGES.home[lang];
   const canonicalPath = lang === 'ru' ? '/ru' : '/';
-
-  const stats = [
-    { value: '2023', label: language === 'ro' ? 'Fondată în' : 'Год основания' },
-    { value: 'B2B', label: language === 'ro' ? 'Prețuri wholesale' : 'Оптовые цены' },
-    { value: '24h', label: language === 'ro' ? 'Timp de răspuns' : 'Время ответа' },
-    { value: 'EU', label: language === 'ro' ? 'Echipamente italiene' : 'Техника из Италии' },
-  ];
 
   const hasBanners = !bannersLoading && banners.length > 0;
 
@@ -78,7 +97,7 @@ export function Home() {
 
       {/* ─── BENTO HERO ─── */}
       <section className="bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
           <div className="grid grid-cols-12 gap-2 md:gap-3">
 
             {/* Main Hero Card — dark, spans 8 cols */}
@@ -122,30 +141,20 @@ export function Home() {
 
             {/* Right column — 2 stacked cards */}
             <div className="col-span-12 lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-2 md:gap-3">
-              {/* Combined Products & Categories card */}
               <Link 
-                to="/catalog"
-                className="bg-gray-950 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[120px] lg:min-h-0 lg:flex-1 group hover:bg-gray-900 transition-colors cursor-pointer"
+                to="/turnkey-solutions"
+                className="bg-gray-950 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[180px] lg:min-h-0 lg:flex-1 group hover:bg-black transition-colors cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <span className="text-[10px] sm:text-xs text-gray-500 uppercase tracking-wider sm:tracking-widest leading-tight">
-                    {language === 'ro' ? 'Catalog' : 'Каталог'}
-                  </span>
-                  <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-gray-400 transition-colors" />
+                <div className="flex items-start justify-end mb-6">
+                  <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
                 </div>
-                <div className="space-y-4">
-                  <div>
-                    <div className="text-4xl sm:text-5xl md:text-6xl text-white tabular-nums leading-none">{productCount}</div>
-                    <div className="text-[10px] sm:text-xs text-gray-600 mt-1 uppercase tracking-widest">
-                      {language === 'ro' ? 'produse' : 'товаров'}
-                    </div>
+                <div>
+                  <div className="text-2xl sm:text-3xl lg:text-4xl text-white uppercase leading-tight mb-4">
+                    {language === 'ro' ? 'Soluții la cheie' : 'Решения под ключ'}
                   </div>
-                  <div className="flex items-end gap-3 pt-2 border-t border-gray-800">
-                    <div className="text-2xl sm:text-3xl text-white tabular-nums leading-none">{categoryCount}</div>
-                    <div className="text-[10px] sm:text-xs text-gray-600 uppercase tracking-widest pb-0.5">
-                      {language === 'ro' ? 'categorii' : 'категорий'}
-                    </div>
-                  </div>
+                  <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm mb-5">
+                    {language === 'ro' ? 'De la proiectare și selecția echipamentelor până la livrare și instalare.' : 'От проектирования и подбора оборудования до доставки и установки.'}
+                  </p>
                 </div>
               </Link>
               {/* Promos card */}
@@ -154,43 +163,26 @@ export function Home() {
                 className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[120px] lg:min-h-0 lg:flex-1 group hover:from-red-700 hover:to-red-800 transition-all cursor-pointer"
               >
                 <div className="flex items-start justify-between mb-3">
-                  <span className="text-[10px] sm:text-xs text-red-200 uppercase tracking-wider sm:tracking-widest leading-tight">
-                    {language === 'ro' ? 'Promoții' : 'Акции'}
-                  </span>
+                  <span />
                   <Tag className="w-4 h-4 text-red-300 group-hover:text-white transition-colors" />
                 </div>
                 <div>
                   <div className="text-5xl sm:text-6xl md:text-7xl text-white tabular-nums leading-none">{promoCount}</div>
                   <div className="text-[10px] sm:text-xs text-red-200 mt-1 uppercase tracking-widest">
-                    {language === 'ro' ? 'cu reducere' : 'со скидкой'}
+                    {language === 'ro' ? 'Promoții cu reducere' : 'Товаров со скидкой'}
                   </div>
                 </div>
               </Link>
-            </div>
-
-            {/* Bottom Stats strip */}
-            <div className="col-span-12 grid grid-cols-4 border border-gray-100">
-              {stats.map((stat, i) => (
-                <div
-                  key={stat.value}
-                  className={`px-5 py-5 text-center ${i < 3 ? 'border-r border-gray-100' : ''}`}
-                >
-                  <div className="text-sm md:text-base text-black tabular-nums">{stat.value}</div>
-                  <div className="text-xs text-gray-400 mt-0.5">{stat.label}</div>
-                </div>
-              ))}
             </div>
 
           </div>
         </div>
       </section>
 
-      {/* ─── PARTNERS MARQUEE ── */}
-      <PartnersMarquee />
-
+      <div className="flex flex-col">
       {/* ─── CATEGORIES BENTO ─── */}
-      <section className="py-12 md:py-16 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="order-2 py-12 md:py-16 bg-gray-50">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-6">
             <div>
               <h2 className="text-xl text-gray-900">{t('categories.title')}</h2>
@@ -264,33 +256,46 @@ export function Home() {
       </section>
 
       {/* ─── FEATURED PRODUCTS BENTO ─── */}
-      <section className="py-12 md:py-16 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="order-1 py-12 md:py-16 bg-white">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-6">
             <div>
               <h2 className="text-xl text-gray-900">{t('products.featured')}</h2>
             </div>
-            <Link
-              to="/catalog"
-              className="text-xs text-gray-400 hover:text-black flex items-center gap-1.5 transition-colors uppercase tracking-wider"
-            >
-              {t('products.all')}
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
+            <div className="flex items-center gap-2">
+              <Link
+                to="/catalog"
+                className="hidden sm:flex text-xs text-gray-400 hover:text-black items-center gap-1.5 transition-colors uppercase tracking-wider"
+              >
+                {t('products.all')}
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+              <button type="button" onClick={() => scrollFeatured(-1)} className="w-9 h-9 border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors">
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+              <button type="button" onClick={() => scrollFeatured(1)} className="w-9 h-9 border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors">
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            </div>
           </div>
 
           {/* Products bento grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3">
+          <div
+            ref={featuredViewport}
+            className="flex items-start gap-3 overflow-x-auto snap-x snap-mandatory pt-2 pb-10 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+            onMouseEnter={() => { featuredPaused.current = true; }}
+            onMouseLeave={() => { featuredPaused.current = false; }}
+          >
 
             {featuredLoading ? (
               Array.from({ length: 7 }).map((_, i) => (
                 <div
                   key={i}
-                  className={`animate-pulse bg-gray-100 ${i === 0 ? 'col-span-2 row-span-2 min-h-[320px]' : 'min-h-[160px]'}`}
+                  className="flex-none w-[78vw] sm:w-[300px] lg:w-[calc((100%_-_36px)_/_4)] aspect-[3/4] animate-pulse bg-gray-100"
                 />
               ))
             ) : featuredProducts.length === 0 ? (
-              <div className="col-span-4 py-16 text-center">
+              <div className="w-full py-16 text-center">
                 <p className="text-sm text-gray-400 mb-3">
                   {language === 'ro'
                     ? 'Niciun produs recomandat selectat.'
@@ -305,62 +310,8 @@ export function Home() {
               </div>
             ) : (
               <>
-                {/* Large featured product */}
-                {featuredProducts[0] && (
-                  <div className="col-span-2 row-span-1 md:row-span-2">
-                    <Link
-                      to={buildProductPath(featuredProducts[0], language as 'ro' | 'ru')}
-                      className="group block bg-black text-white h-full min-h-[240px] overflow-hidden relative flex flex-col"
-                    >
-                      <svg className="absolute inset-0 w-full h-full opacity-5" xmlns="http://www.w3.org/2000/svg">
-                        <defs>
-                          <pattern id="grid-feat" width="32" height="32" patternUnits="userSpaceOnUse">
-                            <path d="M32 0 L0 0 0 32" fill="none" stroke="#fff" strokeWidth="0.5" />
-                          </pattern>
-                        </defs>
-                        <rect width="100%" height="100%" fill="url(#grid-feat)" />
-                      </svg>
-                      {featuredProducts[0].image ? (
-                        <img
-                          src={featuredProducts[0].image}
-                          alt={featuredProducts[0].name[language as Language]}
-                          className="absolute inset-0 w-full h-full object-cover opacity-30"
-                        />
-                      ) : null}
-                      <div className="relative z-10 p-6 flex flex-col h-full justify-between flex-1">
-                        <div className="flex items-start justify-between">
-                          <div className="w-10 h-10 bg-white/10 flex items-center justify-center">
-                            <Package className="w-5 h-5 text-gray-400" />
-                          </div>
-                          <ArrowUpRight className="w-4 h-4 text-gray-600 group-hover:text-white transition-colors" />
-                        </div>
-                        <div>
-                          <div className="text-xs text-gray-500 uppercase tracking-widest mb-2">
-                            {language === 'ro' ? 'Produs recomandat' : 'Рекомендуем'}
-                          </div>
-                          <h3 className="text-lg md:text-xl text-white mb-3 leading-snug">
-                            {featuredProducts[0].name[language as Language]}
-                          </h3>
-                          <div className="flex items-center justify-between">
-                            <div className="text-white">
-                              <span className="text-xl tabular-nums">
-                                {featuredProducts[0].price.toLocaleString()}
-                              </span>
-                              <span className="text-xs text-gray-500 ml-1">MDL</span>
-                            </div>
-                            <span className="text-xs text-gray-500 uppercase tracking-wider border border-gray-700 px-2 py-0.5">
-                              {language === 'ro' ? 'Detalii' : 'Подробнее'}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
-                    </Link>
-                  </div>
-                )}
-
-                {/* Regular products */}
-                {featuredProducts.slice(1, 7).map((product) => (
-                  <div key={product.id} className="col-span-1">
+                {featuredProducts.slice(0, 20).map((product) => (
+                  <div key={product.id} data-featured-card className="flex-none w-[78vw] sm:w-[300px] lg:w-[calc((100%_-_36px)_/_4)] snap-start flex [&>a]:w-full">
                     <ProductCard product={product} />
                   </div>
                 ))}
@@ -368,7 +319,7 @@ export function Home() {
             )}
 
             {/* CTA card */}
-            <div className="col-span-2 md:col-span-1 lg:col-span-1 border border-gray-200 p-6 flex flex-col justify-between bg-gray-50">
+            <div className="flex-none w-[78vw] sm:w-[300px] lg:w-[calc((100%_-_36px)_/_4)] snap-start border border-gray-200 p-6 flex flex-col justify-between bg-gray-50 min-h-[360px]">
               <div className="text-xs text-gray-400 uppercase tracking-widest">
                 {language === 'ro' ? 'Catalog complet' : 'Полный каталог'}
               </div>
@@ -390,10 +341,11 @@ export function Home() {
           </div>
         </div>
       </section>
+      </div>
 
       {/* ─── SERVICES BENTO ─── */}
       <section className="py-12 md:py-16 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-6">
             <h2 className="text-xl text-gray-900">{t('services.title')}</h2>
           </div>
@@ -404,7 +356,7 @@ export function Home() {
 
       {/* ─── WHY US BENTO ─── */}
       <section className="py-12 md:py-16 bg-white border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h2 className="text-xl text-gray-900">{t('about.title')}</h2>
           </div>
@@ -434,7 +386,7 @@ export function Home() {
 
       {/* ── CTA BENTO ─── */}
       <section className="py-12 md:py-16 bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-8 md:grid md:grid-cols-2 md:items-center">
             <div>
               <h2 className="text-2xl md:text-3xl text-white mb-4 leading-tight">{t('cta.title')}</h2>
@@ -457,6 +409,8 @@ export function Home() {
           </div>
         </div>
       </section>
+
+      <PartnersMarquee />
 
       <ConsultationModal
         open={modalOpen}

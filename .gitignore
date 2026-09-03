@@ -31,3 +31,4 @@ yarn-error.log*
 # Build output
 .tsbuildinfo
 node_modules/
+.next/
