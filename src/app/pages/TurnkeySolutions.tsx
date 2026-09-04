@@ -59,7 +59,7 @@ export function TurnkeySolutions() {
 
   const sections: Record<SectionKey, React.ReactNode> = {
     stats: content.show_stats ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-10 sm:py-16 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-10 sm:py-16 border-b border-gray-100">
         <div className="grid grid-cols-3 divide-x divide-gray-100">
           {content.stats.map((s: Stat, i: number) => (
             <div key={i} className="px-3 sm:px-8 first:pl-0 last:pr-0 py-4">
@@ -75,7 +75,7 @@ export function TurnkeySolutions() {
       </section>
     ) : null,
     services: content.show_services ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24">
           <div className="lg:col-span-4">
             <h2 className="text-[clamp(1.6rem,3vw,2.8rem)] leading-[1.1] tracking-tight whitespace-pre-line mb-8">
@@ -96,7 +96,7 @@ export function TurnkeySolutions() {
       </section>
     ) : null,
     process: content.show_process ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
         <div className="mb-10 sm:mb-16">
           <h2 className="text-[clamp(1.6rem,3vw,2.8rem)] leading-[1.1] tracking-tight whitespace-pre-line">
             {t(content.process_title)}
@@ -262,7 +262,7 @@ export function TurnkeySolutions() {
       </section>
     ) : null,
     why: content.show_why ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24">
           <div className="lg:col-span-4">
             <h2 className="text-[clamp(1.6rem,3vw,2.8rem)] leading-[1.1] tracking-tight whitespace-pre-line">
@@ -285,7 +285,7 @@ export function TurnkeySolutions() {
     ) : null,
     cases: content.show_cases && cases.length > 0 ? (
       <section className="border-b border-gray-100 py-16 sm:py-24">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 flex items-end justify-between mb-8 sm:mb-12">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 flex items-end justify-between mb-8 sm:mb-12">
           <h2 className="text-[clamp(1.6rem,3vw,2.8rem)] leading-[1.1] tracking-tight">
             {t(content.cases_title)}
           </h2>
@@ -353,7 +353,7 @@ export function TurnkeySolutions() {
       </section>
     ) : null,
     cta: content.show_cta ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24">
         <div className="bg-black text-white px-6 sm:px-12 md:px-20 py-14 sm:py-20">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] leading-[1.05] tracking-tight text-white mb-6">
@@ -416,7 +416,7 @@ export function TurnkeySolutions() {
       />
 
       {/* ─── HERO ─── */}
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-16 sm:pt-20 pb-16 sm:pb-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 pt-16 sm:pt-20 pb-16 sm:pb-24 border-b border-gray-100">
         <div className="max-w-4xl">
           <h1 className="text-[clamp(2rem,5.5vw,5rem)] leading-[1.05] tracking-tight text-black whitespace-pre-line mb-6 sm:mb-8">
             {t(content.hero_title)}
