@@ -23,9 +23,9 @@ const translations = {
 export default async function NotFoundLocale({
   params,
 }: {
-  params: Promise<{ lang: string }>;
+  params?: Promise<{ lang: string }>;
 }) {
-  const { lang } = await params;
+  const { lang = 'ro' } = (await params) || {};
   const t = translations[lang as keyof typeof translations] || translations.ro;
 
   return (

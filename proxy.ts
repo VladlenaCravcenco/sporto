@@ -9,11 +9,12 @@ export async function proxy(request: NextRequest) {
     },
   });
 
-  // Refresh user session on every request (SSR-safe auth)
-  const supabase = createServerClient<Database>(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
+  // Refresh the session when Supabase is configured. Local builds may omit
+  // credentials, but that should not make public routes return HTTP 500.
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  if (supabaseUrl && supabaseAnonKey) {
+    const supabase = createServerClient<Database>(supabaseUrl, supabaseAnonKey, {
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -24,11 +25,10 @@ export async function proxy(request: NextRequest) {
           });
         },
       },
-    },
-  );
+    });
 
-  // Refresh session
-  await supabase.auth.getSession();
+    await supabase.auth.getSession();
+  }
 
   // Extract and set locale header
   const locale = request.nextUrl.pathname.match(/^\/(ro|ru)(?:\/|$)/)?.[1] ?? 'ro';
