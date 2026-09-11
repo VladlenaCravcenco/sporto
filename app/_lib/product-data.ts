@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabasePublicConfig } from './supabase-env';
 
 export interface ProductDetail {
   id: string;
@@ -41,10 +42,9 @@ export interface ProductDetailData {
 }
 
 function createServerSupabase() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, {
+  const config = getSupabasePublicConfig();
+  if (!config) return null;
+  return createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

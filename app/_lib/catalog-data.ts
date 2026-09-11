@@ -1,5 +1,6 @@
 import { createClient } from '@supabase/supabase-js';
 import { categories as fallbackCategories } from '../../src/app/data/products';
+import { getSupabasePublicConfig } from './supabase-env';
 
 export interface CatalogNavigationSubcategory {
   id: string;
@@ -54,10 +55,9 @@ export type CatalogPageData =
   | { status: 'error'; products: []; message: string };
 
 function createServerSupabase() {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
-  return createClient(url, key, {
+  const config = getSupabasePublicConfig();
+  if (!config) return null;
+  return createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }

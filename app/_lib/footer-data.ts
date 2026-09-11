@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabasePublicConfig } from './supabase-env';
 import { CONTACTS } from '../../src/lib/contacts';
 
 export type SocialType =
@@ -58,11 +59,10 @@ const supportedSocials = new Set<SocialType>([
 ]);
 
 export async function getFooterData(): Promise<FooterData> {
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !key) return fallback;
+  const config = getSupabasePublicConfig();
+  if (!config) return fallback;
 
-  const supabase = createClient(url, key, {
+  const supabase = createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data, error } = await supabase.from('site_settings').select('key,value');

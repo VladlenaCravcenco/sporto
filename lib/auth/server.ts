@@ -17,7 +17,7 @@ export async function getAdminUser() {
   }
 
   // Check if user email matches admin email from environment
-  const adminEmail = process.env.VITE_ADMIN_LOGIN_EMAIL || 'sporto-admin@gmail.com';
+  const adminEmail = process.env.ADMIN_EMAIL || process.env.VITE_ADMIN_LOGIN_EMAIL || 'sporto-admin@gmail.com';
   
   if (user.email === adminEmail) {
     return user;

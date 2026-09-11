@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabasePublicConfig } from './supabase-env';
 
 export const PROMO_POPUP_ENABLED = false;
 
@@ -42,11 +43,10 @@ function parsePopup(value: unknown): PopupData | null {
 export async function getPopupData(): Promise<PopupData | null> {
   if (!PROMO_POPUP_ENABLED) return null;
 
-  const url = process.env.VITE_SUPABASE_URL;
-  const key = process.env.VITE_SUPABASE_ANON_KEY;
-  if (!url || !key) return null;
+  const config = getSupabasePublicConfig();
+  if (!config) return null;
 
-  const supabase = createClient(url, key, {
+  const supabase = createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
   const { data, error } = await supabase

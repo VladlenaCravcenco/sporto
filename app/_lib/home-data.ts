@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { getSupabasePublicConfig } from './supabase-env';
 
 export interface BannerRow {
   id: string;
@@ -15,11 +16,10 @@ export interface BannerRow {
   created_at: string;
 }
 
-const url = process.env.VITE_SUPABASE_URL || 'https://ruvhllbbytjkxkzvusyb.supabase.co';
-const key = process.env.VITE_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJ1dmhsbGJieXRqa3hrenZ1c3liIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI5NjcxNzMsImV4cCI6MjA4ODU0MzE3M30.eCoWdTSOe8E4xEH7vy9q9lKc6AJWx3G0UbpU0ev-DgE';
-
 function createSupabase() {
-  return createClient(url, key, {
+  const config = getSupabasePublicConfig();
+  if (!config) return null;
+  return createClient(config.url, config.key, {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 }
@@ -50,7 +50,7 @@ export interface BrandItem {
   logo_url: string | null;
 }
 
-async function getActiveBrands(supabase: ReturnType<typeof createSupabase>): Promise<BrandItem[]> {
+async function getActiveBrands(supabase: NonNullable<ReturnType<typeof createSupabase>>): Promise<BrandItem[]> {
   const productBrands: Array<{ brand: string | null }> = [];
 
   for (let from = 0; ; from += 1000) {
@@ -80,7 +80,7 @@ async function getActiveBrands(supabase: ReturnType<typeof createSupabase>): Pro
   return rows.filter(item => item.active !== false).map(({ id, name, slug, logo_url }) => ({ id, name, slug, logo_url }));
 }
 
-async function getFeaturedProducts(supabase: ReturnType<typeof createSupabase>): Promise<FeaturedProduct[]> {
+async function getFeaturedProducts(supabase: NonNullable<ReturnType<typeof createSupabase>>): Promise<FeaturedProduct[]> {
   const fields = 'id,name_ro,name_ru,sku,brand,price,sale_price,image_url,qty';
   const featured = await supabase
     .from('products')
@@ -110,6 +110,14 @@ function promoDisplay(count: number) {
 
 export async function getHomeHeroData(): Promise<HomeHeroData> {
   const supabase = createSupabase();
+  if (!supabase) {
+    return {
+      banners: [],
+      brands: [],
+      featuredProducts: [],
+      promoCount: '0',
+    };
+  }
 
   const [bannersResult, promosResult, brands, featuredProducts] = await Promise.all([
     supabase.from('banners').select('*').eq('active', true).order('sort_order', { ascending: true }),
