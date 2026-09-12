@@ -97,6 +97,8 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
               alt={language === 'ro' ? item.title_ro || '' : item.title_ru || item.title_ro || ''}
               className="absolute inset-0 w-full h-full object-cover"
               style={{ opacity: 0.35 }}
+              loading={index === 0 ? 'eager' : 'lazy'}
+              fetchPriority={index === 0 ? 'high' : 'low'}
             />
           )}
           <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
