@@ -22,7 +22,7 @@ export function MaintenanceService() {
 
   const sections: Record<SectionKey, React.ReactNode> = {
     stats: content.show_stats ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-10 sm:py-16 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-10 sm:py-16 border-b border-gray-100">
         <div className="grid grid-cols-3 divide-x divide-gray-100">
           {content.stats.map((s, i) => (
             <div key={i} className="px-3 sm:px-8 first:pl-0 last:pr-0 py-4">
@@ -36,7 +36,7 @@ export function MaintenanceService() {
       </section>
     ) : null,
     services: content.show_services ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-24">
           <div className="lg:col-span-4">
             <div className="text-[11px] uppercase tracking-[0.2em] text-gray-300 mb-4">{t(content.services_eyebrow)}</div>
@@ -56,7 +56,7 @@ export function MaintenanceService() {
       </section>
     ) : null,
     packages: content.show_packages ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
         <div className="mb-10 sm:mb-16">
           <div className="text-[11px] uppercase tracking-[0.2em] text-gray-300 mb-4">{t(content.packages_eyebrow)}</div>
           <h2 className="text-[clamp(1.6rem,3vw,2.8rem)] leading-[1.1] tracking-tight whitespace-pre-line">{t(content.packages_title)}</h2>
@@ -100,7 +100,7 @@ export function MaintenanceService() {
       </section>
     ) : null,
     process: content.show_process ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100">
         <div className="mb-10 sm:mb-16">
           <div className="text-[11px] uppercase tracking-[0.2em] text-gray-300 mb-4">{t(content.process_eyebrow)}</div>
           <h2 className="text-[clamp(1.6rem,3vw,2.8rem)] leading-[1.1] tracking-tight whitespace-pre-line">{t(content.process_title)}</h2>
@@ -210,7 +210,7 @@ export function MaintenanceService() {
       </section>
     ) : null,
     delivery: content.show_delivery ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100 bg-gray-50">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24 border-b border-gray-100 bg-gray-50">
         <div className="mb-10 sm:mb-12">
           <div className="flex items-center gap-3 mb-6">
             <Truck className="w-5 h-5 text-gray-400" />
@@ -244,7 +244,7 @@ export function MaintenanceService() {
       </section>
     ) : null,
     cta: content.show_cta ? (
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 py-16 sm:py-24">
         <div className="bg-black text-white px-6 sm:px-12 md:px-20 py-14 sm:py-20">
           <div className="max-w-2xl mx-auto text-center">
             <h2 className="text-[clamp(1.8rem,4vw,3.5rem)] leading-[1.05] tracking-tight text-white whitespace-pre-line mb-6">{t(content.cta_title)}</h2>
@@ -273,7 +273,7 @@ export function MaintenanceService() {
         lang={lang}
       />
 
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-16 pt-16 sm:pt-20 pb-16 sm:pb-24 border-b border-gray-100">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-16 pt-16 sm:pt-20 pb-16 sm:pb-24 border-b border-gray-100">
         <div className="max-w-4xl">
           <div className="text-[11px] uppercase tracking-[0.2em] text-gray-300 mb-4">{t(content.hero_eyebrow)}</div>
           <h1 className="text-[clamp(2rem,5.5vw,5rem)] leading-[1.05] tracking-tight text-black whitespace-pre-line mb-6 sm:mb-8">{t(content.hero_title)}</h1>

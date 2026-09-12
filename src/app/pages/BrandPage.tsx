@@ -159,7 +159,7 @@ export function BrandPage() {
         />
 
         {/* Back nav */}
-        <div className="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-16 pt-8">
+        <div className="relative z-10 max-w-[1920px] mx-auto px-6 lg:px-16 pt-8">
           <button
             onClick={() => navigate(-1)}
             className="inline-flex items-center gap-2 text-[10px] uppercase tracking-widest text-gray-600 hover:text-white transition-colors"
@@ -170,7 +170,7 @@ export function BrandPage() {
         </div>
 
         {/* Brand name + logo */}
-        <div className="relative z-10 max-w-[1600px] mx-auto px-6 lg:px-16 pt-12 pb-6">
+        <div className="relative z-10 max-w-[1920px] mx-auto px-6 lg:px-16 pt-12 pb-6">
           <p className="text-[10px] uppercase tracking-[0.35em] text-gray-600 mb-6">
             {L('Partener oficial', 'Официальный партнёр')} · SPORTOSFERA S.R.L.
           </p>
@@ -305,7 +305,7 @@ export function BrandPage() {
 
       {/* ── DESCRIPTION + CATEGORIES ── */}
       {(brand.description_ro || brand.description_ru) && (
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-16 py-16">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-16 py-16">
           <div className="grid lg:grid-cols-[2fr_1fr] gap-12 lg:gap-20">
             <div>
               <p className="text-[10px] uppercase tracking-[0.25em] text-gray-400 mb-4">
@@ -345,7 +345,7 @@ export function BrandPage() {
 
       {/* ── PRODUCTS ── */}
       <div id="brand-products" className="border-t border-gray-100 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-16 py-16">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-16 py-16">
           <div className="flex items-end justify-between gap-6 mb-6">
             <div>
               <p className="text-[10px] uppercase tracking-[0.25em] text-gray-400 mb-2">
@@ -506,7 +506,7 @@ export function BrandPage() {
 
       {/* ── CTA ── */}
       <div className="bg-black">
-        <div className="max-w-[1600px] mx-auto px-6 lg:px-16 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div className="max-w-[1920px] mx-auto px-6 lg:px-16 py-12 flex flex-col sm:flex-row items-center justify-between gap-6">
           <div>
             <p className="text-[10px] uppercase tracking-[0.25em] text-gray-600 mb-2">
               {L('Interesat de echipamentele', 'Интересуют товары')} {brand.name}?

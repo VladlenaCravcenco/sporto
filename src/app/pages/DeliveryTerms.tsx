@@ -209,7 +209,7 @@ export function DeliveryTerms() {
           lang={lang}
         />
         <section className="border-b border-gray-100">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
             <Link to="/" className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               {content.back}
@@ -249,7 +249,7 @@ export function DeliveryTerms() {
       />
       {/* Hero */}
       <section className="border-b border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <Link
             to="/"
             className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group"
@@ -268,7 +268,7 @@ export function DeliveryTerms() {
 
       {/* Zones table */}
       <section className="border-b border-gray-100 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-6">{content.zonesTitle}</p>
           <div className="overflow-x-auto">
             <table className="w-full">
@@ -308,7 +308,7 @@ export function DeliveryTerms() {
       </section>
 
       {/* Content */}
-      <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+      <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
           {/* Sticky sidebar */}
@@ -363,7 +363,7 @@ export function DeliveryTerms() {
 
       {/* CTA */}
       <section className="border-t border-gray-100 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-xl">
             <h3 className="text-2xl text-black mb-3">{content.contact.title}</h3>
             <p className="text-sm text-gray-500 mb-6">{content.contact.body}</p>

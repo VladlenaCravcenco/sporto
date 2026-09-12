@@ -432,7 +432,7 @@ const EMPTY_FORM: Partial<ProductRow> = {
   category: '', subcategory: '',
   price: 0, sku: '', brand: '',
   unit: 'BUC.', qty: 0,
-  image_url: '', images: [], youtube_url: '', active: true, featured: false,
+  image_url: '', images: [], youtube_url: '', active: true, featured: false, has_warranty: false,
 };
 
 function toSlug(value: string) {
@@ -1044,6 +1044,7 @@ export function AdminProducts() {
       youtube_url: form.youtube_url?.trim() || null,
       active: form.active ?? true,
       featured: form.featured ?? false,
+      has_warranty: form.has_warranty ?? false,
     };
 
     if (editId) {
@@ -1091,6 +1092,7 @@ export function AdminProducts() {
         image_url: payload.image_url || null,
         images: payload.images || [],
         youtube_url: payload.youtube_url || null,
+        has_warranty: payload.has_warranty ?? false,
         featured: payload.featured ?? false,
         active: payload.active ?? true,
       };
@@ -1981,7 +1983,7 @@ export function AdminProducts() {
             </div>
 
             {/* ── Toggles ── */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
               <label className="flex items-center gap-3 cursor-pointer select-none min-w-0">
                 <button
                   type="button"
@@ -2009,6 +2011,19 @@ export function AdminProducts() {
                 <div className="text-xs text-gray-900 flex items-center gap-1">
                   <Star className={`w-3 h-3 ${form.featured ? 'fill-gray-400 text-gray-400' : 'text-gray-400'}`} />
                   {form.featured ? t.products.featuredLabel : t.products.notFeaturedLabel}
+                </div>
+              </label>
+
+              <label className="flex items-center gap-3 cursor-pointer select-none min-w-0">
+                <button
+                  type="button"
+                  onClick={() => setForm(f => ({ ...f, has_warranty: !f.has_warranty }))}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.has_warranty ? 'bg-red-600' : 'bg-gray-200'}`}
+                >
+                  <span className={`w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${form.has_warranty ? 'translate-x-4' : 'translate-x-0'}`} />
+                </button>
+                <div className="text-xs text-gray-900">
+                  {form.has_warranty ? l('Cu garanție', 'С гарантией') : l('Fără garanție', 'Без гарантии')}
                 </div>
               </label>
             </div>

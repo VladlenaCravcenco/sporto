@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { supabase } from '../../lib/supabase';
+import { fetchAllSupabaseRows, supabase } from '../../lib/supabase';
 
 export type ProductAttributeType = 'number' | 'select' | 'boolean' | 'text';
 
@@ -33,6 +33,7 @@ export interface ProductAttributeValue {
 export interface CatalogAttributeFilter {
   attribute: ProductAttributeDefinition;
   options: string[];
+  values: ProductAttributeValue[];
 }
 
 export function getAttributeUnit(attribute: ProductAttributeDefinition, language: 'ro' | 'ru'): string {
@@ -107,18 +108,18 @@ export function useCatalogAttributeFilters(category?: string) {
     }
     let cancelled = false;
     setLoading(true);
-    supabase
-      .from('product_attribute_values')
-      .select('attribute_id,numeric_value,text_value,boolean_value,products!inner(category,active)')
-      .in('attribute_id', filterDefinitions.map((attribute) => attribute.id))
-      .eq('products.category', category)
-      .eq('products.active', true)
-      .then(({ data, error }) => {
+    (async () => {
+      try {
+        const rows = await fetchAllSupabaseRows<ProductAttributeValue>((from, to) =>
+          supabase
+            .from('product_attribute_values')
+            .select('product_id,attribute_id,numeric_value,text_value,boolean_value,products!inner(category,active)')
+            .in('attribute_id', filterDefinitions.map((attribute) => attribute.id))
+            .eq('products.category', category)
+            .eq('products.active', true)
+            .range(from, to) as unknown as PromiseLike<{ data: ProductAttributeValue[] | null; error: { message: string } | null }>
+        );
         if (cancelled) return;
-        if (error) {
-          setFilters([]);
-        } else {
-          const rows = (data ?? []) as unknown as ProductAttributeValue[];
           setFilters(filterDefinitions.map((attribute) => {
             const values = rows.filter((value) => value.attribute_id === attribute.id);
             const options = [...new Set(values.flatMap((value) => {
@@ -132,11 +133,16 @@ export function useCatalogAttributeFilters(category?: string) {
             return {
               attribute,
               options,
+              values,
             };
           }).filter((filter) => filter.options.length > 0));
-        }
+      } catch {
+        if (!cancelled) setFilters([]);
+      } finally {
+        if (cancelled) return;
         setLoading(false);
-      });
+      }
+    })();
     return () => { cancelled = true; };
   }, [category, filterDefinitions]);
 

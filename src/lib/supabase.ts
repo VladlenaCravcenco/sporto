@@ -63,6 +63,7 @@ export interface ProductRow {
   image_url: string | null;
   images: string[] | null;   // gallery (images[0] === image_url)
   youtube_url: string | null; // full YouTube URL, e.g. https://youtu.be/abc123
+  has_warranty: boolean;
   featured: boolean;
   active: boolean;
 }

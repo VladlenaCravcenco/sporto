@@ -12,7 +12,7 @@ export function Footer() {
 
   return (
     <footer className="bg-black text-gray-500">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
         {/* Top section */}
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-b border-gray-900">
 

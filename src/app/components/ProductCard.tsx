@@ -2,7 +2,7 @@ import { Link, useNavigate } from 'react-router';
 import { Product } from '../data/products';
 import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useCart } from '../contexts/CartContext';
-import { ShoppingCart, Check, Package, ArrowUpRight, Tag } from 'lucide-react';
+import { Minus, Plus, Package, ArrowUpRight, Tag, ShieldCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { getBrandByName } from '../data/brands';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
@@ -29,9 +29,10 @@ function getSku(product: Product): string {
 
 export function ProductCard({ product, listView = false, onBrandClick }: ProductCardProps) {
   const { language } = useLanguage();
-  const { addToCart, isInCart } = useCart();
+  const { cart, addToCart, removeFromCart, updateQuantity, isInCart } = useCart();
   const navigate = useNavigate();
   const inCart = isInCart(product.id);
+  const cartItem = cart.find(item => item.id === product.id);
 
   const isRu = language === 'ru';
   const sku = getSku(product);
@@ -58,16 +59,29 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
       category: product.category,
       sku: product.sku || undefined,
     });
-    toast.success(L.addedMsg);
+    toast.success(L.addedMsg, {
+      action: {
+        label: isRu ? 'В корзину' : 'Vezi coșul',
+        onClick: () => navigate('/order-request'),
+      },
+    });
+  };
+
+  const changeQuantity = (e: React.MouseEvent, delta: number) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!cartItem) return;
+    if (delta < 0 && cartItem.quantity === 1) removeFromCart(product.id);
+    else updateQuantity(product.id, delta);
   };
 
   return (
     <Link
       to={buildProductPath(product, language as 'ro' | 'ru')}
-      className={`group bg-white border border-gray-100 overflow-hidden hover:border-black transition-all duration-200 flex ${listView ? 'flex-row' : 'flex-col'}`}
+      className={`group bg-white border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)] transition-all duration-300 flex ${listView ? 'flex-row' : 'flex-col'}`}
     >
       {/* ── Image / Wireframe area ── */}
-      <div className={`${listView ? 'w-24 flex-shrink-0 self-stretch' : 'aspect-[4/3]'} bg-gray-50 flex items-center justify-center relative overflow-hidden`}>
+      <div className={`${listView ? 'w-24 flex-shrink-0 self-stretch' : 'aspect-[4/3]'} bg-white flex items-center justify-center relative overflow-hidden`}>
 
         {product.image ? (
           /* Real product image */
@@ -112,9 +126,19 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
           </div>
         )}
 
+        {/* Warranty badge — top right */}
+        {product.hasWarranty && (
+          <div className="absolute top-2 right-2 z-10">
+            <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider px-1.5 py-0.5 bg-white border border-gray-200 text-gray-700 shadow-sm">
+              <ShieldCheck className="w-2.5 h-2.5 text-red-600" />
+              {isRu ? 'Гарантия' : 'Garanție'}
+            </span>
+          </div>
+        )}
+
         {/* Hover arrow — top right */}
         {!listView && (
-          <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+          <div className={`absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 ${product.hasWarranty ? 'top-8' : 'top-2'}`}>
             <ArrowUpRight className="w-3.5 h-3.5 text-gray-400" />
           </div>
         )}
@@ -194,17 +218,41 @@ export function ProductCard({ product, listView = false, onBrandClick }: Product
             )}
           </div>
 
-          <button
-            onClick={handleAddToCart}
-            title={inCart ? (isRu ? 'В корзине' : 'În coș') : (isRu ? 'В корзину' : 'Adaugă în coș')}
-            className={`flex-shrink-0 flex items-center gap-1 px-2.5 py-1.5 text-xs transition-all border ${
-              inCart
-                ? 'border-black bg-black text-white'
-                : 'border-gray-200 text-gray-400 hover:border-black hover:text-black'
-            }`}
-          >
-            {inCart ? <Check className="w-3 h-3" /> : <ShoppingCart className="w-3 h-3" />}
-          </button>
+          {cartItem ? (
+            <div className="h-8 min-w-[92px] flex-shrink-0 grid grid-cols-[30px_32px_30px] border border-black bg-black text-white">
+              <button
+                type="button"
+                onClick={e => changeQuantity(e, -1)}
+                aria-label={isRu ? 'Уменьшить количество' : 'Micșorează cantitatea'}
+                className="flex items-center justify-center hover:bg-gray-800 transition-colors"
+              >
+                <Minus className="w-3 h-3" />
+              </button>
+              <span className="flex items-center justify-center text-xs tabular-nums border-x border-white/20">
+                {cartItem.quantity}
+              </span>
+              <button
+                type="button"
+                onClick={e => changeQuantity(e, 1)}
+                aria-label={isRu ? 'Увеличить количество' : 'Mărește cantitatea'}
+                className="flex items-center justify-center hover:bg-gray-800 transition-colors"
+              >
+                <Plus className="w-3 h-3" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleAddToCart}
+              title={inStock ? (isRu ? 'Купить' : 'Cumpără') : (isRu ? 'Под заказ' : 'La comandă')}
+              className={`h-8 min-w-[92px] flex-shrink-0 flex items-center justify-center px-3 text-[10px] uppercase tracking-wider transition-all border ${
+                inStock
+                  ? 'border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700'
+                  : 'border-gray-200 bg-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-200'
+              }`}
+            >
+              {inStock ? (isRu ? 'Купить' : 'Cumpără') : (isRu ? 'Под заказ' : 'La comandă')}
+            </button>
+          )}
         </div>
 
       </div>

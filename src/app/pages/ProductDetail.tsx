@@ -196,7 +196,7 @@ function BrandCarousel({
 function ServicesBentoSection({ t }: { t: (k: string) => string }) {
   return (
     <section className="py-12 md:py-16 bg-gray-50 border-t border-gray-100">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-1">
             {t('services.title')}
@@ -259,7 +259,7 @@ export function ProductDetail() {
   if (loading) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="grid md:grid-cols-2 gap-10 lg:gap-16 animate-pulse">
             <div className="bg-gray-100 aspect-square" />
             <div className="space-y-4">
@@ -396,7 +396,7 @@ export function ProductDetail() {
       />
       {/* Breadcrumb */}
       <div className="border-b border-gray-100 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
           <div className="flex items-center gap-1.5 text-xs text-gray-400 overflow-x-auto whitespace-nowrap scrollbar-none">
             <Link to="/" className="hover:text-gray-900 transition-colors shrink-0">
               {t('nav.home')}
@@ -434,7 +434,7 @@ export function ProductDetail() {
       </div>
 
       {/* ── Main product block ── */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
         <button
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-sm text-gray-400 hover:text-gray-900 transition-colors mb-6 sm:mb-8"
@@ -644,7 +644,7 @@ export function ProductDetail() {
       {/* ── Brand Products Carousel ── */}
       {product.brand && brandProducts.length > 0 && (
         <section className="py-12 md:py-14 border-t border-gray-100 bg-white">
-          <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header */}
             <div className="flex items-end justify-between mb-6">
               <div>

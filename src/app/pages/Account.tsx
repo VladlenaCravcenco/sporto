@@ -247,7 +247,7 @@ export function Account() {
   return (
     <div className="min-h-screen bg-white text-black">
       <SeoHead title="Account | Sporto" canonical="/account" noIndex lang={lang} />
-      <div className="max-w-[1600px] mx-auto px-6 lg:px-16 py-16">
+      <div className="max-w-[1920px] mx-auto px-6 lg:px-16 py-16">
 
         {/* ── PAGE HEADER ───────────────────────────────────────────────────── */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 mb-16 pb-8 border-b border-gray-100">

@@ -128,7 +128,7 @@ export function PartnersMarquee() {
   return (
     <div className="bg-white border-y border-gray-100 py-5">
       {/* Label */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 mb-4">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 mb-4">
         <p className="text-[10px] uppercase tracking-[0.2em] text-gray-300">
           {language === 'ro'
             ? 'Mărci partenere — click pentru catalog'
