@@ -6,7 +6,22 @@ const nextConfig: NextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.next.json',
   },
-  webpack: (config, { isServer }) => {
+  webpack: (config, { isServer, webpack }) => {
+    // Reused public pages retain Vite's public configuration names. Never
+    // expose the server environment or the Supabase service-role key here.
+    const publicEnv = {
+      VITE_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
+      VITE_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
+      VITE_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
+      VITE_ADMIN_LOGIN_EMAIL: process.env.VITE_ADMIN_LOGIN_EMAIL,
+      VITE_EMAILJS_PUBLIC_KEY: process.env.VITE_EMAILJS_PUBLIC_KEY,
+      VITE_EMAILJS_SERVICE_ID: process.env.VITE_EMAILJS_SERVICE_ID,
+      VITE_EMAILJS_TEMPLATE_WELCOME: process.env.VITE_EMAILJS_TEMPLATE_WELCOME,
+      VITE_EMAILJS_TEMPLATE_ADMIN: process.env.VITE_EMAILJS_TEMPLATE_ADMIN,
+    };
+    config.plugins.push(new webpack.DefinePlugin({
+      'import.meta.env': JSON.stringify(publicEnv),
+    }));
     // Optimize chunk splitting for better caching and performance
     if (!isServer) {
       config.optimization = {

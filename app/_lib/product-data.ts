@@ -26,6 +26,7 @@ export interface ProductDetail {
 
 export interface ProductBrand {
   name: string;
+  logo_url: string | null;
   slug: string | null;
   catalog_pdf: string | null;
 }
@@ -100,7 +101,7 @@ export async function getProductDetail(identifier: string, sku?: string): Promis
 
   const [brandResult, attributesResult] = await Promise.all([
     product.brand
-      ? supabase.from('brands').select('name,slug,catalog_pdf').ilike('name', product.brand).eq('active', true).maybeSingle()
+      ? supabase.from('brands').select('name,slug,logo_url,catalog_pdf').ilike('name', product.brand).eq('active', true).maybeSingle()
       : Promise.resolve({ data: null }),
     supabase
       .from('product_attribute_values')

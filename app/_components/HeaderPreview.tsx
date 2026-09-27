@@ -55,10 +55,19 @@ export function HeaderPreview({ language, categories, contacts }: HeaderPreviewP
   const mobileCategory = categories.find(category => category.id === mobileCategoryId) ?? initialCategory;
 
   useEffect(() => {
-    try {
-      const cart = JSON.parse(localStorage.getItem('cart') || '[]') as Array<{ quantity?: number }>;
-      setTotalItems(cart.reduce((sum, item) => sum + (item.quantity ?? 1), 0));
-    } catch { setTotalItems(0); }
+    const syncCart = () => {
+      try {
+        const cart = JSON.parse(localStorage.getItem('cart') || '[]') as Array<{ quantity?: number }>;
+        setTotalItems(cart.reduce((sum, item) => sum + (item.quantity ?? 1), 0));
+      } catch { setTotalItems(0); }
+    };
+    syncCart();
+    window.addEventListener('sporto:cart-updated', syncCart);
+    window.addEventListener('storage', syncCart);
+    return () => {
+      window.removeEventListener('sporto:cart-updated', syncCart);
+      window.removeEventListener('storage', syncCart);
+    };
   }, []);
 
   useEffect(() => {
@@ -93,6 +102,12 @@ export function HeaderPreview({ language, categories, contacts }: HeaderPreviewP
 
   function changeLanguage(next: Language) {
     if (next === language) return;
+    if (/^\/(login|register|account|forgot-password|reset-password|callback)$/.test(window.location.pathname)) {
+      const url = new URL(window.location.href);
+      url.searchParams.set('lang', next);
+      window.location.assign(`${url.pathname}${url.search}${url.hash}`);
+      return;
+    }
     const rest = window.location.pathname.replace(/^\/(ro|ru)(?=\/|$)/, '');
     window.location.assign(`/${next}${rest}${window.location.search}${window.location.hash}`);
   }

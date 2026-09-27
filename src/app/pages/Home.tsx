@@ -86,7 +86,7 @@ export function Home() {
   const hasBanners = !bannersLoading && banners.length > 0;
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={seo.title}
         description={seo.description}
@@ -96,7 +96,7 @@ export function Home() {
       />
 
       {/* ─── BENTO HERO ─── */}
-      <section className="bg-white">
+      <section className="bg-[#f5f6f7]">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
           <div className="grid grid-cols-12 gap-2 md:gap-3">
 
@@ -256,7 +256,7 @@ export function Home() {
       </section>
 
       {/* ─── FEATURED PRODUCTS BENTO ─── */}
-      <section className="order-1 py-12 md:py-16 bg-white">
+      <section className="order-1 py-12 md:py-16 bg-[#f5f6f7]">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-end justify-between mb-6">
             <div>
@@ -355,7 +355,7 @@ export function Home() {
       </section>
 
       {/* ─── WHY US BENTO ─── */}
-      <section className="py-12 md:py-16 bg-white border-t border-gray-100">
+      <section className="py-12 md:py-16 bg-[#f5f6f7] border-t border-gray-100">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-8">
             <h2 className="text-xl text-gray-900">{t('about.title')}</h2>

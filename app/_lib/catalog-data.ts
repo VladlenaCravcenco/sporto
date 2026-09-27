@@ -135,6 +135,7 @@ export async function getCatalogPageData(
   pageSize = 24,
   sort: CatalogSort = 'recommended',
   language: CatalogLanguage = 'ro',
+  filters: { category?: string; subcategory?: string } = {},
 ): Promise<CatalogPageData> {
   const supabase = createServerSupabase();
   if (!supabase) return { status: 'unavailable', products: [] };
@@ -147,7 +148,7 @@ export async function getCatalogPageData(
     const countResult = await supabase
       .from('products')
       .select('id', { count: 'exact', head: true })
-      .eq('active', true);
+      .eq('active', true).match(filters);
 
     if (countResult.error) {
       return { status: 'error', products: [], message: countResult.error.message };
@@ -174,7 +175,7 @@ export async function getCatalogPageData(
     let productsQuery = supabase
       .from('products')
       .select(fields)
-      .eq('active', true);
+      .eq('active', true).match(filters);
 
     if (sort === 'price-asc') {
       productsQuery = productsQuery.order('price', { ascending: true }).order('id', { ascending: true });
@@ -205,12 +206,12 @@ export async function getCatalogPageData(
     supabase
       .from('products')
       .select('id', { count: 'exact', head: true })
-      .eq('active', true)
+      .eq('active', true).match(filters)
       .ilike('brand', 'insportline'),
     supabase
       .from('products')
       .select('id', { count: 'exact', head: true })
-      .eq('active', true)
+      .eq('active', true).match(filters)
       .or('brand.is.null,brand.not.ilike.insportline'),
   ]);
 
@@ -253,7 +254,7 @@ export async function getCatalogPageData(
     ? supabase
         .from('products')
         .select(fields)
-        .eq('active', true)
+        .eq('active', true).match(filters)
         .ilike('brand', 'insportline')
         .order('featured', { ascending: false })
         .order('id', { ascending: true })
@@ -264,7 +265,7 @@ export async function getCatalogPageData(
     ? supabase
         .from('products')
         .select(fields)
-        .eq('active', true)
+        .eq('active', true).match(filters)
         .or('brand.is.null,brand.not.ilike.insportline')
         .order('featured', { ascending: false })
         .order('brand', { ascending: true, nullsFirst: false })

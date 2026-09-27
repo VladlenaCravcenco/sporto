@@ -365,7 +365,7 @@ export function OrderRequest() {
   // ── Success screen ─────────────────────────────────────────────────────────
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-8 h-8 text-white" />
@@ -495,7 +495,7 @@ export function OrderRequest() {
 
   // ── Cart screen ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead title="Order Request | Sporto" canonical="/order-request" noIndex lang={language as Language} />
       {/* Header */}
       <div className="bg-black text-white">

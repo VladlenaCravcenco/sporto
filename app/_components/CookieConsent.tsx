@@ -70,7 +70,7 @@ export function CookieConsent({ language }: { language: Language }) {
           role="dialog"
           aria-live="polite"
           aria-label={language === 'ro' ? 'Preferințe cookie' : 'Настройки cookies'}
-          className="fixed bottom-0 left-0 right-0 z-[140] bg-white border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]"
+          className="fixed bottom-0 left-0 right-0 z-[140] bg-[#f5f6f7] border-t border-gray-200 shadow-[0_-4px_24px_rgba(0,0,0,0.08)]"
         >
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <p className="text-xs text-gray-600 leading-relaxed flex-1">

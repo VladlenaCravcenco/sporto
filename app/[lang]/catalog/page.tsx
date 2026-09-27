@@ -1,7 +1,11 @@
+import { CatalogFilters } from '../../_components/CatalogFilters';
+import { getFilteredCatalog } from '../../_lib/catalog-filter-data';
+import type { CatalogQuery } from '../../_lib/catalog-filters';
+import { ProductCardView } from '../../../src/app/components/ProductCardView';
 import type { Metadata } from 'next';
-import { ArrowLeft, ArrowRight, ArrowUpRight, Package, ShieldCheck, Tag } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Package } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
-import { getCatalogPageData, type CatalogProduct, type CatalogSort } from '../../_lib/catalog-data';
+import { type CatalogProduct, type CatalogSort } from '../../_lib/catalog-data';
 import type { Language } from '../../_components/HeaderPreview';
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.VITE_SITE_URL || 'https://www.sporto.md').replace(/\/+$/, '');
@@ -30,12 +34,6 @@ function productHref(product: CatalogProduct, language: Language) {
   return `/${language}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
 }
 
-function formatPrice(value: number, language: Language) {
-  return new Intl.NumberFormat(language === 'ru' ? 'ru-MD' : 'ro-MD', {
-    maximumFractionDigits: 2,
-  }).format(value);
-}
-
 function parsePage(rawValue: string | string[] | undefined) {
   if (rawValue === undefined) return 1;
   if (Array.isArray(rawValue) || !/^\d+$/.test(rawValue)) return null;
@@ -51,73 +49,16 @@ function parseSort(rawValue: string | string[] | undefined): CatalogSort | null 
     : null;
 }
 
-function catalogHref(language: Language, page: number, sort: CatalogSort) {
+function catalogHref(language: Language, page: number, sort: CatalogSort, filters: CatalogQuery = {}) {
   const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filters)) {
+    if (value == null || key === 'page' || key === 'sort') continue;
+    for (const item of Array.isArray(value) ? value : [value]) params.append(key, item);
+  }
   if (sort !== 'recommended') params.set('sort', sort);
   if (page > 1) params.set('page', String(page));
   const query = params.toString();
   return `/${language}/catalog${query ? `?${query}` : ''}`;
-}
-
-function ProductCard({ product, language }: { product: CatalogProduct; language: Language }) {
-  const name = language === 'ru' ? product.name_ru || product.name_ro : product.name_ro;
-  const inStock = (product.qty ?? 0) > 0;
-  const onSale = product.sale_price !== null && product.sale_price > 0 && product.sale_price < product.price;
-  const currentPrice = onSale ? product.sale_price as number : product.price;
-
-  return (
-    <a
-      href={productHref(product, language)}
-      className="group flex min-w-0 flex-col overflow-hidden rounded-[5px] border border-gray-100 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-[0_14px_34px_rgba(15,23,42,0.10)]"
-    >
-      <div className="relative flex aspect-[4/3] items-center justify-center overflow-hidden bg-white">
-        {product.image_url ? (
-          <img
-            src={product.image_url}
-            alt={name}
-            loading="lazy"
-            className="h-full w-full object-contain p-3 transition-transform duration-500 group-hover:scale-[1.03]"
-          />
-        ) : (
-          <Package className="h-8 w-8 text-gray-200" aria-hidden="true" />
-        )}
-
-        <span className={`absolute left-3 top-3 rounded-[3px] px-2 py-1 text-[11px] font-medium ${inStock ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
-          {inStock
-            ? (language === 'ro' ? 'Disponibil' : 'В наличии')
-            : (language === 'ro' ? 'La comandă' : 'Под заказ')}
-        </span>
-
-        {product.has_warranty && (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-[3px] border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
-            <ShieldCheck className="h-3 w-3 text-red-600" aria-hidden="true" />
-            {language === 'ro' ? 'Garanție' : 'Гарантия'}
-          </span>
-        )}
-
-        {onSale && (
-          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-[3px] bg-red-600 px-2 py-1 text-[11px] font-medium text-white">
-            <Tag className="h-3 w-3" aria-hidden="true" />
-            {language === 'ro' ? 'Promoție' : 'Акция'}
-          </span>
-        )}
-
-        <ArrowUpRight className="absolute bottom-3 right-3 h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
-      </div>
-
-      <div className="flex flex-1 flex-col gap-2 border-t border-gray-100 p-4">
-        {product.brand && <p className="text-xs font-medium text-gray-500">{product.brand}</p>}
-        <h2 className="line-clamp-2 min-h-11 text-[15px] font-medium leading-[1.45] text-gray-900">{name}</h2>
-        <p className="text-xs text-gray-400">{product.sku || `ART-${product.id}`}</p>
-        <div className="mt-auto border-t border-gray-100 pt-3">
-          {onSale && <p className="text-xs text-gray-400 line-through">{formatPrice(product.price, language)} MDL</p>}
-          <p className={`text-lg font-semibold ${onSale ? 'text-red-600' : 'text-gray-900'}`}>
-            {formatPrice(currentPrice, language)} <span className="text-xs font-normal">MDL</span>
-          </p>
-        </div>
-      </div>
-    </a>
-  );
 }
 
 export async function generateMetadata({ params, searchParams }: CatalogPageProps): Promise<Metadata> {
@@ -151,14 +92,15 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
   const [{ lang }, query] = await Promise.all([params, searchParams]);
   if (!languages.has(lang as Language)) notFound();
   const language = lang as Language;
+  const filters = query;
   const page = parsePage(query.page);
   const sort = parseSort(query.sort);
   if (page === null || sort === null) redirect(`/${language}/catalog`);
   if ((page === 1 && query.page !== undefined) || (sort === 'recommended' && query.sort !== undefined)) {
-    redirect(catalogHref(language, page, sort));
+    redirect(catalogHref(language, page, sort, filters));
   }
 
-  const data = await getCatalogPageData(page, 24, sort, language);
+  const data = await getFilteredCatalog(query, page, sort, language);
   if (data.status === 'out-of-range') notFound();
 
   return (
@@ -176,6 +118,9 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
           </p>
         </div>
 
+        <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
+        {data.status === 'ready' && <CatalogFilters key={JSON.stringify(query)} facets={data.facets} query={query} language={language} />}
+        <div className="min-w-0">
         {data.status === 'ready' && data.products.length > 0 && (
           <>
             <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
@@ -193,6 +138,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                   </p>
                 )}
                 <form action={`/${language}/catalog`} method="get" className="flex items-end gap-2">
+                  {Object.entries(filters).filter(([key]) => key !== 'sort' && key !== 'page').flatMap(([key, value]) => (Array.isArray(value) ? value : value ? [value] : []).map((item, index) => <input key={`${key}-${index}`} type="hidden" name={key} value={item} />))}
                   <label className="flex min-w-[220px] flex-col gap-1.5 text-sm font-medium text-gray-700">
                     {language === 'ro' ? 'Sortare' : 'Сортировка'}
                     <select
@@ -213,16 +159,16 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
               </div>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               {data.products.map(product => (
-                <ProductCard key={product.id} product={product} language={language} />
+                <ProductCardView key={product.id} product={product} language={language} href={productHref(product, language)} />
               ))}
             </div>
 
             {data.totalPages > 1 && (
               <nav aria-label={language === 'ro' ? 'Paginarea catalogului' : 'Пагинация каталога'} className="mt-10 flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
                 {data.page > 1 ? (
-                  <a href={catalogHref(language, data.page - 1, sort)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-900">
+                  <a href={catalogHref(language, data.page - 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-900">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     {language === 'ro' ? 'Înapoi' : 'Назад'}
                   </a>
@@ -235,7 +181,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                       <span key={item} className="flex items-center gap-2">
                         {index > 0 && item - visiblePages[index - 1] > 1 && <span className="px-1 text-gray-400">…</span>}
                         <a
-                          href={catalogHref(language, item, sort)}
+                          href={catalogHref(language, item, sort, filters)}
                           aria-current={item === data.page ? 'page' : undefined}
                           className={`flex h-11 min-w-11 items-center justify-center rounded-[5px] border px-3 text-sm font-semibold transition-colors ${item === data.page ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-900'}`}
                         >
@@ -246,7 +192,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                 </div>
 
                 {data.page < data.totalPages ? (
-                  <a href={catalogHref(language, data.page + 1, sort)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
+                  <a href={catalogHref(language, data.page + 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
                     {language === 'ro' ? 'Înainte' : 'Далее'}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>
@@ -260,7 +206,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
           <div className="rounded-[5px] border border-gray-200 bg-white px-6 py-16 text-center">
             <Package className="mx-auto mb-4 h-8 w-8 text-gray-300" aria-hidden="true" />
             <h2 className="text-lg font-semibold text-gray-900">
-              {language === 'ro' ? 'Catalogul este momentan gol' : 'Каталог пока пуст'}
+              {language === 'ro' ? 'Nu există produse pentru filtrele selectate' : 'По выбранным фильтрам товаров нет'}
             </h2>
           </div>
         )}
@@ -275,6 +221,8 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
             </p>
           </div>
         )}
+        </div>
+        </div>
       </div>
     </section>
   );

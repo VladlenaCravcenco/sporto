@@ -80,7 +80,7 @@ export function About() {
   const faqItems = toLocalizedFaq(faqRows, lang);
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={c.seoTitle}
         description={c.seoDesc}

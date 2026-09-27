@@ -29,7 +29,7 @@ export default async function NotFoundLocale({
   const t = translations[lang as keyof typeof translations] || translations.ro;
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-white px-4">
+    <div className="flex flex-col items-center justify-center min-h-screen bg-[#f5f6f7] px-4">
       <div className="text-center">
         <h1 className="text-6xl font-bold text-red-600 mb-4">404</h1>
         <p className="text-xl text-gray-700 mb-2">{t.title}</p>

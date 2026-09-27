@@ -1,9 +1,7 @@
-import { Link, useNavigate } from 'react-router';
+import { ProductCardView } from './ProductCardView';
+import { useHref, useNavigate } from 'react-router';
 import { Product } from '../data/products';
-import { useLanguage, Language } from '../contexts/LanguageContext';
-import { useCart } from '../contexts/CartContext';
-import { Minus, Plus, Package, ArrowUpRight, Tag, ShieldCheck } from 'lucide-react';
-import { toast } from 'sonner';
+import { useLanguage } from '../contexts/LanguageContext';
 import { getBrandByName } from '../data/brands';
 import { getCurrentPrice, hasSalePrice } from '../lib/productPricing';
 import { isProductInStock } from '../lib/productStock';
@@ -29,233 +27,28 @@ function getSku(product: Product): string {
 
 export function ProductCard({ product, listView = false, onBrandClick }: ProductCardProps) {
   const { language } = useLanguage();
-  const { cart, addToCart, removeFromCart, updateQuantity, isInCart } = useCart();
   const navigate = useNavigate();
-  const inCart = isInCart(product.id);
-  const cartItem = cart.find(item => item.id === product.id);
 
-  const isRu = language === 'ru';
   const sku = getSku(product);
   const inStock = isProductInStock(product);
   const currentPrice = getCurrentPrice(product);
   const showSalePrice = hasSalePrice(product);
 
-  const L = {
-    inStock:   isRu ? 'В наличии'  : 'Disponibil',
-    onOrder:   isRu ? 'Под заказ'  : 'La comandă',
-    addedMsg:  isRu
-      ? `"${product.name.ru}" добавен в корзину`
-      : `"${product.name.ro}" adăugat în coș`,
-  };
-
-  const handleAddToCart = (e: React.MouseEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    addToCart({
-      id: product.id,
-      name: product.name,
-      price: currentPrice,
-      image: product.image,
-      category: product.category,
-      sku: product.sku || undefined,
-    });
-    toast.success(L.addedMsg, {
-      action: {
-        label: isRu ? 'В корзину' : 'Vezi coșul',
-        onClick: () => navigate('/order-request'),
-      },
-    });
-  };
-
-  const changeQuantity = (e: React.MouseEvent, delta: number) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (!cartItem) return;
-    if (delta < 0 && cartItem.quantity === 1) removeFromCart(product.id);
-    else updateQuantity(product.id, delta);
-  };
-
-  return (
-    <Link
-      to={buildProductPath(product, language as 'ro' | 'ru')}
-      className={`group bg-white border border-gray-100 overflow-hidden hover:border-gray-200 hover:shadow-[0_12px_32px_rgba(15,23,42,0.10)] transition-all duration-300 flex ${listView ? 'flex-row' : 'flex-col'}`}
-    >
-      {/* ── Image / Wireframe area ── */}
-      <div className={`${listView ? 'w-24 flex-shrink-0 self-stretch' : 'aspect-[4/3]'} bg-white flex items-center justify-center relative overflow-hidden`}>
-
-        {product.image ? (
-          /* Real product image */
-          <img
-            src={product.image}
-            alt={product.name[language as Language]}
-            className="w-full h-full object-contain p-2 transition-transform duration-500 group-hover:scale-105"
-            loading="lazy"
-          />
-        ) : (
-          /* No image — clean placeholder */
-          <>
-            <svg className="absolute inset-0 w-full h-full opacity-[0.04]" xmlns="http://www.w3.org/2000/svg">
-              <defs>
-                <pattern id={`grid-${product.id}`} width="32" height="32" patternUnits="userSpaceOnUse">
-                  <path d="M32 0 L0 0 0 32" fill="none" stroke="#000" strokeWidth="0.5" />
-                </pattern>
-              </defs>
-              <rect width="100%" height="100%" fill={`url(#grid-${product.id})`} />
-            </svg>
-            <Package className="w-7 h-7 text-gray-200 group-hover:text-gray-300 transition-colors relative z-10" />
-          </>
-        )}
-
-        {/* Stock badge — top left */}
-        <div className="absolute top-2 left-2 z-10">
-          <span className={`inline-flex items-center gap-1 text-[9px] uppercase tracking-wider px-1.5 py-0.5 ${
-            inStock ? 'bg-black text-white' : 'bg-gray-100 text-gray-500'
-          }`}>
-            <span className={`w-1 h-1 rounded-full ${inStock ? 'bg-white' : 'bg-gray-400'}`} />
-            {inStock ? L.inStock : L.onOrder}
-          </span>
-        </div>
-
-        {/* Sale badge — bottom left (if sale_price exists) */}
-        {showSalePrice && (
-          <div className="absolute bottom-2 left-2 z-10">
-            <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider px-1.5 py-0.5 bg-red-600 text-white">
-              <Tag className="w-2.5 h-2.5" />
-              {isRu ? 'Акция' : 'Promoție'}
-            </span>
-          </div>
-        )}
-
-        {/* Warranty badge — top right */}
-        {product.hasWarranty && (
-          <div className="absolute top-2 right-2 z-10">
-            <span className="inline-flex items-center gap-1 text-[9px] uppercase tracking-wider px-1.5 py-0.5 bg-white border border-gray-200 text-gray-700 shadow-sm">
-              <ShieldCheck className="w-2.5 h-2.5 text-red-600" />
-              {isRu ? 'Гарантия' : 'Garanție'}
-            </span>
-          </div>
-        )}
-
-        {/* Hover arrow — top right */}
-        {!listView && (
-          <div className={`absolute right-2 opacity-0 group-hover:opacity-100 transition-opacity z-10 ${product.hasWarranty ? 'top-8' : 'top-2'}`}>
-            <ArrowUpRight className="w-3.5 h-3.5 text-gray-400" />
-          </div>
-        )}
-      </div>
-
-      {/* ── Content ── */}
-      <div className={`flex flex-col flex-1 gap-1.5 ${listView ? 'p-2.5' : 'p-3 gap-2'}`}>
-
-        {/* Brand badge — only if known */}
-        {product.brand && (() => {
-          const matchedBrand = getBrandByName(product.brand);
-          if (!matchedBrand) return null;
-
-          if (onBrandClick) {
-            return (
-              <button
-                type="button"
-                onClick={e => { e.preventDefault(); e.stopPropagation(); onBrandClick(product.brand!); }}
-                className="self-start text-[9px] uppercase tracking-[0.15em] text-gray-400 border border-gray-100 px-1.5 py-0.5 hover:border-black hover:text-black transition-colors"
-              >
-                {product.brand}
-              </button>
-            );
-          }
-
-          return (
-            <button
-              type="button"
-              onClick={e => { e.preventDefault(); e.stopPropagation(); navigate(`/brands/${matchedBrand.id}`); }}
-              className="self-start text-[9px] uppercase tracking-[0.15em] text-gray-400 border border-gray-100 px-1.5 py-0.5 hover:border-black hover:text-black transition-colors"
-            >
-              {product.brand}
-            </button>
-          );
-        })()}
-
-        {/* Product name */}
-        <h3 className={`text-xs text-gray-900 leading-snug flex-1 group-hover:text-black ${listView ? 'line-clamp-2' : 'line-clamp-2'}`}>
-          {product.name[language as Language]}
-        </h3>
-
-        {/* SKU — hidden in list view */}
-        {!listView && (
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-[10px] font-mono tracking-wider text-gray-400 truncate">{sku}</span>
-          </div>
-        )}
-
-        {/* Divider */}
-        <div className="border-t border-gray-50 group-hover:border-gray-100 transition-colors" />
-
-        {/* Price + cart button */}
-        <div className="flex items-end justify-between gap-2 mt-auto">
-          <div className="min-w-0">
-            {showSalePrice ? (
-              <div className="flex flex-col gap-0.5">
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-xs tabular-nums text-gray-400 line-through leading-none">
-                    {product.price.toLocaleString()}
-                  </span>
-                  <span className="text-[9px] text-gray-300">MDL</span>
-                </div>
-                <div className="flex items-baseline gap-0.5">
-                  <span className="text-base tabular-nums text-red-600 font-medium leading-none">
-                    {currentPrice.toLocaleString()}
-                  </span>
-                  <span className="text-[10px] text-red-500">MDL</span>
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-baseline gap-0.5">
-                <span className="text-sm tabular-nums text-gray-900 leading-none">
-                  {currentPrice.toLocaleString()}
-                </span>
-                <span className="text-[10px] text-gray-400">MDL</span>
-              </div>
-            )}
-          </div>
-
-          {cartItem ? (
-            <div className="h-8 min-w-[92px] flex-shrink-0 grid grid-cols-[30px_32px_30px] border border-black bg-black text-white">
-              <button
-                type="button"
-                onClick={e => changeQuantity(e, -1)}
-                aria-label={isRu ? 'Уменьшить количество' : 'Micșorează cantitatea'}
-                className="flex items-center justify-center hover:bg-gray-800 transition-colors"
-              >
-                <Minus className="w-3 h-3" />
-              </button>
-              <span className="flex items-center justify-center text-xs tabular-nums border-x border-white/20">
-                {cartItem.quantity}
-              </span>
-              <button
-                type="button"
-                onClick={e => changeQuantity(e, 1)}
-                aria-label={isRu ? 'Увеличить количество' : 'Mărește cantitatea'}
-                className="flex items-center justify-center hover:bg-gray-800 transition-colors"
-              >
-                <Plus className="w-3 h-3" />
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={handleAddToCart}
-              title={inStock ? (isRu ? 'Купить' : 'Cumpără') : (isRu ? 'Под заказ' : 'La comandă')}
-              className={`h-8 min-w-[92px] flex-shrink-0 flex items-center justify-center px-3 text-[10px] uppercase tracking-wider transition-all border ${
-                inStock
-                  ? 'border-red-600 bg-red-600 text-white hover:border-red-700 hover:bg-red-700'
-                  : 'border-gray-200 bg-gray-100 text-gray-500 hover:border-gray-300 hover:bg-gray-200'
-              }`}
-            >
-              {inStock ? (isRu ? 'Купить' : 'Cumpără') : (isRu ? 'Под заказ' : 'La comandă')}
-            </button>
-          )}
-        </div>
-
-      </div>
-    </Link>
-  );
+  const matchedBrand = product.brand ? getBrandByName(product.brand) : null;
+  const href = useHref(buildProductPath(product, language));
+  return <ProductCardView
+    href={href}
+    language={language}
+    listView={listView}
+    product={{ id: product.id, name_ro: product.name.ro, name_ru: product.name.ru,
+      category: product.category, image_url: product.image, brand: product.brand, sku,
+      price: product.price, sale_price: showSalePrice ? currentPrice : null,
+      qty: inStock ? 1 : 0, has_warranty: product.hasWarranty }}
+    brandControl={product.brand && (onBrandClick || matchedBrand) ? (
+      <button type="button" className="text-xs text-gray-500 hover:text-black" onClick={() => {
+        if (onBrandClick) onBrandClick(product.brand!);
+        else if (matchedBrand) navigate(`/brands/${matchedBrand.id}`);
+      }}>{product.brand}</button>
+    ) : null}
+  />;
 }

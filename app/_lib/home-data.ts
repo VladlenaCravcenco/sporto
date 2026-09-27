@@ -28,6 +28,7 @@ export interface HomeHeroData {
   banners: BannerRow[];
   brands: BrandItem[];
   featuredProducts: FeaturedProduct[];
+  saleProducts: FeaturedProduct[];
   promoCount: string;
 }
 
@@ -99,7 +100,20 @@ async function getFeaturedProducts(supabase: NonNullable<ReturnType<typeof creat
     .order('id', { ascending: true })
     .limit(12);
 
-  return fallback.error ? [] : fallback.data as FeaturedProduct[];
+  return fallback.error ? [] : (fallback.data ?? []) as FeaturedProduct[];
+}
+
+async function getSaleProducts(supabase: NonNullable<ReturnType<typeof createSupabase>>): Promise<FeaturedProduct[]> {
+  const products: FeaturedProduct[] = [];
+  for (let from = 0; products.length < 20; from += 100) {
+    const { data, error } = await supabase.from('products')
+      .select('id,name_ro,name_ru,sku,brand,price,sale_price,image_url,qty')
+      .eq('active', true).gt('sale_price', 0).order('id').range(from, from + 99);
+    if (error || !data?.length) break;
+    products.push(...data.filter(item => item.sale_price < item.price));
+    if (data.length < 100) break;
+  }
+  return products.slice(0, 20);
 }
 
 function promoDisplay(count: number) {
@@ -115,21 +129,24 @@ export async function getHomeHeroData(): Promise<HomeHeroData> {
       banners: [],
       brands: [],
       featuredProducts: [],
+      saleProducts: [],
       promoCount: '0',
     };
   }
 
-  const [bannersResult, promosResult, brands, featuredProducts] = await Promise.all([
+  const [bannersResult, promosResult, brands, featuredProducts, saleProducts] = await Promise.all([
     supabase.from('banners').select('*').eq('active', true).order('sort_order', { ascending: true }),
     supabase.from('products').select('*', { count: 'exact', head: true }).eq('active', true).not('sale_price', 'is', null),
     getActiveBrands(supabase),
     getFeaturedProducts(supabase),
+    getSaleProducts(supabase),
   ]);
 
   return {
-    banners: bannersResult.error ? [] : (bannersResult.data as BannerRow[]),
+    banners: bannersResult.error ? [] : ((bannersResult.data ?? []) as BannerRow[]),
     brands,
     featuredProducts,
+    saleProducts,
     promoCount: promosResult.error ? '...' : promoDisplay(promosResult.count ?? 0),
   };
 }

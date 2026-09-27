@@ -342,7 +342,7 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
           setProducts([]);
           setTotal(0);
           setError(warrantyColumnMissing ? null : err.message);
-          setConnected(warrantyColumnMissing);
+          setConnected(Boolean(warrantyColumnMissing));
         } else {
           setProducts(((data as ProductRow[] | null) ?? []).map(rowToProduct));
           setTotal(count ?? 0);

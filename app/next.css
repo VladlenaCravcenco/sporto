@@ -25,3 +25,7 @@
   .contact-sticker-attention { animation: none; }
 }
 @import '../src/styles/theme.css';
+@import '../src/styles/typography.css';
+
+/* Shared page canvas; cards and form surfaces retain their own backgrounds. */
+body { background-color: #f5f6f7; }

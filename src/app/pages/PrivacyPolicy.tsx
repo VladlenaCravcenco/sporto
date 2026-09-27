@@ -182,7 +182,7 @@ export function PrivacyPolicy() {
     const managedBody = language === 'ro' ? managed.content_ro : managed.content_ru;
 
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#f5f6f7]">
         <SeoHead
           title={SEO_PAGES.privacy[language as 'ro' | 'ru'].title}
           description={SEO_PAGES.privacy[language as 'ro' | 'ru'].description}
@@ -213,7 +213,7 @@ export function PrivacyPolicy() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={SEO_PAGES.privacy[language as 'ro' | 'ru'].title}
         description={SEO_PAGES.privacy[language as 'ro' | 'ru'].description}

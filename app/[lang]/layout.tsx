@@ -1,3 +1,5 @@
+import { Suspense } from 'react';
+import { PageBreadcrumbs } from '../_components/PageBreadcrumbs';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
 import { HeaderPreview, type Language } from '../_components/HeaderPreview';
@@ -31,9 +33,9 @@ export default async function PublicLocaleLayout({
   ]);
 
   return (
-    <div lang={lang} className="min-h-screen bg-white">
+    <div lang={lang} className="min-h-screen bg-[#f5f6f7]">
       <HeaderPreview language={lang as Language} categories={catalogNavigation} contacts={footerData} />
-      <main>{children}</main>
+      <main><Suspense fallback={null}><PageBreadcrumbs categories={catalogNavigation} /></Suspense>{children}</main>
       <FooterPreview language={lang as Language} contacts={footerData} />
       <FloatingContactsPreview language={lang as Language} contacts={footerData} />
       <CookieConsent language={lang as Language} />

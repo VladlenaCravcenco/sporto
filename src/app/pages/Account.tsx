@@ -245,7 +245,7 @@ export function Account() {
   ];
 
   return (
-    <div className="min-h-screen bg-white text-black">
+    <div className="min-h-screen bg-[#f5f6f7] text-black">
       <SeoHead title="Account | Sporto" canonical="/account" noIndex lang={lang} />
       <div className="max-w-[1920px] mx-auto px-6 lg:px-16 py-16">
 

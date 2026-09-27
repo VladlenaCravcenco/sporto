@@ -81,12 +81,7 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
   const items = [...half, ...half];
 
   return (
-    <div className="bg-white border-y border-gray-100 py-5">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 mb-4">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-300">
-          {language === 'ro' ? 'Mărci partenere — click pentru catalog' : 'Бренды-партнёры — нажмите для каталога'}
-        </p>
-      </div>
+    <div className="bg-[#f5f6f7] border-y border-gray-100 py-5">
       <div
         className="relative overflow-hidden cursor-grab"
         onPointerDown={pointerDown}
@@ -103,8 +98,8 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
         onMouseLeave={() => resume(150)}
         style={{ touchAction: 'pan-y' }}
       >
-        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-r from-white to-transparent" />
-        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-white to-transparent" />
+        <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-r from-[#f5f6f7] to-transparent" />
+        <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-16 z-10 bg-gradient-to-l from-[#f5f6f7] to-transparent" />
         <div ref={track} className="flex items-center will-change-transform" style={{ width: 'max-content' }}>
           {items.map((brand, index) => {
             const itemId = `${brand.id}-${index}`;

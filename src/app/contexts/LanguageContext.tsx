@@ -271,8 +271,9 @@ function getLanguageFromUrl(): Language | null {
   return null;
 }
 
-export function LanguageProvider({ children }: { children: React.ReactNode }) {
+export function LanguageProvider({ children, initialLanguage }: { children: React.ReactNode; initialLanguage?: Language }) {
   const [language, setLanguageState] = useState<Language>(() => {
+    if (initialLanguage) return initialLanguage;
     const urlLang = getLanguageFromUrl();
     if (urlLang) return urlLang;
     if (typeof window !== 'undefined') {

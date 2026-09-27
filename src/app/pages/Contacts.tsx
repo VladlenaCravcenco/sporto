@@ -302,7 +302,7 @@ export function Contacts() {
     };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={SEO_PAGES.contacts[language as Lang].title}
         description={SEO_PAGES.contacts[language as Lang].description}
@@ -343,7 +343,7 @@ export function Contacts() {
       </section>
 
       {/* ── MAIN CONTENT ── */}
-      <section className="py-14 md:py-20 bg-white">
+      <section className="py-14 md:py-20 bg-[#f5f6f7]">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
 
@@ -635,7 +635,7 @@ export function Contacts() {
       </section>
 
       {/* ── WHY US ── */}
-      <section className="py-14 md:py-20 bg-white border-t border-gray-100">
+      <section className="py-14 md:py-20 bg-[#f5f6f7] border-t border-gray-100">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">

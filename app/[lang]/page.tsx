@@ -1,3 +1,4 @@
+import { getCatalogNavigation } from '../_lib/catalog-data';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 import { HomeMigrationPreview } from '../_components/HomeMigrationPreview';
@@ -55,6 +56,6 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   const { lang } = await params;
   if (!languages.has(lang as Language)) notFound();
 
-  const data = await getHomeHeroData();
-  return <HomeMigrationPreview language={lang as Language} {...data} />;
+  const [data, categories] = await Promise.all([getHomeHeroData(), getCatalogNavigation()]);
+  return <HomeMigrationPreview language={lang as Language} {...data} categories={categories} />;
 }

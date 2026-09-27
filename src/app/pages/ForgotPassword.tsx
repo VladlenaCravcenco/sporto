@@ -70,7 +70,7 @@ export function ForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center px-4 py-16">
+    <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center px-4 py-16">
       <SeoHead title="Forgot Password | Sporto" canonical="/forgot-password" noIndex lang={lang} />
       <div className="w-full max-w-md">
 

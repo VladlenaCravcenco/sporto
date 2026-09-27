@@ -1,5 +1,10 @@
 'use client';
 
+import { HomeCategories } from './HomeCategories';
+import type { CatalogNavigationCategory } from '../_lib/catalog-data';
+import { ServicesBentoView } from '../../src/app/components/ServicesBentoView';
+import { HomeBenefits, HomeCallToAction } from './HomeSections';
+
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRight, ArrowUpRight, ChevronLeft, ChevronRight, Tag } from 'lucide-react';
 import type { BannerRow } from '../_lib/home-data';
@@ -8,11 +13,13 @@ import { PartnersMarqueePreview } from './PartnersMarqueePreview';
 import { FeaturedProductsSlider } from './FeaturedProductsSlider';
 
 interface HomeMigrationPreviewProps {
+  categories?: CatalogNavigationCategory[];
   language: Language;
   banners: BannerRow[];
   brands: import('../_lib/home-data').BrandItem[];
   featuredProducts: import('../_lib/home-data').FeaturedProduct[];
   promoCount: string;
+  saleProducts: import('../_lib/home-data').FeaturedProduct[];
 }
 
 const interval = 5500;
@@ -145,10 +152,10 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
   );
 }
 
-export function HomeMigrationPreview({ language, banners, brands, featuredProducts, promoCount }: HomeMigrationPreviewProps) {
+export function HomeMigrationPreview({ language, banners, brands, featuredProducts, saleProducts, promoCount, categories = [] }: HomeMigrationPreviewProps) {
   return (
-    <div className="min-h-screen bg-white">
-      <section className="bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
+      <section className="bg-[#f5f6f7]">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-10 lg:py-14">
           <div className="grid grid-cols-12 gap-2 md:gap-3">
             <div className="col-span-12 lg:col-span-8 overflow-hidden">
@@ -173,7 +180,17 @@ export function HomeMigrationPreview({ language, banners, brands, featuredProduc
         </div>
       </section>
       <FeaturedProductsSlider products={featuredProducts} language={language} />
+      <HomeCategories categories={categories} language={language} />
+      <FeaturedProductsSlider products={saleProducts} language={language} title={language === 'ro' ? 'Produse la promoție' : 'Товары по акции'} />
+      <section className="py-12 md:py-16">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+          <h2 className="mb-6 text-xl font-semibold text-gray-900">{language === 'ro' ? 'Servicii profesionale' : 'Профессиональные услуги'}</h2>
+          <ServicesBentoView language={language} basePath={`/${language}`} />
+        </div>
+      </section>
+      <HomeBenefits language={language} />
       <PartnersMarqueePreview brands={brands} language={language} />
+      <HomeCallToAction language={language} />
     </div>
   );
 }

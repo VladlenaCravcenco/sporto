@@ -80,7 +80,7 @@ export function BrandPage() {
   // ─── Loading ──────────────────────────────────────────────────────────────
   if (brandLoading) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center">
         <Loader2 className="w-6 h-6 text-gray-300 animate-spin" />
       </div>
     );
@@ -89,7 +89,7 @@ export function BrandPage() {
   // ─── Brand not found in DB ─────────────────────────────────────────────────
   if (!brand) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center">
         <div className="text-center">
           <p className="text-xs uppercase tracking-widest text-gray-400 mb-4">404</p>
           <h1 className="text-2xl mb-6">{L('Brand negăsit', 'Бренд не найден')}</h1>
@@ -104,7 +104,7 @@ export function BrandPage() {
   // ─── Brand has 0 products → redirect-style 404 ────────────────────────────
   if (!productsLoading && brandProducts.length === 0) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center">
+      <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center">
         <div className="text-center max-w-sm mx-auto px-4">
           <p className="text-xs uppercase tracking-widest text-gray-400 mb-4">
             {L('Brand disponibil în curând', 'Бренд скоро появится')}
@@ -129,7 +129,7 @@ export function BrandPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={`${brand.name} — ${lang === 'ro' ? 'Echipamente Sportive' : 'Спортивное Оборудование'} | SPORTOSFERA`}
         description={

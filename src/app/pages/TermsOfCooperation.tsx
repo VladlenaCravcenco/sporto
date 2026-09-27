@@ -192,7 +192,7 @@ export function TermsOfCooperation() {
     const managedBody = lang === 'ro' ? managed.content_ro : managed.content_ru;
 
     return (
-      <div className="min-h-screen bg-white">
+      <div className="min-h-screen bg-[#f5f6f7]">
         <SeoHead
           title={SEO_PAGES.terms[lang].title}
           description={SEO_PAGES.terms[lang].description}
@@ -231,7 +231,7 @@ export function TermsOfCooperation() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={SEO_PAGES.terms[lang].title}
         description={SEO_PAGES.terms[lang].description}

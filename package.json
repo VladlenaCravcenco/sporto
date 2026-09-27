@@ -10,7 +10,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "next:dev": "next dev",
+    "next:dev": "next dev --webpack",
     "next:build": "next build --webpack",
     "next:start": "next start"
   },

@@ -263,7 +263,7 @@ export function MaintenanceService() {
   };
 
   return (
-    <div className="min-h-screen bg-white text-black overflow-x-hidden">
+    <div className="min-h-screen bg-[#f5f6f7] text-black overflow-x-hidden">
       <ConsultationModal open={modalOpen} onClose={() => setModalOpen(false)} type="maintenance" />
       <SeoHead
         title={SEO_PAGES.maintenance[lang].title}
