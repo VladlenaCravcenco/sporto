@@ -29,3 +29,7 @@
 
 /* Shared page canvas; cards and form surfaces retain their own backgrounds. */
 body { background-color: #f5f6f7; }
+
+@media (max-width: 639px) {
+  .contact-sticker-attention { animation: none; box-shadow: 0 3px 12px rgb(0 0 0 / 12%); }
+}

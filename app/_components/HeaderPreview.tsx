@@ -1,7 +1,8 @@
 'use client';
 
-import { FormEvent, useCallback, useEffect, useRef, useState } from 'react';
-import { Activity, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Menu, Mic, Package, Phone, Puzzle, School, Search, ShoppingCart, Swords, TreePine, Trophy, Waves, Weight, X } from 'lucide-react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Activity, ChevronDown, ChevronLeft, ChevronRight, Dumbbell, Menu, Package, Phone, Puzzle, School, Search, ShoppingCart, Swords, TreePine, Trophy, Waves, Weight, X } from 'lucide-react';
+import { SmartSearch } from './SmartSearch';
 import { Logo } from '../../src/app/components/Logo';
 import { getCategoryIcon } from '../../src/app/lib/category-icons';
 import type { CatalogMenuProduct, CatalogNavigationCategory } from '../_lib/catalog-data';
@@ -37,7 +38,6 @@ export function HeaderPreview({ language, categories, contacts }: HeaderPreviewP
   const text = labels[language];
   const localePath = useCallback((path = '') => `/${language}${path}`, [language]);
   const initialCategory = categories[0];
-  const [searchQuery, setSearchQuery] = useState('');
   const [catalogOpen, setCatalogOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mobileLevel, setMobileLevel] = useState<0 | 1 | 2>(0);
@@ -111,11 +111,7 @@ export function HeaderPreview({ language, categories, contacts }: HeaderPreviewP
     const rest = window.location.pathname.replace(/^\/(ro|ru)(?=\/|$)/, '');
     window.location.assign(`/${next}${rest}${window.location.search}${window.location.hash}`);
   }
-  function submitSearch(event: FormEvent) {
-    event.preventDefault();
-    const query = searchQuery.trim();
-    if (query) window.location.href = `${localePath('/catalog')}?search=${encodeURIComponent(query)}`;
-  }
+
   function openCatalog() { if (closeTimer.current) window.clearTimeout(closeTimer.current); setCatalogOpen(true); }
   function scheduleClose() { closeTimer.current = window.setTimeout(() => setCatalogOpen(false), 120); }
   function selectCategory(category: CatalogNavigationCategory) { setCategoryId(category.id); setSubcategoryId(category.subcategories[0]?.id || ''); setProducts([]); }
@@ -129,7 +125,7 @@ export function HeaderPreview({ language, categories, contacts }: HeaderPreviewP
       <div className="border-b border-gray-100"><div className="max-w-[1920px] mx-auto px-2 sm:px-6 lg:px-8"><div className="flex items-center h-12 md:h-16 gap-2 md:gap-6">
         <a href={localePath()} className="flex items-center flex-shrink-0"><Logo className="h-5 md:h-8 w-auto" color="#111111" /></a>
         <div className="hidden md:block relative" onMouseEnter={openCatalog} onMouseLeave={scheduleClose}>
-          <button type="button" onClick={() => setCatalogOpen(value => !value)} className="h-9 rounded-[5px] px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 text-xs font-semibold transition-colors">{text.catalog}<ChevronDown className={`w-3 h-3 transition-transform ${catalogOpen ? 'rotate-180' : ''}`} /></button>
+          <a href={localePath('/catalog')} onClick={() => setCatalogOpen(false)} onFocus={openCatalog} className="h-9 rounded-[5px] px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 text-xs font-semibold transition-colors">{text.catalog}<ChevronDown className={`w-3 h-3 transition-transform ${catalogOpen ? 'rotate-180' : ''}`} /></a>
           {catalogOpen && activeCategory && (
             <div className="absolute top-9 left-0 flex min-h-0 bg-white border border-gray-100 shadow-2xl z-50 overflow-hidden" style={{ width: 'min(1120px, calc(100vw - 2rem))', height: 'min(680px, calc(100vh - 110px))' }} onMouseEnter={openCatalog} onMouseLeave={scheduleClose}>
               <div className="w-[250px] min-h-0 flex-shrink-0 border-r border-gray-100 py-1 overflow-y-auto overscroll-contain">
@@ -147,11 +143,11 @@ export function HeaderPreview({ language, categories, contacts }: HeaderPreviewP
             </div>
           )}
         </div>
-        <form onSubmit={submitSearch} className="hidden md:block flex-1 max-w-2xl relative"><input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder={text.search} className="w-full h-9 pl-4 pr-20 text-base border border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-black" /><button type="button" title={language === 'ro' ? 'Căutare vocală' : 'Голосовой поиск'} className="absolute right-10 top-0 h-9 w-9 flex items-center justify-center text-gray-300"><Mic className="w-3.5 h-3.5" /></button><button type="submit" aria-label="Search" className="absolute right-0 top-0 h-9 w-10 flex items-center justify-center text-gray-400 border-l border-gray-200"><Search className="w-3.5 h-3.5" /></button></form>
+        <SmartSearch language={language} />
         <div className="ml-auto flex items-center"><div className="flex md:hidden h-12 border-x border-gray-100"><button type="button" aria-label="Română" onClick={() => changeLanguage('ro')} className={`px-2 text-xs ${language === 'ro' ? 'bg-black text-white' : 'text-gray-400'}`}>RO</button><button type="button" aria-label="Русский" onClick={() => changeLanguage('ru')} className={`px-2 text-xs ${language === 'ru' ? 'bg-black text-white' : 'text-gray-400'}`}>RU</button></div><a href={localePath('/order-request')} aria-label={language === 'ro' ? 'Coș de cumpărături' : 'Корзина'} className="relative flex items-center justify-center w-10 h-12 md:w-12 md:h-16 text-gray-400 border-r border-gray-100"><ShoppingCart className="w-4 h-4" />{totalItems > 0 && <span className="absolute top-2 right-1 w-4 h-4 bg-black text-white text-[9px] flex items-center justify-center">{totalItems > 9 ? '9+' : totalItems}</span>}</a><a href={localePath('/login')} className="hidden md:flex px-4 h-16 items-center text-xs text-gray-500 hover:text-black">{text.login}</a><button type="button" aria-label="Menu" onClick={() => { setMobileMenuOpen(true); setMobileLevel(1); }} className="md:hidden w-10 h-12 flex items-center justify-center text-gray-500"><Menu className="w-4 h-4" /></button></div>
       </div></div></div>
       <div className="hidden md:block border-b border-gray-100 bg-white"><div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8"><nav className="flex items-center h-10"><a href={localePath()} className="px-4 h-10 flex items-center text-xs font-semibold text-black border-b-2 border-black">{text.home}</a>{navLinks.map(([href, label]) => <a key={href} href={href} className="px-4 h-10 flex items-center text-xs text-gray-500 hover:text-black">{label}</a>)}<div className="ml-auto flex h-10"><a href={`tel:${contacts.phone}`} aria-label={contacts.phoneDisplay} className="hidden lg:flex items-center gap-2 px-3 border-x border-gray-100 text-xs text-gray-600"><span className="w-6 h-6 bg-black flex items-center justify-center"><Phone className="w-3 h-3 text-white" /></span>{contacts.phoneDisplay}</a><button type="button" aria-label="Română" onClick={() => changeLanguage('ro')} className={`px-3 text-xs ${language === 'ro' ? 'bg-black text-white' : 'text-gray-400'}`}>RO</button><button type="button" aria-label="Русский" onClick={() => changeLanguage('ru')} className={`px-3 text-xs border-r border-gray-100 ${language === 'ru' ? 'bg-black text-white' : 'text-gray-400'}`}>RU</button></div></nav></div></div>
-      <div className="md:hidden border-b border-gray-100 bg-white"><form onSubmit={submitSearch} className="flex"><input value={searchQuery} onChange={event => setSearchQuery(event.target.value)} placeholder={text.mobileSearch} className="flex-1 h-9 pl-3 text-base bg-gray-50 focus:outline-none" /><button type="submit" aria-label="Search" className="w-10 h-9 border-l border-gray-100 flex items-center justify-center text-gray-400"><Search className="w-3.5 h-3.5" /></button></form></div>
+      <SmartSearch language={language} mobile />
       <aside className={`md:hidden fixed top-0 right-0 h-full w-[88vw] max-w-sm bg-white z-50 shadow-2xl transition-transform duration-300 ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}><div className="h-14 px-5 flex items-center justify-between border-b border-gray-100"><button type="button" onClick={() => mobileLevel === 2 ? setMobileLevel(1) : closeMobile()} aria-label="Back">{mobileLevel === 2 ? <ChevronLeft className="w-4 h-4" /> : <Logo className="h-6 w-auto" color="#111" />}</button><button onClick={closeMobile} aria-label="Close menu"><X className="w-4 h-4" /></button></div><div className="h-[calc(100%-3.5rem)] overflow-y-auto">{mobileLevel === 1 && categories.map(category => <button key={category.id} onClick={() => { setMobileCategoryId(category.id); setMobileLevel(2); }} className="w-full px-5 py-4 border-b border-gray-100 flex items-center justify-between text-left"><span className="flex items-center gap-3"><span className="w-5 text-gray-400">{getCategoryIcon(category.icon) ?? fallbackIcons[category.id] ?? <Dumbbell className="w-4 h-4" />}</span><span className="text-sm text-gray-700">{category.name[language]}</span></span><ChevronRight className="w-3.5 h-3.5 text-gray-300" /></button>)}{mobileLevel === 2 && mobileCategory && <><a href={`${localePath('/catalog')}?category=${encodeURIComponent(mobileCategory.id)}`} className="flex px-5 py-4 bg-gray-50 border-b border-gray-100 text-sm font-semibold">{language === 'ro' ? 'Toate din categorie' : 'Все в категории'}</a>{mobileCategory.subcategories.map(subcategory => <a key={subcategory.id} href={`${localePath('/catalog')}?category=${encodeURIComponent(mobileCategory.id)}&subcategory=${encodeURIComponent(subcategory.id)}`} className="flex items-center justify-between px-5 py-4 border-b border-gray-100 text-sm text-gray-600">{subcategory.name[language]}<ChevronRight className="w-3 h-3 text-gray-300" /></a>)}</>}</div></aside>
     </header>
   );

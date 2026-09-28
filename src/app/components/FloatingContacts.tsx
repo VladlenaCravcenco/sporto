@@ -72,20 +72,20 @@ export function FloatingContacts() {
       {/* ── Main toggle button ── */}
       <button
         onClick={() => setOpen(v => !v)}
-        className={`contact-sticker-attention h-14 w-[min(310px,calc(100vw-2rem))] flex items-center text-left shadow-[0_12px_32px_rgba(220,38,38,0.28)] transition-colors duration-300 ${
+        className={`contact-sticker-attention relative h-12 w-12 rounded-full sm:h-14 sm:w-[310px] sm:rounded-[5px] flex items-center text-left shadow-[0_12px_32px_rgba(220,38,38,0.28)] transition-colors duration-300 ${
           open
             ? 'bg-gray-900 hover:bg-black'
             : 'bg-red-600 hover:bg-red-700'
         }`}
         aria-label={open ? 'Закрыть контакты' : 'Связаться с нами'}
       >
-        <span className="w-14 h-14 flex-shrink-0 flex items-center justify-center border-r border-white/20">
+        <span className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center sm:border-r border-white/20">
           {open
             ? <X className="w-5 h-5 text-white" />
             : <MessageCircle className="w-5 h-5 text-white" />
           }
         </span>
-        <span className="flex-1 min-w-0 px-4">
+        <span className="hidden sm:block flex-1 min-w-0 px-4">
           <span className="block text-[9px] uppercase tracking-[0.18em] text-white/65 mb-0.5">
             {open
               ? (language === 'ro' ? 'Alegeți un contact' : 'Выберите способ связи')
@@ -98,7 +98,7 @@ export function FloatingContacts() {
           </span>
         </span>
         {!open && (
-          <span className="mr-4 w-2 h-2 flex-shrink-0 bg-white rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.18)]" />
+          <span className="absolute right-2 top-2 sm:static sm:mr-4 w-1.5 h-1.5 sm:w-2 sm:h-2 flex-shrink-0 bg-white rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.18)]" />
         )}
       </button>
     </div>

@@ -19,8 +19,8 @@ function CartAction({ product, language }: Props) {
     id: product.id, name: { ro: product.name_ro, ru: product.name_ru || product.name_ro },
     price: product.sale_price != null && product.sale_price > 0 && product.sale_price < product.price ? product.sale_price : product.price,
     image: product.image_url || '', category: product.category || '', sku: product.sku || undefined,
-  })} className="inline-flex min-h-10 items-center justify-center gap-2 rounded-[5px] bg-red-600 px-4 text-sm font-medium text-white hover:bg-red-700">
-    <ShoppingCart className="h-4 w-4" />{ru ? 'В корзину' : 'Adaugă în coș'}
+  })} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[5px] bg-red-600 px-2 sm:px-4 text-xs sm:text-sm font-medium text-white hover:bg-red-700">
+    <ShoppingCart className="h-4 w-4 shrink-0" />{(product.qty ?? 0) > 0 ? (ru ? 'Добавить в корзину' : 'Adaugă în coș') : (ru ? 'Под заказ' : 'La comandă')}
   </button>;
 }
 

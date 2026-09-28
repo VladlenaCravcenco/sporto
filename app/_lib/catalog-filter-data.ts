@@ -1,3 +1,4 @@
+import { searchProducts } from '../../src/lib/searchEngine';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 import { getCatalogNavigation, type CatalogProduct, type CatalogSort, type CatalogLanguage } from './catalog-data';
@@ -19,14 +20,29 @@ export async function getFilteredCatalog(query: CatalogQuery, page: number, sort
   }
   try {
     const [products, allDefinitions, categories] = await Promise.all([
-      readAll<CatalogProduct>((from, to) => db.from('products').select('id,name_ro,name_ru,sku,brand,category,subcategory,price,sale_price,image_url,qty,has_warranty').eq('active', true).order('id').range(from, to)),
+      readAll<CatalogProduct & { description_ro: string | null; description_ru: string | null }>((from, to) => db.from('products').select('id,name_ro,name_ru,description_ro,description_ru,sku,brand,category,subcategory,price,sale_price,image_url,qty,has_warranty').eq('active', true).order('id').range(from, to)),
       readAll<AttributeDefinition>((from, to) => db.from('product_attributes').select('id,name_ro,name_ru,value_type,unit,unit_ro,unit_ru,category_ids').eq('active', true).eq('filter_enabled', true).neq('value_type', 'text').order('sort_order').order('id').range(from, to)),
       getCatalogNavigation(),
     ]);
     const chosenCategories = valuesOf(query, 'category');
     const definitions = allDefinitions.filter(d => !chosenCategories.length || !d.category_ids?.length || d.category_ids.some(id => chosenCategories.includes(id)));
     const rows = definitions.length ? await readAll<AttributeValue>((from, to) => db.from('product_attribute_values').select('product_id,attribute_id,numeric_value,text_value,boolean_value').in('attribute_id', definitions.map(d => d.id)).order('product_id').order('attribute_id').range(from, to)) : [];
-    const matches = createProductMatcher(query, definitions, rows);
+    const categoryNames = Object.fromEntries(categories.flatMap(c => [
+      [c.id, c.name.ro + ' ' + c.name.ru],
+      ...c.subcategories.map(s => [s.id, s.name.ro + ' ' + s.name.ru]),
+    ]));
+    const search = (valuesOf(query, 'search')[0] || '').trim();
+    const hits = search ? searchProducts(products.map(p => ({
+      id: p.id, name: { ro: p.name_ro, ru: p.name_ru || p.name_ro },
+      description: { ro: p.description_ro || '', ru: p.description_ru || p.description_ro || '' },
+      category: p.category || '', subcategory: p.subcategory || '', brand: p.brand || '',
+      sku: p.sku || '', cod: p.sku || '', price: p.price, image: p.image_url || '',
+      featured: false, specifications: { ro: {}, ru: {} },
+    })), search, language, products.length).hits : [];
+    const ranks = new Map(hits.map((hit, index) => [hit.product.id, index]));
+    const filterMatch = createProductMatcher({ ...query, search: undefined }, definitions, rows, categoryNames);
+    const matches = (product: CatalogProduct, exclude?: string) =>
+      (!search || ranks.has(product.id)) && filterMatch(product, exclude);
     const groups: FilterGroup[] = [];
     const group = (key: string, label: string, options: { value: string; label: string; test: (p: CatalogProduct) => boolean }[]) => {
       const eligible = products.filter(p => matches(p, key));
@@ -59,6 +75,7 @@ export async function getFilteredCatalog(query: CatalogQuery, page: number, sort
       if (sort === 'price-asc') return effectivePrice(a) - effectivePrice(b) || a.id.localeCompare(b.id);
       if (sort === 'price-desc') return effectivePrice(b) - effectivePrice(a) || a.id.localeCompare(b.id);
       if (sort === 'recommended') {
+        if (search) return (ranks.get(a.id) ?? 0) - (ranks.get(b.id) ?? 0);
         const priority = Number(b.brand?.toLowerCase() === 'insportline') - Number(a.brand?.toLowerCase() === 'insportline');
         if (priority) return priority;
       }

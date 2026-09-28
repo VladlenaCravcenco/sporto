@@ -1,3 +1,4 @@
+import { CatalogSortControl } from '../../_components/CatalogSortControl';
 import { CatalogFilters } from '../../_components/CatalogFilters';
 import { getFilteredCatalog } from '../../_lib/catalog-filter-data';
 import type { CatalogQuery } from '../../_lib/catalog-filters';
@@ -107,7 +108,6 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
     <section className="min-h-[70vh] bg-[#f5f6f7] py-10 md:py-14">
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-2">
-          <p className="text-sm font-medium text-red-600">SPORTO</p>
           <h1 className="text-3xl font-semibold text-gray-950 md:text-4xl">
             {language === 'ro' ? 'Catalog de produse' : 'Каталог товаров'}
           </h1>
@@ -118,48 +118,23 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
           </p>
         </div>
 
-        <div className="grid items-start gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
+        {data.status === 'ready' && <div className="mb-3 flex items-center justify-between gap-3">
+          <p className="min-w-0 text-sm text-gray-600">
+            <span className="font-medium text-gray-900">{data.facets.groups
+              .filter(group => group.key === (query.subcategory ? 'subcategory' : 'category'))
+              .flatMap(group => group.options.filter(option => (Array.isArray(query[group.key]) ? query[group.key] : [query[group.key]])?.includes(option.value)).map(option => option.label))
+              .join(', ') || (language === 'ro' ? 'Toate produsele' : 'Все товары')}</span>
+            {' · '}{data.totalProducts} {language === 'ro' ? 'produse' : 'товаров'}
+          </p>
+          <div className="hidden shrink-0 lg:block"><CatalogSortControl query={query} language={language} /></div>
+        </div>}
+        <div className="grid items-start gap-3 lg:gap-6 lg:grid-cols-[280px_minmax(0,1fr)] xl:grid-cols-[300px_minmax(0,1fr)]">
         {data.status === 'ready' && <CatalogFilters key={JSON.stringify(query)} facets={data.facets} query={query} language={language} />}
         <div className="min-w-0">
         {data.status === 'ready' && data.products.length > 0 && (
           <>
-            <div className="mb-5 flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
-              <p className="text-sm text-gray-500">
-                {language === 'ro'
-                  ? `${data.totalProducts} produse`
-                  : `${data.totalProducts} товаров`}
-              </p>
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
-                {data.totalPages > 1 && (
-                  <p className="pb-2.5 text-sm font-medium text-gray-700">
-                    {language === 'ro'
-                      ? `Pagina ${data.page} din ${data.totalPages}`
-                      : `Страница ${data.page} из ${data.totalPages}`}
-                  </p>
-                )}
-                <form action={`/${language}/catalog`} method="get" className="flex items-end gap-2">
-                  {Object.entries(filters).filter(([key]) => key !== 'sort' && key !== 'page').flatMap(([key, value]) => (Array.isArray(value) ? value : value ? [value] : []).map((item, index) => <input key={`${key}-${index}`} type="hidden" name={key} value={item} />))}
-                  <label className="flex min-w-[220px] flex-col gap-1.5 text-sm font-medium text-gray-700">
-                    {language === 'ro' ? 'Sortare' : 'Сортировка'}
-                    <select
-                      name="sort"
-                      defaultValue={sort}
-                      className="h-11 rounded-[5px] border border-gray-300 bg-white px-3 text-sm font-medium text-gray-800 outline-none transition-colors focus:border-gray-900"
-                    >
-                      <option value="recommended">{language === 'ro' ? 'Recomandate' : 'Рекомендуемые'}</option>
-                      <option value="price-asc">{language === 'ro' ? 'Preț crescător' : 'Сначала дешевле'}</option>
-                      <option value="price-desc">{language === 'ro' ? 'Preț descrescător' : 'Сначала дороже'}</option>
-                      <option value="name-asc">{language === 'ro' ? 'După denumire' : 'По названию'}</option>
-                    </select>
-                  </label>
-                  <button type="submit" className="h-11 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
-                    {language === 'ro' ? 'Aplică' : 'Применить'}
-                  </button>
-                </form>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
+            <div className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {data.products.map(product => (
                 <ProductCardView key={product.id} product={product} language={language} href={productHref(product, language)} />
               ))}
@@ -192,7 +167,7 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                 </div>
 
                 {data.page < data.totalPages ? (
-                  <a href={catalogHref(language, data.page + 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-red-600 px-5 text-sm font-semibold text-white transition-colors hover:bg-red-700">
+                  <a href={catalogHref(language, data.page + 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-gray-800">
                     {language === 'ro' ? 'Înainte' : 'Далее'}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
                   </a>

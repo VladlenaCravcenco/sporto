@@ -1,3 +1,4 @@
+import { FeaturedProductsSlider } from '../../../../_components/FeaturedProductsSlider';
 import { SiteBreadcrumbs } from '../../../../../src/app/components/SiteBreadcrumbs';
 import { ProductPurchase } from '../../../../_components/ProductPurchase';
 import { getCatalogNavigation } from '../../../../_lib/catalog-data';
@@ -5,7 +6,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import { notFound, redirect } from 'next/navigation';
 import { ArrowLeft, ArrowUpRight, Package, ShieldCheck, Tag } from 'lucide-react';
-import { getProductDetail, getProductYoutubeId, type ProductDetailData } from '../../../../_lib/product-data';
+import { getProductDetail, getProductYoutubeId, getRelatedProducts, type ProductDetailData } from '../../../../_lib/product-data';
 import type { Language } from '../../../../_components/HeaderPreview';
 
 const siteUrl = (process.env.NEXT_PUBLIC_SITE_URL || process.env.VITE_SITE_URL || 'https://www.sporto.md').replace(/\/+$/, '');
@@ -101,7 +102,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
   const onSale = product.sale_price != null && product.sale_price > 0 && product.sale_price < product.price;
   const currentPrice = onSale ? product.sale_price as number : product.price;
   const inStock = (product.qty || 0) > 0;
-  const categories = await getCatalogNavigation();
+  const [categories, relatedProducts] = await Promise.all([getCatalogNavigation(), getRelatedProducts(product)]);
   const category = categories.find(item => item.id === product.category);
   const subcategory = category?.subcategories.find(item => item.id === product.subcategory);
   const breadcrumbs = [
@@ -152,8 +153,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
             <div className="border-y border-gray-200 py-5">
               {onSale && <p className="text-sm text-gray-400 line-through">{formatPrice(product.price, language)} MDL</p>}
               <p className={`text-3xl font-semibold ${onSale ? 'text-red-600' : 'text-gray-950'}`}>{formatPrice(currentPrice, language)} <span className="text-base font-normal">MDL</span></p>
-              <div className="mt-3 flex flex-wrap gap-3 text-sm"><span className={inStock ? 'text-green-700' : 'text-gray-500'}>{inStock ? (language === 'ro' ? 'Disponibil' : 'В наличии') : (language === 'ro' ? 'La comandă' : 'Под заказ')}</span>{product.has_warranty && <span className="inline-flex items-center gap-1 text-gray-600"><ShieldCheck className="h-4 w-4 text-red-600" />{language === 'ro' ? 'Garanție' : 'Гарантия'}</span>}{onSale && <span className="inline-flex items-center gap-1 text-red-600"><Tag className="h-4 w-4" />{language === 'ro' ? 'Promoție' : 'Акция'}</span>}</div>
-              <ProductPurchase language={language} item={{
+              <div className="mt-3 flex flex-wrap gap-3 text-sm"><span className={inStock ? 'text-green-700' : 'text-gray-500'}>{inStock ? (language === 'ro' ? 'Disponibil' : 'В наличии') : (language === 'ro' ? 'Nu este în stoc' : 'Нет в наличии')}</span>{product.has_warranty && <span className="inline-flex items-center gap-1 text-gray-600"><ShieldCheck className="h-4 w-4 text-red-600" />{language === 'ro' ? 'Garanție' : 'Гарантия'}</span>}{onSale && <span className="inline-flex items-center gap-1 text-red-600"><Tag className="h-4 w-4" />{language === 'ro' ? 'Promoție' : 'Акция'}</span>}</div>
+              <ProductPurchase inStock={inStock} language={language} item={{
                 id: product.id, name: { ro: product.name_ro, ru: product.name_ru || product.name_ro },
                 price: currentPrice, image: images[0] || '', category: product.category, sku: product.sku || undefined,
               }} />
@@ -167,6 +168,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
           </div>
         </div>
         {getProductYoutubeId(product) && <div className="mt-12 border-t border-gray-100 pt-8"><h2 className="mb-4 text-xl font-semibold">{language === 'ro' ? 'Video' : 'Видео'}</h2><div className="aspect-video max-w-3xl"><iframe className="h-full w-full" src={`https://www.youtube.com/embed/${getProductYoutubeId(product)}`} title={name} loading="lazy" allowFullScreen /></div></div>}
+        <FeaturedProductsSlider products={relatedProducts} language={language} title={language === 'ro' ? 'Produse similare' : 'Похожие товары'} compact />
       </div>
     </main>
   );

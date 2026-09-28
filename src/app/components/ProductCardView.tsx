@@ -41,14 +41,14 @@ export function ProductCardView({ product, language, href, actions, brandControl
           <Package className="h-8 w-8 text-gray-200" aria-hidden="true" />
         )}
 
-        <span className={`absolute left-3 top-3 rounded-[3px] px-2 py-1 text-[11px] font-medium ${inStock ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
+        <span className={`absolute left-1.5 top-1.5 sm:left-3 sm:top-3 rounded-[3px] px-2 py-1 text-[11px] font-medium ${inStock ? 'bg-black text-white' : 'bg-gray-200 text-gray-600'}`}>
           {inStock
             ? (language === 'ro' ? 'Disponibil' : 'В наличии')
-            : (language === 'ro' ? 'La comandă' : 'Под заказ')}
+            : (language === 'ro' ? 'Nu este în stoc' : 'Нет в наличии')}
         </span>
 
         {product.has_warranty && (
-          <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-[3px] border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
+          <span className="absolute right-1.5 bottom-1.5 sm:bottom-auto sm:right-3 sm:top-3 inline-flex items-center gap-1 rounded-[3px] border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
             <ShieldCheck className="h-3 w-3 text-red-600" aria-hidden="true" />
             {language === 'ro' ? 'Garanție' : 'Гарантия'}
           </span>
@@ -64,19 +64,19 @@ export function ProductCardView({ product, language, href, actions, brandControl
         <ArrowUpRight className="absolute bottom-3 right-3 h-4 w-4 text-gray-400 opacity-0 transition-opacity group-hover:opacity-100" aria-hidden="true" />
       </div>
 
-      <div className="flex flex-1 flex-col gap-2 border-t border-gray-100 p-4">
+      <div className="flex flex-1 flex-col gap-2 border-t border-gray-100 p-2 sm:p-4">
         {product.brand && <p className="text-xs font-medium text-gray-500">{product.brand}</p>}
-        <h2 className="line-clamp-2 min-h-11 text-[15px] font-medium leading-[1.45] text-gray-900">{name}</h2>
+        <h2 className="line-clamp-2 min-h-11 text-xs sm:text-[15px] font-medium leading-[1.45] text-gray-900">{name}</h2>
         <p className="text-xs text-gray-400">{product.sku || `ART-${product.id}`}</p>
-        <div className="mt-auto flex flex-wrap items-baseline gap-x-3 gap-y-1 border-t border-gray-100 pt-3">
-          <p className={`whitespace-nowrap text-2xl font-semibold ${onSale ? 'text-red-600' : 'text-gray-900'}`}>
+        <div className="mt-auto flex flex-wrap items-baseline gap-x-2 sm:gap-x-3 gap-y-1 border-t border-gray-100 pt-3">
+          <p className={`whitespace-nowrap text-xl sm:text-2xl font-semibold ${onSale ? 'text-red-600' : 'text-gray-900'}`}>
             {formatPrice(currentPrice, language)} <span className="text-sm font-normal">MDL</span>
           </p>
           {onSale && <p className="whitespace-nowrap text-sm text-gray-400 line-through">{formatPrice(product.price, language)} MDL</p>}
         </div>
       </div>
       </a>
-      {<div className="flex flex-wrap items-center justify-between gap-2 px-4 pb-4">{brandControl}{actions ?? <ProductCardCartAction product={product} language={language} />}</div>}
+      {<div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-2 sm:px-4 sm:pb-4">{brandControl}<div className="ml-auto flex justify-end">{actions ?? <ProductCardCartAction product={product} language={language} />}</div></div>}
     </article>
   );
 }

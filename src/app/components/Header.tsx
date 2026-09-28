@@ -6,7 +6,7 @@ import { useCart } from '../contexts/CartContext';
 import { Menu, X, User, LogOut, ShoppingCart, Search, ChevronDown, ChevronRight, ChevronLeft, Phone, ArrowRight, Activity, Dumbbell, Weight, PersonStanding, Trophy, Medal, Swords, Waves, Puzzle, TreePine, School } from 'lucide-react';
 import { Logo } from './Logo';
 import { useCategories } from '../contexts/CategoriesContext';
-import { SearchDropdown, VoiceSearchButton } from './SearchDropdown';
+import { SearchDropdown } from './SearchDropdown';
 import { addToHistory } from '../../lib/searchEngine';
 import { useContacts } from '../hooks/useContacts';
 import { supabase, type ProductRow } from '../../lib/supabase';
@@ -357,14 +357,11 @@ export function Header() {
                   onClick={handleSearchClick}
                   onBlur={handleBlur}
                   placeholder={language === 'ro' ? 'Caută produse, categorii...' : 'Поиск товаров, категорий...'}
-                  className={`w-full h-9 pl-4 pr-20 text-[16px] border bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white transition-colors ${
+                  className={`w-full h-9 pl-4 pr-12 text-[16px] border bg-gray-50 text-gray-900 placeholder-gray-400 focus:outline-none focus:bg-white transition-colors ${
                     showDropdown ? 'border-black' : 'border-gray-200 focus:border-black'
                   }`}
                 />
-                <VoiceSearchButton
-                  onResult={text => { setSearchQuery(text); setSearchOpen(true); inputRef.current?.focus(); }}
-                  lang={language as 'ro' | 'ru'}
-                />
+
                 <button
                   type="submit"
                   className="absolute right-0 top-0 h-9 w-10 flex items-center justify-center text-gray-400 hover:text-black transition-colors border-l border-gray-200"

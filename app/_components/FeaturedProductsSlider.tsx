@@ -22,7 +22,7 @@ function productPath(product: FeaturedProduct, language: Language) {
   return `/${language}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
 }
 
-export function FeaturedProductsSlider({ products: suppliedProducts, language, title }: { products?: FeaturedProduct[] | null; language: Language; title?: string }) {
+export function FeaturedProductsSlider({ products: suppliedProducts, language, title, compact = false }: { products?: FeaturedProduct[] | null; language: Language; title?: string; compact?: boolean }) {
   const products = Array.isArray(suppliedProducts) ? suppliedProducts : [];
   const viewport = useRef<HTMLDivElement>(null);
   const paused = useRef(false);
@@ -57,7 +57,7 @@ export function FeaturedProductsSlider({ products: suppliedProducts, language, t
 
   return (
     <section className="py-12 md:py-16 bg-[#f5f6f7]">
-      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className={compact ? "w-full" : "max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8"}>
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-xl text-gray-900">{title || (language === 'ro' ? 'Produse recomandate' : 'Рекомендуемые товары')}</h2>
           <div className="flex items-center gap-2">
@@ -78,7 +78,7 @@ export function FeaturedProductsSlider({ products: suppliedProducts, language, t
           onPointerUp={() => { paused.current = false; }}
         >
           {products.map(product => (
-            <div key={product.id} data-product-card className="flex-none w-[78vw] sm:w-[300px] lg:w-[calc((100%_-_36px)_/_4)] snap-start">
+            <div key={product.id} data-product-card className="flex-none w-[calc((100%_-_12px)_/_2)] sm:w-[300px] lg:w-[calc((100%_-_36px)_/_4)] snap-start">
               <ProductCardView product={product} language={language} href={productPath(product, language)} />
             </div>
           ))}

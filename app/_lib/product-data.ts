@@ -130,3 +130,27 @@ export async function getProductDetail(identifier: string, sku?: string): Promis
     specifications,
   };
 }
+export async function getRelatedProducts(product: ProductDetail): Promise<import('./home-data').FeaturedProduct[]> {
+  const db = createServerSupabase();
+  if (!db || !product.category) return [];
+  const columns = 'id,name_ro,name_ru,sku,brand,category,price,sale_price,image_url,qty,has_warranty';
+  try {
+    const base = () => db.from('products').select(columns).eq('active', true).eq('category', product.category).neq('id', product.id).order('qty', { ascending: false, nullsFirst: false }).order('id');
+    const related: import('./home-data').FeaturedProduct[] = [];
+    if (product.subcategory) {
+      const { data, error } = await base().eq('subcategory', product.subcategory).limit(12);
+      if (error) throw error;
+      related.push(...(data || []));
+    }
+    if (related.length < 12) {
+      const { data, error } = await base().limit(24);
+      if (error) throw error;
+      const ids = new Set(related.map(item => item.id));
+      related.push(...(data || []).filter(item => !ids.has(item.id)).slice(0, 12 - related.length));
+    }
+    return related;
+  } catch (error) {
+    console.error('[related products] Could not load recommendations', error);
+    return [];
+  }
+}

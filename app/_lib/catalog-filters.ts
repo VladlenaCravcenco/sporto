@@ -25,7 +25,8 @@ export function attributeKey(value: AttributeValue, type: string) {
   if (type === 'boolean') return value.boolean_value == null ? null : String(value.boolean_value);
   return value.text_value;
 }
-export function createProductMatcher(query: CatalogQuery, definitions: AttributeDefinition[], rows: AttributeValue[]) {
+export const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().replace(/ё/g, 'е');
+export function createProductMatcher(query: CatalogQuery, definitions: AttributeDefinition[], rows: AttributeValue[], categoryNames: Record<string, string> = {}) {
   const options = new Map<string, Map<string, Set<string>>>();
   const types = new Map(definitions.map(d => [d.id, d.value_type]));
   for (const row of rows) {
@@ -54,8 +55,12 @@ export function createProductMatcher(query: CatalogQuery, definitions: Attribute
     if (exclude !== 'warranty' && valuesOf(query, 'warranty').includes('true') && !product.has_warranty) return false;
     const stock = valuesOf(query, 'stock');
     if (exclude !== 'stock' && stock.length && !stock.includes((product.qty ?? 0) > 0 ? 'inStock' : 'onOrder')) return false;
-    const search = (valuesOf(query, 'search')[0] || '').trim().toLocaleLowerCase();
-    if (search && !`${product.name_ro} ${product.name_ru || ''} ${product.sku || ''} ${product.brand || ''}`.toLocaleLowerCase().includes(search)) return false;
+    const terms = normalizeSearch(valuesOf(query, 'search')[0] || '').trim().split(/\s+/).filter(Boolean);
+    const searchable = normalizeSearch([
+      product.name_ro, product.name_ru, product.sku, product.brand,
+      categoryNames[product.category || ''], categoryNames[product.subcategory || ''],
+    ].filter(Boolean).join(' '));
+    if (!terms.every(term => searchable.includes(term))) return false;
     for (const definition of definitions) {
       const key = `attr.${definition.id}`;
       const selected = valuesOf(query, key);
