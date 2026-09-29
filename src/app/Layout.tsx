@@ -8,7 +8,7 @@ import { PromoPopup } from './components/PromoPopup';
 
 export function Layout() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col bg-[#f5f6f7]">
       <ScrollRestoration />
       <Header />
       <main className="flex-1">

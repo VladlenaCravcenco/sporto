@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS products (
   images       TEXT[] DEFAULT '{}',      -- Массив всех фото (images[1] = главное = image_url)
   youtube_url  TEXT,                     -- YouTube ссылка (https://youtu.be/ID или watch?v=ID)
   featured     BOOLEAN DEFAULT FALSE,    -- Показывать на главной
+  has_warranty BOOLEAN NOT NULL DEFAULT FALSE, -- Товар продаётся с гарантией
   active       BOOLEAN DEFAULT TRUE,     -- Скрыть товар не удаляя
   created_at   TIMESTAMPTZ DEFAULT NOW(),
   updated_at   TIMESTAMPTZ DEFAULT NOW()
@@ -71,6 +72,7 @@ CREATE POLICY "Anon write access"
 CREATE INDEX IF NOT EXISTS products_category_idx     ON products (category);
 CREATE INDEX IF NOT EXISTS products_brand_idx        ON products (brand);
 CREATE INDEX IF NOT EXISTS products_featured_idx     ON products (featured) WHERE featured = TRUE;
+CREATE INDEX IF NOT EXISTS products_warranty_idx     ON products (has_warranty) WHERE has_warranty = TRUE;
 CREATE INDEX IF NOT EXISTS products_active_idx       ON products (active);
 
 -- ─── Полнотекстовый поиск по названию ────────────────────────────────

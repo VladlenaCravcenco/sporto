@@ -365,7 +365,7 @@ export function OrderRequest() {
   // ── Success screen ─────────────────────────────────────────────────────────
   if (step === 'success') {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-8">
+      <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center p-8">
         <div className="max-w-md w-full text-center">
           <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 className="w-8 h-8 text-white" />
@@ -495,11 +495,11 @@ export function OrderRequest() {
 
   // ── Cart screen ─────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead title="Order Request | Sporto" canonical="/order-request" noIndex lang={language as Language} />
       {/* Header */}
       <div className="bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
               <p className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-2">
@@ -519,7 +519,7 @@ export function OrderRequest() {
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {cart.length === 0 ? (
           <div className="border border-gray-200 p-16 text-center max-w-md mx-auto mt-8">
             <div className="w-14 h-14 bg-gray-100 flex items-center justify-center mx-auto mb-5">

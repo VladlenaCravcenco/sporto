@@ -9,7 +9,7 @@ export function FloatingContacts() {
   const [open, setOpen] = useState(false);
 
   return (
-    <div className="fixed bottom-6 right-4 sm:right-6 z-[150] flex flex-col items-end gap-2.5">
+    <div className="fixed bottom-4 right-4 sm:bottom-5 sm:right-6 z-[150] flex flex-col items-end gap-2.5">
 
       {/* ── Expanded contacts panel ── */}
       {open && (
@@ -72,25 +72,35 @@ export function FloatingContacts() {
       {/* ── Main toggle button ── */}
       <button
         onClick={() => setOpen(v => !v)}
-        className={`w-12 h-12 sm:w-14 sm:h-14 flex items-center justify-center shadow-xl transition-all duration-300 ${
+        className={`contact-sticker-attention relative h-12 w-12 rounded-full sm:h-14 sm:w-[310px] sm:rounded-[5px] flex items-center text-left shadow-[0_12px_32px_rgba(220,38,38,0.28)] transition-colors duration-300 ${
           open
-            ? 'bg-gray-800 hover:bg-gray-700'
-            : 'bg-black hover:bg-gray-800'
+            ? 'bg-gray-900 hover:bg-black'
+            : 'bg-red-600 hover:bg-red-700'
         }`}
         aria-label={open ? 'Закрыть контакты' : 'Связаться с нами'}
       >
-        {open
-          ? <X className="w-5 h-5 text-white" />
-          : <MessageCircle className="w-5 h-5 text-white" />
-        }
-      </button>
-
-      {/* ── Pulse ring when closed ── */}
-      {!open && (
-        <span className="absolute bottom-0 right-0 w-12 h-12 sm:w-14 sm:h-14 pointer-events-none">
-          <span className="absolute inset-0 bg-black rounded-none animate-ping opacity-20" />
+        <span className="w-12 h-12 sm:w-14 sm:h-14 flex-shrink-0 flex items-center justify-center sm:border-r border-white/20">
+          {open
+            ? <X className="w-5 h-5 text-white" />
+            : <MessageCircle className="w-5 h-5 text-white" />
+          }
         </span>
-      )}
+        <span className="hidden sm:block flex-1 min-w-0 px-4">
+          <span className="block text-[9px] uppercase tracking-[0.18em] text-white/65 mb-0.5">
+            {open
+              ? (language === 'ro' ? 'Alegeți un contact' : 'Выберите способ связи')
+              : (language === 'ro' ? 'Suntem online' : 'Мы онлайн')}
+          </span>
+          <span className="block text-sm text-white whitespace-nowrap truncate">
+            {open
+              ? (language === 'ro' ? 'Cum vă putem ajuta?' : 'Как с нами связаться?')
+              : (language === 'ro' ? 'Aveți întrebări?' : 'Есть вопрос? Мы онлайн!')}
+          </span>
+        </span>
+        {!open && (
+          <span className="absolute right-2 top-2 sm:static sm:mr-4 w-1.5 h-1.5 sm:w-2 sm:h-2 flex-shrink-0 bg-white rounded-full shadow-[0_0_0_4px_rgba(255,255,255,0.18)]" />
+        )}
+      </button>
     </div>
   );
 }

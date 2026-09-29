@@ -121,7 +121,7 @@ export function SeoHead({
   const alternateRu = buildLocalizedUrl(pagePath, 'ru');
 
   // Combine base schemas with any additional ones
-  const allJsonLd = [...BASE_JSON_LD];
+  const allJsonLd: object[] = [...BASE_JSON_LD];
   if (jsonLd) {
     if (Array.isArray(jsonLd)) {
       allJsonLd.push(...jsonLd);

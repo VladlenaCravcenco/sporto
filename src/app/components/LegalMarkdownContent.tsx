@@ -144,7 +144,7 @@ export function LegalMarkdownContent({ content, tocTitle }: LegalMarkdownContent
   };
 
   return (
-    <section className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
+    <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         <aside className="lg:col-span-3 hidden lg:block">
           <div className="sticky top-8">

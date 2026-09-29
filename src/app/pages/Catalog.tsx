@@ -16,6 +16,7 @@ import {
   Tag,
   Zap,
   Package,
+  ShieldCheck,
   ArrowUpRight,
   Check,
 } from 'lucide-react';
@@ -26,10 +27,11 @@ import { useLanguage, Language } from '../contexts/LanguageContext';
 import { useCategories } from '../contexts/CategoriesContext';
 import { ProductCard } from '../components/ProductCard';
 import { AnimatePresence, motion } from 'motion/react';
-import { getAttributeUnit, resolveProductIdsForAttributeFilters, useCatalogAttributeFilters } from '../hooks/useProductAttributes';
+import { getAttributeUnit, resolveProductIdsForAttributeFilters, useCatalogAttributeFilters, type CatalogAttributeFilter, type ProductAttributeValue } from '../hooks/useProductAttributes';
+import { fetchAllSupabaseRows, supabase } from '../../lib/supabase';
 
 type SortOption = 'default' | 'price-asc' | 'price-desc';
-type FilterSectionId = 'sort' | 'stock' | 'category' | 'subcategory' | 'brand' | 'offers';
+type FilterSectionId = 'sort' | 'stock' | 'category' | 'subcategory' | 'brand' | 'offers' | 'warranty';
 type StockFilter = 'all' | 'inStock' | 'onOrder';
 type MobileFilterDraft = {
   categories: string[];
@@ -38,7 +40,102 @@ type MobileFilterDraft = {
   sortBy: SortOption;
   stockFilter: StockFilter;
   saleOnly: boolean;
+  warrantyOnly: boolean;
 };
+
+type FacetProduct = {
+  id: string;
+  category: string;
+  subcategory: string | null;
+  brand: string | null;
+  qty: number | null;
+  sale_price: number | null;
+  name_ro: string;
+  name_ru: string | null;
+  sku: string | null;
+  has_warranty?: boolean;
+};
+
+type FacetSelection = {
+  categories: string[];
+  subcategories: string[];
+  brands: string[];
+  stockFilter: StockFilter;
+  saleOnly: boolean;
+  warrantyOnly: boolean;
+  search: string;
+  attributes: Record<string, string[]>;
+};
+
+function attributeValueKey(filter: CatalogAttributeFilter, value: ProductAttributeValue): string | null {
+  if (filter.attribute.value_type === 'number' && value.numeric_value != null) return `num:${value.numeric_value}`;
+  if (filter.attribute.value_type === 'boolean' && value.boolean_value != null) return String(value.boolean_value);
+  return value.text_value || null;
+}
+
+function buildFacetCounts(products: FacetProduct[], filters: CatalogAttributeFilter[], selection: FacetSelection) {
+  const attributeProductOptions = new Map<string, Map<string, Set<string>>>();
+  filters.forEach((filter) => {
+    const byOption = new Map<string, Set<string>>();
+    filter.values.forEach((value) => {
+      const key = attributeValueKey(filter, value);
+      if (!key) return;
+      if (!byOption.has(key)) byOption.set(key, new Set());
+      byOption.get(key)!.add(value.product_id);
+    });
+    attributeProductOptions.set(filter.attribute.id, byOption);
+  });
+
+  const normalizedSearch = selection.search.trim().toLowerCase();
+  const matches = (product: FacetProduct, excludedFacet?: 'category' | 'subcategory' | 'brand' | 'stock', excludedAttribute?: string) => {
+    if (excludedFacet !== 'category' && selection.categories.length && !selection.categories.includes(product.category)) return false;
+    if (excludedFacet !== 'subcategory' && selection.subcategories.length && !selection.subcategories.includes(product.subcategory || '')) return false;
+    if (excludedFacet !== 'brand' && selection.brands.length && !selection.brands.includes(product.brand || '')) return false;
+    if (excludedFacet !== 'stock' && selection.stockFilter === 'inStock' && (product.qty ?? 0) <= 0) return false;
+    if (excludedFacet !== 'stock' && selection.stockFilter === 'onOrder' && (product.qty ?? 0) > 0) return false;
+    if (selection.saleOnly && product.sale_price == null) return false;
+    if (selection.warrantyOnly && product.has_warranty !== true) return false;
+    if (normalizedSearch) {
+      const haystack = `${product.name_ro} ${product.name_ru || ''} ${product.sku || ''} ${product.brand || ''}`.toLowerCase();
+      if (!haystack.includes(normalizedSearch)) return false;
+    }
+    for (const [attributeId, selectedValues] of Object.entries(selection.attributes)) {
+      if (attributeId === excludedAttribute || selectedValues.length === 0) continue;
+      const options = attributeProductOptions.get(attributeId);
+      if (!selectedValues.some((value) => options?.get(value)?.has(product.id))) return false;
+    }
+    return true;
+  };
+
+  const category = new Map<string, number>();
+  const subcategory = new Map<string, number>();
+  const brand = new Map<string, number>();
+  const stock = new Map<StockFilter, number>([['all', 0], ['inStock', 0], ['onOrder', 0]]);
+  products.forEach((product) => {
+    if (matches(product, 'category')) category.set(product.category, (category.get(product.category) ?? 0) + 1);
+    if (matches(product, 'subcategory') && product.subcategory) subcategory.set(product.subcategory, (subcategory.get(product.subcategory) ?? 0) + 1);
+    if (matches(product, 'brand') && product.brand) brand.set(product.brand, (brand.get(product.brand) ?? 0) + 1);
+    if (matches(product, 'stock')) {
+      stock.set('all', (stock.get('all') ?? 0) + 1);
+      const key: StockFilter = (product.qty ?? 0) > 0 ? 'inStock' : 'onOrder';
+      stock.set(key, (stock.get(key) ?? 0) + 1);
+    }
+  });
+
+  const attributes = new Map<string, Map<string, number>>();
+  filters.forEach((filter) => {
+    const optionCounts = new Map<string, number>();
+    const eligibleIds = new Set(products.filter((product) => matches(product, undefined, filter.attribute.id)).map((product) => product.id));
+    filter.options.forEach((option) => {
+      const ids = attributeProductOptions.get(filter.attribute.id)?.get(option);
+      optionCounts.set(option, ids ? [...ids].filter((id) => eligibleIds.has(id)).length : 0);
+    });
+    attributes.set(filter.attribute.id, optionCounts);
+  });
+
+  const total = products.filter((product) => matches(product)).length;
+  return { category, subcategory, brand, stock, attributes, total };
+}
 
 const PAGE_SIZE = 24;
 
@@ -50,6 +147,24 @@ export function Catalog() {
 
   // ── Supabase ────────────────────────────────────────────────────────
   const { brands: allBrands } = useSupabaseBrands();
+  const [facetProducts, setFacetProducts] = useState<FacetProduct[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadFacetProducts = (includeWarranty: boolean) => fetchAllSupabaseRows<FacetProduct>((from, to) =>
+      supabase
+        .from('products')
+        .select(`id,category,subcategory,brand,qty,sale_price,name_ro,name_ru,sku${includeWarranty ? ',has_warranty' : ''}`)
+        .eq('active', true)
+        .range(from, to)
+    );
+    loadFacetProducts(true).catch(() => loadFacetProducts(false)).then((rows) => {
+      if (!cancelled) setFacetProducts(rows);
+    }).catch(() => {
+      if (!cancelled) setFacetProducts([]);
+    });
+    return () => { cancelled = true; };
+  }, []);
 
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
 
@@ -59,6 +174,7 @@ export function Catalog() {
   const [sortBy, setSortBy] = useState<SortOption>('default');
   const [page, setPage] = useState(1);
   const [saleOnly, setSaleOnly] = useState(searchParams.get('sale') === 'true');
+  const [warrantyOnly, setWarrantyOnly] = useState(searchParams.get('warranty') === 'true');
 
   const [brandPopoverOpen, setBrandPopoverOpen] = useState(false);
   const [filterSheetOpen, setFilterSheetOpen] = useState(false);
@@ -69,8 +185,19 @@ export function Catalog() {
     sortBy,
     stockFilter: (searchParams.get('stock') as StockFilter) || 'all',
     saleOnly,
+    warrantyOnly,
+  });
+  const [desktopFilterDraft, setDesktopFilterDraft] = useState<MobileFilterDraft>({
+    categories: searchParams.getAll('category'),
+    subcategories: searchParams.getAll('subcategory'),
+    brands: searchParams.getAll('brand'),
+    sortBy,
+    stockFilter: (searchParams.get('stock') as StockFilter) || 'all',
+    saleOnly,
+    warrantyOnly,
   });
   const [mobileAttributeDraft, setMobileAttributeDraft] = useState<Record<string, string[]>>({});
+  const [desktopAttributeDraft, setDesktopAttributeDraft] = useState<Record<string, string[]>>({});
   const [openFilterSections, setOpenFilterSections] = useState<Record<FilterSectionId, boolean>>({
     sort: false,
     stock: false,
@@ -78,14 +205,13 @@ export function Catalog() {
     subcategory: false,
     brand: false,
     offers: false,
+    warranty: false,
   });
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [stockFilter, setStockFilter] = useState<StockFilter>(
     (searchParams.get('stock') as StockFilter) || 'all',
   );
   const [stockPopoverOpen, setStockPopoverOpen] = useState(false);
-  const [showAllDesktopSubcategories, setShowAllDesktopSubcategories] = useState(false);
-  const [showAllDesktopBrands, setShowAllDesktopBrands] = useState(false);
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const categoryDragRef = useRef({ active: false, dragged: false, startX: 0, scrollLeft: 0 });
@@ -100,6 +226,7 @@ export function Catalog() {
     const q = searchParams.get('search') || '';
     const br = searchParams.get('brand') || '';
     const sale = searchParams.get('sale') === 'true';
+    const warranty = searchParams.get('warranty') === 'true';
     const sort = searchParams.get('sort');
     const stock = searchParams.get('stock');
     setSelectedCategory(cat);
@@ -107,13 +234,23 @@ export function Catalog() {
     setSearchTerm(q);
     setSelectedBrand(br);
     setSaleOnly(sale);
+    setWarrantyOnly(warranty);
     setSortBy(sort === 'price-asc' || sort === 'price-desc' ? sort : 'default');
     setStockFilter(stock === 'inStock' || stock === 'onOrder' ? stock : 'all');
+    setDesktopFilterDraft({
+      categories: searchParams.getAll('category'),
+      subcategories: searchParams.getAll('subcategory'),
+      brands: searchParams.getAll('brand'),
+      sortBy: sort === 'price-asc' || sort === 'price-desc' ? sort : 'default',
+      stockFilter: stock === 'inStock' || stock === 'onOrder' ? stock : 'all',
+      saleOnly: sale,
+      warrantyOnly: warranty,
+    });
     setPage(1);
   }, [searchParams]);
 
   // ── Reset page on filter change ──────────────────────────────────────────
-  useEffect(() => { setPage(1); }, [selectedCategory, selectedSubcategory, sortBy, selectedBrand, saleOnly, stockFilter, searchTerm]);
+  useEffect(() => { setPage(1); }, [selectedCategory, selectedSubcategory, sortBy, selectedBrand, saleOnly, warrantyOnly, stockFilter, searchTerm]);
 
   // ── Close popovers on outside click ─────────────────────────────────
   useEffect(() => {
@@ -164,11 +301,33 @@ export function Catalog() {
     });
     return selections;
   }, [searchParamsKey]);
+  useEffect(() => {
+    setDesktopAttributeDraft(attributeSelections);
+  }, [attributeSelections]);
   const { filters: dynamicCatalogFilters } = useCatalogAttributeFilters(currentCategory?.id);
   const mobileAttributeCategory = mobileFilterDraft.categories.length === 1 ? mobileFilterDraft.categories[0] : undefined;
   const { filters: mobileDynamicCatalogFilters } = useCatalogAttributeFilters(mobileAttributeCategory);
   const [attributeProductIds, setAttributeProductIds] = useState<string[] | undefined>(undefined);
-  const [mobileAttributeProductIds, setMobileAttributeProductIds] = useState<string[] | undefined>(undefined);
+  const desktopFacetCounts = useMemo(() => buildFacetCounts(facetProducts, dynamicCatalogFilters, {
+    categories: desktopFilterDraft.categories,
+    subcategories: desktopFilterDraft.subcategories,
+    brands: desktopFilterDraft.brands,
+    stockFilter: desktopFilterDraft.stockFilter,
+    saleOnly: desktopFilterDraft.saleOnly,
+    warrantyOnly: desktopFilterDraft.warrantyOnly,
+    search: deferredSearchTerm,
+    attributes: desktopAttributeDraft,
+  }), [facetProducts, dynamicCatalogFilters, desktopFilterDraft, deferredSearchTerm, desktopAttributeDraft]);
+  const mobileFacetCounts = useMemo(() => buildFacetCounts(facetProducts, mobileDynamicCatalogFilters, {
+    categories: mobileFilterDraft.categories,
+    subcategories: mobileFilterDraft.subcategories,
+    brands: mobileFilterDraft.brands,
+    stockFilter: mobileFilterDraft.stockFilter,
+    saleOnly: mobileFilterDraft.saleOnly,
+    warrantyOnly: mobileFilterDraft.warrantyOnly,
+    search: deferredSearchTerm,
+    attributes: mobileAttributeDraft,
+  }), [facetProducts, mobileDynamicCatalogFilters, mobileFilterDraft, deferredSearchTerm, mobileAttributeDraft]);
 
   useEffect(() => {
     let cancelled = false;
@@ -177,14 +336,6 @@ export function Catalog() {
     });
     return () => { cancelled = true; };
   }, [attributeSelections]);
-
-  useEffect(() => {
-    let cancelled = false;
-    resolveProductIdsForAttributeFilters(mobileAttributeDraft).then((ids) => {
-      if (!cancelled) setMobileAttributeProductIds(ids ?? undefined);
-    });
-    return () => { cancelled = true; };
-  }, [mobileAttributeDraft]);
 
   const catalogSeo = useMemo(() => {
     const catalogDefaults = SEO_PAGES.catalog[lang];
@@ -254,25 +405,24 @@ export function Catalog() {
     brand: appliedBrands.length > 1 ? appliedBrands : (selectedBrand || undefined),
     productIds: attributeProductIds,
     saleOnly,
+    warrantyOnly,
     stockFilter,
     searchTerm: deferredSearchTerm,
     sortBy,
+    prioritizeBrand: selectedCategory === 'all'
+      && selectedSubcategory === 'all'
+      && !selectedBrand
+      && !saleOnly
+      && !warrantyOnly
+      && stockFilter === 'all'
+      && !deferredSearchTerm.trim()
+      && sortBy === 'default'
+      && Object.keys(attributeSelections).length === 0
+        ? 'inSPORTline'
+        : undefined,
   });
-  const {
-    total: mobileFilterTotal,
-    loading: mobileFilterLoading,
-  } = usePaginatedCatalogProducts({
-    page: 1,
-    pageSize: 1,
-    category: mobileFilterDraft.categories,
-    subcategory: mobileFilterDraft.subcategories,
-    brand: mobileFilterDraft.brands,
-    productIds: mobileAttributeProductIds,
-    saleOnly: mobileFilterDraft.saleOnly,
-    stockFilter: mobileFilterDraft.stockFilter,
-    searchTerm: deferredSearchTerm,
-    sortBy: mobileFilterDraft.sortBy,
-  });
+  const mobileFilterTotal = mobileFacetCounts.total;
+  const mobileFilterLoading = facetProducts.length === 0;
   const displayProducts = products;
   const displayTotal = totalProducts;
   const displayLoading = dbLoading;
@@ -280,28 +430,18 @@ export function Catalog() {
   const displayConnected = connected;
 
   const availableBrands = useMemo(() => {
-    return allBrands.filter((brand) => brand.active !== false).map((brand) => ({ name: brand.name, count: 1 }));
-  }, [allBrands]);
+    const totals = new Map<string, number>();
+    facetProducts.forEach((product) => {
+      if (product.brand) totals.set(product.brand, (totals.get(product.brand) ?? 0) + 1);
+    });
+    return allBrands.filter((brand) => brand.active !== false).map((brand) => ({ name: brand.name, count: totals.get(brand.name) ?? 0 }));
+  }, [allBrands, facetProducts]);
   const selectedBrandData = useMemo(
     () => allBrands.find((brand) => brand.name.toLowerCase() === selectedBrand.toLowerCase()),
     [allBrands, selectedBrand],
   );
-  const desktopSubcategories = useMemo(() => {
-    if (!currentCategory || showAllDesktopSubcategories) return currentCategory?.subcategories ?? [];
-    const visible = currentCategory.subcategories.slice(0, 5);
-    const selected = currentCategory.subcategories.find((subcategory) => subcategory.id === selectedSubcategory);
-    return selected && !visible.some((subcategory) => subcategory.id === selected.id)
-      ? [...visible.slice(0, 4), selected]
-      : visible;
-  }, [currentCategory, selectedSubcategory, showAllDesktopSubcategories]);
-  const desktopBrands = useMemo(() => {
-    if (showAllDesktopBrands) return availableBrands;
-    const visible = availableBrands.slice(0, 5);
-    const selected = availableBrands.find((brand) => brand.name === selectedBrand);
-    return selected && !visible.some((brand) => brand.name === selected.name)
-      ? [...visible.slice(0, 4), selected]
-      : visible;
-  }, [availableBrands, selectedBrand, showAllDesktopBrands]);
+  const desktopSubcategories = currentCategory?.subcategories ?? [];
+  const desktopBrands = availableBrands;
 
   const totalPages = Math.max(1, Math.ceil(displayTotal / PAGE_SIZE));
   const safePage = Math.min(page, totalPages);
@@ -325,14 +465,8 @@ export function Catalog() {
     setSelectedBrand('');
     setStockFilter('all');
     setSaleOnly(false);
+    setWarrantyOnly(false);
     setSearchParams({});
-  };
-
-  const setAttributeSelection = (attributeId: string, values: string[]) => {
-    const params = new URLSearchParams(searchParams);
-    params.delete(`attr.${attributeId}`);
-    values.forEach((value) => params.append(`attr.${attributeId}`, value));
-    setSearchParams(params);
   };
 
   const setMobileAttributeSelection = (attributeId: string, values: string[]) => {
@@ -354,6 +488,7 @@ export function Catalog() {
       sortBy,
       stockFilter,
       saleOnly,
+      warrantyOnly,
     });
     setMobileAttributeDraft(attributeSelections);
     setFilterSheetOpen(true);
@@ -367,8 +502,39 @@ export function Catalog() {
       sortBy: 'default',
       stockFilter: 'all',
       saleOnly: false,
+      warrantyOnly: false,
     });
     setMobileAttributeDraft({});
+  };
+
+  const clearDesktopFilters = () => {
+    setDesktopFilterDraft({
+      categories: [],
+      subcategories: [],
+      brands: [],
+      sortBy: 'default',
+      stockFilter: 'all',
+      saleOnly: false,
+      warrantyOnly: false,
+    });
+    setDesktopAttributeDraft({});
+  };
+
+  const applyDesktopFilters = () => {
+    const params = new URLSearchParams();
+    const query = searchTerm.trim();
+    if (query) params.set('search', query);
+    desktopFilterDraft.categories.forEach((category) => params.append('category', category));
+    desktopFilterDraft.subcategories.forEach((subcategory) => params.append('subcategory', subcategory));
+    desktopFilterDraft.brands.forEach((brand) => params.append('brand', brand));
+    Object.entries(desktopAttributeDraft).forEach(([attributeId, values]) => {
+      values.forEach((value) => params.append(`attr.${attributeId}`, value));
+    });
+    if (desktopFilterDraft.saleOnly) params.set('sale', 'true');
+    if (desktopFilterDraft.warrantyOnly) params.set('warranty', 'true');
+    if (desktopFilterDraft.sortBy !== 'default') params.set('sort', desktopFilterDraft.sortBy);
+    if (desktopFilterDraft.stockFilter !== 'all') params.set('stock', desktopFilterDraft.stockFilter);
+    setSearchParams(params);
   };
 
   const applyMobileFilters = () => {
@@ -382,6 +548,7 @@ export function Catalog() {
       values.forEach((value) => params.append(`attr.${attributeId}`, value));
     });
     if (mobileFilterDraft.saleOnly) params.set('sale', 'true');
+    if (mobileFilterDraft.warrantyOnly) params.set('warranty', 'true');
     if (mobileFilterDraft.sortBy !== 'default') params.set('sort', mobileFilterDraft.sortBy);
     if (mobileFilterDraft.stockFilter !== 'all') params.set('stock', mobileFilterDraft.stockFilter);
 
@@ -399,7 +566,16 @@ export function Catalog() {
     || mobileFilterDraft.sortBy !== 'default'
     || mobileFilterDraft.stockFilter !== 'all'
     || mobileFilterDraft.saleOnly
+    || mobileFilterDraft.warrantyOnly
     || Object.keys(mobileAttributeDraft).length > 0;
+  const desktopDraftHasActiveFilters = desktopFilterDraft.categories.length > 0
+    || desktopFilterDraft.subcategories.length > 0
+    || desktopFilterDraft.brands.length > 0
+    || desktopFilterDraft.sortBy !== 'default'
+    || desktopFilterDraft.stockFilter !== 'all'
+    || desktopFilterDraft.saleOnly
+    || desktopFilterDraft.warrantyOnly
+    || Object.keys(desktopAttributeDraft).length > 0;
 
   const scrollCats = (dir: 'left' | 'right') => {
     scrollRef.current?.scrollBy({ left: dir === 'left' ? -220 : 220, behavior: 'smooth' });
@@ -501,7 +677,7 @@ export function Catalog() {
   };
 
   const isPriceFiltered = sortBy !== 'default';
-  const hasActiveFilters = searchTerm !== '' || selectedCategory !== 'all' || selectedSubcategory !== 'all' || isPriceFiltered || !!selectedBrand || stockFilter !== 'all' || saleOnly || Object.keys(attributeSelections).length > 0;
+  const hasActiveFilters = searchTerm !== '' || selectedCategory !== 'all' || selectedSubcategory !== 'all' || isPriceFiltered || !!selectedBrand || stockFilter !== 'all' || saleOnly || warrantyOnly || Object.keys(attributeSelections).length > 0;
 
   const sortIcon = sortBy === 'price-asc'
     ? <ArrowUp className="w-3.5 h-3.5" />
@@ -517,6 +693,7 @@ export function Catalog() {
       ? (language === 'ro' ? 'La comandă' : 'Под заказ')
       : null,
     saleOnly ? (language === 'ro' ? 'Promoție' : 'Акция') : null,
+    warrantyOnly ? (language === 'ro' ? 'Cu garanție' : 'С гарантией') : null,
     sortBy === 'price-asc'
       ? (language === 'ro' ? 'Întâi mai ieftin' : 'Сначала дешевле')
       : sortBy === 'price-desc'
@@ -583,7 +760,7 @@ export function Catalog() {
   };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={catalogSeo.title}
         description={catalogSeo.description}
@@ -595,7 +772,7 @@ export function Catalog() {
 
       {/* Breadcrumb */}
       <div className="border-b border-gray-100 bg-gray-50">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-3">
           {catalogPath}
         </div>
       </div>
@@ -612,7 +789,7 @@ export function Catalog() {
 
       {/* ─── PAGE HEADER — desktop ─── */}
       <div className="hidden md:block bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
           <div className="flex items-end justify-between gap-4">
             <div>
               <h1 className="text-2xl md:text-3xl text-white">{catalogHeading}</h1>
@@ -631,7 +808,7 @@ export function Catalog() {
 
       {/* ─── CATEGORY STRIP ─── */}
       <div className="hidden md:block bg-white border-b border-gray-100 sticky top-[104px] z-40">
-        <div className="max-w-[1600px] mx-auto px-0 md:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-0 md:px-6 lg:px-8">
           <div className="flex items-center">
 
             {/* Left arrow — always visible, smaller on mobile */}
@@ -974,7 +1151,7 @@ export function Catalog() {
 
       {/* ─── Mobile filter toolbar — simple: Filters button + grid toggle ── */}
       <div className="md:hidden bg-white border-b border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 flex items-start min-h-11 py-2 gap-3">
+        <div className="max-w-[1920px] mx-auto px-4 flex items-start min-h-11 py-2 gap-3">
 
           {/* Filter button with badge */}
           <button
@@ -1035,7 +1212,7 @@ export function Catalog() {
         };
         return (
           <div className="hidden bg-gray-50 border-b border-gray-100">
-            <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
               <div className="flex items-center">
                 <button
                   onClick={() => scrollSubs('left')}
@@ -1207,7 +1384,7 @@ export function Catalog() {
                   <button
                     key={opt.value}
                     onClick={() => setMobileFilterDraft((draft) => ({ ...draft, stockFilter: opt.value }))}
-                    className={filterOptionClass()}
+                    className={`${filterOptionClass()} ${(mobileFacetCounts.stock.get(opt.value) ?? 0) === 0 && mobileFilterDraft.stockFilter !== opt.value ? 'opacity-35' : ''}`}
                   >
                     <span className="flex items-center gap-2.5 min-w-0">
                       <span className={mobileFilterDraft.stockFilter === opt.value ? 'opacity-60' : 'text-gray-400'}>
@@ -1215,7 +1392,10 @@ export function Catalog() {
                       </span>
                       <span className="truncate">{opt.label}</span>
                     </span>
-                    {filterCheckbox(mobileFilterDraft.stockFilter === opt.value)}
+                    <span className="flex items-center gap-2">
+                      <span className="text-[10px] tabular-nums text-gray-400">({mobileFacetCounts.stock.get(opt.value) ?? 0})</span>
+                      {filterCheckbox(mobileFilterDraft.stockFilter === opt.value)}
+                    </span>
                   </button>
                 ))}
                 </>,
@@ -1249,6 +1429,34 @@ export function Catalog() {
                 </>,
               )}
 
+              {/* ── Warranty ── */}
+              {filterSection(
+                'warranty',
+                language === 'ro' ? 'Garanție' : 'Гарантия',
+                mobileFilterDraft.warrantyOnly
+                  ? (language === 'ro' ? 'Doar produse cu garanție' : 'Только товары с гарантией')
+                  : (language === 'ro' ? 'Toate produsele' : 'Все товары'),
+                <>
+                  <button
+                    onClick={() => setMobileFilterDraft((draft) => ({ ...draft, warrantyOnly: false }))}
+                    className={filterOptionClass()}
+                  >
+                    <span>{language === 'ro' ? 'Toate produsele' : 'Все товары'}</span>
+                    {filterCheckbox(!mobileFilterDraft.warrantyOnly)}
+                  </button>
+                  <button
+                    onClick={() => setMobileFilterDraft((draft) => ({ ...draft, warrantyOnly: true }))}
+                    className={filterOptionClass()}
+                  >
+                    <span className="flex items-center gap-2.5">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {language === 'ro' ? 'Doar produse cu garanție' : 'Только товары с гарантией'}
+                    </span>
+                    {filterCheckbox(mobileFilterDraft.warrantyOnly)}
+                  </button>
+                </>,
+              )}
+
               {/* ── Category ── */}
               {filterSection(
                 'category',
@@ -1266,8 +1474,10 @@ export function Catalog() {
                   </span>
                   {filterCheckbox(mobileFilterDraft.categories.length === 0)}
                 </button>
-                {categories.map((cat) => (
-                  <button
+                {categories.map((cat) => {
+                  const count = mobileFacetCounts.category.get(cat.id) ?? 0;
+                  const active = mobileFilterDraft.categories.includes(cat.id);
+                  return <button
                     key={cat.id}
                     onClick={() => {
                       const removing = mobileFilterDraft.categories.includes(cat.id);
@@ -1281,7 +1491,7 @@ export function Catalog() {
                           : draft.subcategories,
                       }));
                     }}
-                    className={filterOptionClass()}
+                    className={`${filterOptionClass()} ${count === 0 && !active ? 'opacity-35' : ''}`}
                   >
                     <span className="flex items-center gap-2.5 min-w-0">
                       <span className="text-gray-400">
@@ -1289,9 +1499,12 @@ export function Catalog() {
                       </span>
                       <span className="truncate">{cat.name[language as Language]}</span>
                     </span>
-                    {filterCheckbox(mobileFilterDraft.categories.includes(cat.id))}
+                    <span className="flex items-center gap-2">
+                      <span className="text-[10px] tabular-nums text-gray-400">({count})</span>
+                      {filterCheckbox(active)}
+                    </span>
                   </button>
-                ))}
+                })}
                 </>,
               )}
 
@@ -1314,16 +1527,21 @@ export function Catalog() {
                     {t('products.all')}
                     {filterCheckbox(mobileFilterDraft.subcategories.length === 0)}
                   </button>
-                  {mobileDraftSubcategories.map((sub) => (
-                    <button
+                  {mobileDraftSubcategories.map((sub) => {
+                    const count = mobileFacetCounts.subcategory.get(sub.id) ?? 0;
+                    const active = mobileFilterDraft.subcategories.includes(sub.id);
+                    return <button
                       key={sub.id}
                       onClick={() => toggleDraftValue('subcategories', sub.id)}
-                      className={filterOptionClass()}
+                      className={`${filterOptionClass()} ${count === 0 && !active ? 'opacity-35' : ''}`}
                     >
                       <span className="truncate text-left">{sub.name[language as Language]}</span>
-                      {filterCheckbox(mobileFilterDraft.subcategories.includes(sub.id))}
+                      <span className="flex items-center gap-2">
+                        <span className="text-[10px] tabular-nums text-gray-400">({count})</span>
+                        {filterCheckbox(active)}
+                      </span>
                     </button>
-                  ))}
+                  })}
                   </>,
                 )
               )}
@@ -1345,6 +1563,7 @@ export function Catalog() {
                   <>
                       {filter.options.map((option) => {
                         const active = selected.includes(option);
+                        const count = mobileFacetCounts.attributes.get(filter.attribute.id)?.get(option) ?? 0;
                         const label = filter.attribute.value_type === 'boolean'
                           ? option === 'true' ? (language === 'ro' ? 'Da' : 'Да') : (language === 'ro' ? 'Nu' : 'Нет')
                           : `${option.replace(/^num:/, '')}${unit ? ` ${unit}` : ''}`;
@@ -1355,10 +1574,13 @@ export function Catalog() {
                               filter.attribute.id,
                               active ? selected.filter((value) => value !== option) : [...selected, option],
                             )}
-                            className={filterOptionClass()}
+                            className={`${filterOptionClass()} ${count === 0 && !active ? 'opacity-35' : ''}`}
                           >
                             <span>{label}</span>
-                            {filterCheckbox(active)}
+                            <span className="flex items-center gap-2">
+                              <span className="text-[10px] tabular-nums text-gray-400">({count})</span>
+                              {filterCheckbox(active)}
+                            </span>
                           </button>
                         );
                       })}
@@ -1385,19 +1607,21 @@ export function Catalog() {
                       {filterCheckbox(mobileFilterDraft.brands.length === 0)}
                     </span>
                   </button>
-                  {availableBrands.map(({ name, count }) => (
-                    <button
+                  {availableBrands.map(({ name }) => {
+                    const count = mobileFacetCounts.brand.get(name) ?? 0;
+                    const active = mobileFilterDraft.brands.includes(name);
+                    return <button
                       key={name}
                       onClick={() => toggleDraftValue('brands', name)}
-                      className={filterOptionClass()}
+                      className={`${filterOptionClass()} ${count === 0 && !active ? 'opacity-35' : ''}`}
                     >
                       <span className="truncate">{name}</span>
                       <span className="flex items-center gap-2 tabular-nums font-mono text-[10px] text-gray-400">
                         {count}
-                        {filterCheckbox(mobileFilterDraft.brands.includes(name))}
+                        {filterCheckbox(active)}
                       </span>
                     </button>
-                  ))}
+                  })}
                   </>,
                 )
               )}
@@ -1426,7 +1650,7 @@ export function Catalog() {
       </AnimatePresence>
 
       {/* ─── MAIN CONTENT ─── */}
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
+      <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-6 md:py-8">
         <div className="md:grid md:grid-cols-[260px_minmax(0,1fr)] lg:grid-cols-[300px_minmax(0,1fr)] md:gap-8">
           <aside className="hidden md:block">
             <div className="border border-gray-100 bg-white">
@@ -1437,9 +1661,9 @@ export function Catalog() {
                     {language === 'ro' ? 'Filtre' : 'Фильтры'}
                   </span>
                 </div>
-                {hasActiveFilters && (
+                {(hasActiveFilters || desktopDraftHasActiveFilters) && (
                   <button
-                    onClick={clearFilters}
+                    onClick={clearDesktopFilters}
                     className="!text-[10px] text-gray-400 hover:text-black transition-colors"
                   >
                     {language === 'ro' ? 'Reset' : 'Сброс'}
@@ -1455,47 +1679,49 @@ export function Catalog() {
                     </p>
                     <div className="space-y-1">
                       <button
-                        onClick={() => setSearchParams({ category: selectedCategory })}
+                        onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, subcategories: [] }))}
                         className={`w-full px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                          selectedSubcategory === 'all'
+                          desktopFilterDraft.subcategories.length === 0
                             ? 'bg-gray-900 text-white'
                             : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                         }`}
                       >
                         {t('products.all')}
                       </button>
-                      {desktopSubcategories.map((subcategory) => (
-                        <button
+                      {desktopSubcategories.map((subcategory) => {
+                        const count = desktopFacetCounts.subcategory.get(subcategory.id) ?? 0;
+                        const active = desktopFilterDraft.subcategories.includes(subcategory.id);
+                        return <button
                           key={subcategory.id}
-                          onClick={() => setSearchParams({ category: selectedCategory, subcategory: subcategory.id })}
-                          className={`w-full px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                            selectedSubcategory === subcategory.id
+                          onClick={() => setDesktopFilterDraft((draft) => ({
+                            ...draft,
+                            subcategories: active
+                              ? draft.subcategories.filter((value) => value !== subcategory.id)
+                              : [...draft.subcategories, subcategory.id],
+                          }))}
+                          className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
+                            active
                               ? 'bg-gray-900 text-white'
-                              : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                              : count === 0
+                                ? 'text-gray-300'
+                                : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                           }`}
                         >
-                          {subcategory.name[language as Language]}
-                        </button>
-                      ))}
-                      {currentCategory.subcategories.length > 5 && (
-                        <button
-                          onClick={() => setShowAllDesktopSubcategories((value) => !value)}
-                          className="w-full flex items-center justify-between px-3 py-2 !text-[10px] text-gray-400 hover:text-black transition-colors"
-                        >
-                          <span>
-                            {showAllDesktopSubcategories
-                              ? (language === 'ro' ? 'Arată mai puțin' : 'Скрыть')
-                              : (language === 'ro' ? 'Arată mai multe' : 'Показать больше')}
+                          <span>{subcategory.name[language as Language]}</span>
+                          <span className="flex items-center gap-2">
+                            <span className={`text-[10px] tabular-nums ${active ? 'text-gray-400' : 'text-gray-400'}`}>({count})</span>
+                            <span className={`w-3.5 h-3.5 border flex items-center justify-center ${active ? 'bg-white border-white' : 'border-gray-300 bg-white'}`}>
+                              {active && <Check className="w-2.5 h-2.5 text-black" />}
+                            </span>
                           </span>
-                          <ChevronDown className={`w-3 h-3 transition-transform ${showAllDesktopSubcategories ? 'rotate-180' : ''}`} />
                         </button>
-                      )}
+                      })}
                     </div>
                   </div>
                 )}
 
                 {dynamicCatalogFilters.map((filter) => {
-                  const selected = attributeSelections[filter.attribute.id] ?? [];
+                  const selected = desktopAttributeDraft[filter.attribute.id] ?? [];
                   const unit = getAttributeUnit(filter.attribute, language === 'ro' ? 'ro' : 'ru');
                   return (
                     <div key={filter.attribute.id} className="border-b border-gray-100 p-4">
@@ -1506,6 +1732,7 @@ export function Catalog() {
                       <div className="space-y-1">
                           {filter.options.map((option) => {
                             const active = selected.includes(option);
+                            const count = desktopFacetCounts.attributes.get(filter.attribute.id)?.get(option) ?? 0;
                             const label = filter.attribute.value_type === 'boolean'
                               ? option === 'true'
                                 ? (language === 'ro' ? 'Da' : 'Да')
@@ -1514,15 +1741,20 @@ export function Catalog() {
                             return (
                               <button
                                 key={option}
-                                onClick={() => setAttributeSelection(
-                                  filter.attribute.id,
-                                  active ? selected.filter((value) => value !== option) : [...selected, option],
-                                )}
-                                className="w-full flex items-center justify-between gap-2 px-3 py-2 text-left !text-[11px] text-gray-500 hover:bg-gray-50 hover:text-black"
+                                onClick={() => setDesktopAttributeDraft((draft) => ({
+                                  ...draft,
+                                  [filter.attribute.id]: active
+                                    ? selected.filter((value) => value !== option)
+                                    : [...selected, option],
+                                }))}
+                                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left !text-[11px] transition-colors ${count === 0 && !active ? 'text-gray-300' : 'text-gray-500 hover:bg-gray-50 hover:text-black'}`}
                               >
                                 <span>{label}</span>
-                                <span className={`w-3.5 h-3.5 border flex items-center justify-center ${active ? 'bg-black border-black' : 'border-gray-300'}`}>
-                                  {active && <Check className="w-2.5 h-2.5 text-white" />}
+                                <span className="flex items-center gap-2">
+                                  <span className="text-[10px] tabular-nums text-gray-400">({count})</span>
+                                  <span className={`w-3.5 h-3.5 border flex items-center justify-center ${active ? 'bg-black border-black' : 'border-gray-300'}`}>
+                                    {active && <Check className="w-2.5 h-2.5 text-white" />}
+                                  </span>
                                 </span>
                               </button>
                             );
@@ -1541,20 +1773,29 @@ export function Catalog() {
                       { value: 'all' as StockFilter, label: language === 'ro' ? 'Toate produsele' : 'Все товары' },
                       { value: 'inStock' as StockFilter, label: language === 'ro' ? 'În stoc' : 'В наличии' },
                       { value: 'onOrder' as StockFilter, label: language === 'ro' ? 'La comandă' : 'Под заказ' },
-                    ]).map((option) => (
-                      <button
+                    ]).map((option) => {
+                      const count = desktopFacetCounts.stock.get(option.value) ?? 0;
+                      const active = desktopFilterDraft.stockFilter === option.value;
+                      return <button
                         key={option.value}
-                        onClick={() => setStockFilter(option.value)}
+                        onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, stockFilter: option.value }))}
                         className={`w-full flex items-center justify-between px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                          stockFilter === option.value
+                          active
                             ? 'bg-black text-white'
-                            : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                            : count === 0
+                              ? 'text-gray-300'
+                              : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                         }`}
                       >
                         {option.label}
-                        {stockFilter === option.value && <span className="w-1.5 h-1.5 bg-white" />}
+                        <span className="flex items-center gap-2">
+                          <span className={`text-[10px] tabular-nums ${active ? 'text-gray-400' : 'text-gray-400'}`}>({count})</span>
+                          <span className={`w-3.5 h-3.5 border flex items-center justify-center ${active ? 'bg-white border-white' : 'border-gray-300 bg-white'}`}>
+                            {active && <Check className="w-2.5 h-2.5 text-black" />}
+                          </span>
+                        </span>
                       </button>
-                    ))}
+                    })}
                   </div>
                 </div>
 
@@ -1563,18 +1804,38 @@ export function Catalog() {
                     {language === 'ro' ? 'Promoții' : 'Акции'}
                   </p>
                   <button
-                    onClick={() => setSaleOnly((value) => !value)}
+                    onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, saleOnly: !draft.saleOnly }))}
                     className={`w-full flex items-center justify-between px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                      saleOnly
+                      desktopFilterDraft.saleOnly
                         ? 'bg-red-500 text-white'
                         : 'text-gray-500 hover:bg-red-50 hover:text-red-500'
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <Zap className={`w-3.5 h-3.5 ${saleOnly ? 'fill-white' : ''}`} />
+                      <Zap className={`w-3.5 h-3.5 ${desktopFilterDraft.saleOnly ? 'fill-white' : ''}`} />
                       {language === 'ro' ? 'Doar produse la promoție' : 'Только товары по акции'}
                     </span>
-                    {saleOnly && <span className="w-1.5 h-1.5 bg-white" />}
+                    {desktopFilterDraft.saleOnly && <span className="w-1.5 h-1.5 bg-white" />}
+                  </button>
+                </div>
+
+                <div className="border-b border-gray-100 p-4">
+                  <p className="text-[10px] uppercase tracking-widest text-gray-400 mb-3">
+                    {language === 'ro' ? 'Garanție' : 'Гарантия'}
+                  </p>
+                  <button
+                    onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, warrantyOnly: !draft.warrantyOnly }))}
+                    className={`w-full flex items-center justify-between px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
+                      desktopFilterDraft.warrantyOnly
+                        ? 'bg-black text-white'
+                        : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                    }`}
+                  >
+                    <span className="flex items-center gap-2">
+                      <ShieldCheck className="w-3.5 h-3.5" />
+                      {language === 'ro' ? 'Doar cu garanție' : 'Только с гарантией'}
+                    </span>
+                    {desktopFilterDraft.warrantyOnly && <span className="w-1.5 h-1.5 bg-white" />}
                   </button>
                 </div>
 
@@ -1585,41 +1846,41 @@ export function Catalog() {
                     </p>
                     <div className="space-y-1">
                       <button
-                        onClick={() => setSelectedBrand('')}
+                        onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, brands: [] }))}
                         className={`w-full px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                          !selectedBrand
+                          desktopFilterDraft.brands.length === 0
                             ? 'bg-black text-white'
                             : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                         }`}
                       >
                         {language === 'ro' ? 'Toate brandurile' : 'Все бренды'}
                       </button>
-                      {desktopBrands.map(({ name }) => (
-                        <button
+                      {desktopBrands.map(({ name }) => {
+                        const count = desktopFacetCounts.brand.get(name) ?? 0;
+                        const active = desktopFilterDraft.brands.includes(name);
+                        return <button
                           key={name}
-                          onClick={() => setSelectedBrand(name === selectedBrand ? '' : name)}
-                          className={`w-full px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                            selectedBrand === name
+                          onClick={() => setDesktopFilterDraft((draft) => ({
+                            ...draft,
+                            brands: active ? draft.brands.filter((value) => value !== name) : [...draft.brands, name],
+                          }))}
+                          className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
+                            active
                               ? 'bg-black text-white'
-                              : 'text-gray-500 hover:bg-gray-50 hover:text-black'
+                              : count === 0
+                                ? 'text-gray-300'
+                                : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                           }`}
                         >
-                          {name}
-                        </button>
-                      ))}
-                      {availableBrands.length > 5 && (
-                        <button
-                          onClick={() => setShowAllDesktopBrands((value) => !value)}
-                          className="w-full flex items-center justify-between px-3 py-2 !text-[10px] text-gray-400 hover:text-black transition-colors"
-                        >
-                          <span>
-                            {showAllDesktopBrands
-                              ? (language === 'ro' ? 'Arată mai puțin' : 'Скрыть')
-                              : (language === 'ro' ? 'Arată mai multe' : 'Показать больше')}
+                          <span className="truncate">{name}</span>
+                          <span className="flex items-center gap-2">
+                            <span className={`text-[10px] tabular-nums ${active ? 'text-gray-400' : 'text-gray-400'}`}>({count})</span>
+                            <span className={`w-3.5 h-3.5 border flex items-center justify-center ${active ? 'bg-white border-white' : 'border-gray-300 bg-white'}`}>
+                              {active && <Check className="w-2.5 h-2.5 text-black" />}
+                            </span>
                           </span>
-                          <ChevronDown className={`w-3 h-3 transition-transform ${showAllDesktopBrands ? 'rotate-180' : ''}`} />
                         </button>
-                      )}
+                      })}
                     </div>
                   </div>
                 )}
@@ -1636,18 +1897,30 @@ export function Catalog() {
                     ]).map((option) => (
                       <button
                         key={option.value}
-                        onClick={() => setSortBy(option.value)}
+                        onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, sortBy: option.value }))}
                         className={`w-full flex items-center justify-between px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
-                          sortBy === option.value
+                          desktopFilterDraft.sortBy === option.value
                             ? 'bg-black text-white'
                             : 'text-gray-500 hover:bg-gray-50 hover:text-black'
                         }`}
                       >
                         {option.label}
-                        {sortBy === option.value && <span className="w-1.5 h-1.5 bg-white" />}
+                        {desktopFilterDraft.sortBy === option.value && <span className="w-1.5 h-1.5 bg-white" />}
                       </button>
                     ))}
                   </div>
+                </div>
+
+                <div className="sticky bottom-0 z-10 border-t border-gray-100 bg-white p-4 shadow-[0_-10px_24px_rgba(15,23,42,0.06)]">
+                  <button
+                    type="button"
+                    onClick={applyDesktopFilters}
+                    className="w-full h-11 bg-black text-white text-xs uppercase tracking-wider hover:bg-red-600 transition-colors"
+                  >
+                    {language === 'ro'
+                      ? `Arată ${desktopFacetCounts.total} produse`
+                      : `Показать ${desktopFacetCounts.total} товаров`}
+                  </button>
                 </div>
               </div>
             </div>
@@ -1657,7 +1930,7 @@ export function Catalog() {
 
         {/* ── Supabase loading skeleton ── */}
         {displayLoading && (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 md:gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3">
             {Array.from({ length: 12 }).map((_, i) => (
               <div key={i} className="animate-pulse">
                 <div className="bg-gray-100 aspect-square mb-2" />
@@ -1836,6 +2109,13 @@ export function Catalog() {
                     <button onClick={() => setSaleOnly(false)} className="ml-1 hover:text-gray-300"><X className="w-3 h-3" /></button>
                   </span>
                 )}
+                {warrantyOnly && (
+                  <span className="flex items-center gap-1.5 text-xs bg-gray-900 text-white px-3 py-1.5 uppercase tracking-wider">
+                    <ShieldCheck className="w-3 h-3 text-gray-300" />
+                    {language === 'ro' ? 'Cu garanție' : 'С гарантией'}
+                    <button onClick={() => setWarrantyOnly(false)} className="ml-1 hover:text-gray-300"><X className="w-3 h-3" /></button>
+                  </span>
+                )}
                 {sortBy !== 'default' && (
                   <span className="flex items-center gap-1.5 text-xs border border-gray-300 text-gray-600 px-3 py-1.5 uppercase tracking-wider">
                     {sortBy === 'price-asc'
@@ -1874,8 +2154,8 @@ export function Catalog() {
               <>
                 <div className={
                   viewMode === 'list'
-                    ? 'flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-3 xl:grid-cols-4 2xl:grid-cols-5'
-                    : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-2 md:gap-3'
+                    ? 'flex flex-col gap-2 md:grid md:grid-cols-3 md:gap-3 xl:grid-cols-4'
+                    : 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 gap-2 md:gap-3'
                 }>
                   {displayProducts.map((product) => (
                     <ProductCard

@@ -1,3 +1,4 @@
+import { useRemoteSearch } from '../hooks/useRemoteSearch';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
 import {
@@ -20,6 +21,7 @@ import { buildProductPath } from '../lib/product-url';
 import { useSupabaseProducts } from '../hooks/useSupabaseProducts';
 
 interface SearchDropdownProps {
+  remote?: boolean;
   query: string;
   onSelect: () => void;
   onQueryChange?: (q: string) => void;
@@ -107,7 +109,7 @@ function MatchBadge({ type }: { type: string }) {
 }
 
 export function SearchDropdown({
-  query, onSelect, onQueryChange,
+  query, onSelect, onQueryChange, remote = false,
 }: SearchDropdownProps) {
   const { language } = useLanguage();
   const navigate = useNavigate();
@@ -116,7 +118,9 @@ export function SearchDropdown({
   const [activeIdx, setActiveIdx] = useState(-1);
   const containerRef = useRef<HTMLDivElement>(null);
   const [history, setHistory] = useState<string[]>([]);
-  const { products, loading } = useSupabaseProducts();
+  const { products, loading: localLoading } = useSupabaseProducts(!remote);
+  const remoteSearch = useRemoteSearch(query, lang, remote);
+  const loading = remote ? remoteSearch.loading : localLoading;
 
   const L = (ro: string, ru: string) => lang === 'ro' ? ro : ru;
   const isEmptyQuery = query.trim().length === 0;
@@ -129,9 +133,10 @@ export function SearchDropdown({
   const clearAllHistory = useCallback(() => { clearHistory(); setHistory([]); }, []);
 
   const results: SearchResult | null = useMemo(() => {
+    if (remote) return remoteSearch.result;
     if (isEmptyQuery || !products.length) return null;
     return searchProducts(products, query, lang, 8);
-  }, [query, products, lang, isEmptyQuery]);
+  }, [query, products, lang, isEmptyQuery, remote, remoteSearch.result]);
 
   const catMatches = useMemo(() => {
     if (isEmptyQuery || !results) return [];
@@ -145,9 +150,10 @@ export function SearchDropdown({
   }, [results, categories, lang, isEmptyQuery]);
 
   const suggestions = useMemo(() => {
+    if (remote) return remoteSearch.suggestions;
     if (!results || results.total > 0 || !results.rawTokens.length) return [];
     return getSuggestions(products, results.rawTokens, lang);
-  }, [results, products, lang]);
+  }, [results, products, lang, remote, remoteSearch.suggestions]);
 
   const totalRows = catMatches.length + (results?.hits.length ?? 0);
 
@@ -323,7 +329,7 @@ export function SearchDropdown({
           <div className="flex items-center gap-3">
             <Search className="w-4 h-4 text-gray-300" />
             <span className="text-xs text-gray-500">
-              {L('Căutarea momentan este indisponibilă. Reîncercați mai târziu.', 'Поиск временно недоступен. Попробуйте позже.')}
+              {query.trim().length < 2 ? L('Introduceți cel puțin 2 caractere.', 'Введите минимум 2 символа.') : L('Căutarea momentan este indisponibilă. Reîncercați mai târziu.', 'Поиск временно недоступен. Попробуйте позже.')}
             </span>
           </div>
         </div>

@@ -1,0 +1,35 @@
+@import '../src/styles/fonts.css';
+@import 'tailwindcss' source(none);
+@source '../src/**/*.{js,ts,jsx,tsx}';
+@source './**/*.{js,ts,jsx,tsx}';
+@import 'tw-animate-css';
+
+@keyframes fadeSlideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes contact-sticker-attention {
+  0%, 72%, 100% { transform: translateX(0); }
+  77% { transform: translateX(8px); }
+  81% { transform: translateX(-5px); }
+  85% { transform: translateX(3px); }
+  89% { transform: translateX(0); }
+}
+
+.contact-sticker-attention {
+  animation: contact-sticker-attention 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-sticker-attention { animation: none; }
+}
+@import '../src/styles/theme.css';
+@import '../src/styles/typography.css';
+
+/* Shared page canvas; cards and form surfaces retain their own backgrounds. */
+body { background-color: #f5f6f7; }
+
+@media (max-width: 639px) {
+  .contact-sticker-attention { animation: none; box-shadow: 0 3px 12px rgb(0 0 0 / 12%); }
+}

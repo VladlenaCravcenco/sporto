@@ -1,6 +1,58 @@
 @import './fonts.css';
 @import './tailwind.css';
 @import './theme.css';
+@import './typography.css';
+
+/* Slightly larger, more legible public typography. */
+body .text-xs {
+  font-size: 0.8125rem !important;
+}
+
+body .text-sm {
+  font-size: 0.9375rem !important;
+}
+
+body .text-base {
+  font-size: 1.0625rem !important;
+}
+
+body .text-xl {
+  font-size: 1.375rem !important;
+}
+
+body .text-\[9px\] {
+  font-size: 0.6875rem !important;
+}
+
+body .text-\[10px\] {
+  font-size: 0.75rem !important;
+}
+
+body .text-\[11px\] {
+  font-size: 0.8125rem !important;
+}
+
+body .text-gray-400 {
+  color: #6b7280 !important;
+}
+
+body .text-gray-500 {
+  color: #4b5563 !important;
+}
+
+body h1,
+body h2,
+body h3 {
+  font-weight: 600;
+}
+
+/* Consistent radius for red interactive CTAs only. */
+button[class*="bg-red-"],
+a[class*="bg-red-"],
+button[class*="from-red-"],
+a[class*="from-red-"] {
+  border-radius: 5px !important;
+}
 
 @keyframes bell-ring {
   0%   { transform: rotate(0deg); }
@@ -11,4 +63,29 @@
   75%  { transform: rotate(6deg); }
   90%  { transform: rotate(-4deg); }
   100% { transform: rotate(0deg); }
+}
+
+@keyframes contact-sticker-attention {
+  0%, 72%, 100% { transform: translateX(0); }
+  77% { transform: translateX(8px); }
+  81% { transform: translateX(-5px); }
+  85% { transform: translateX(3px); }
+  89% { transform: translateX(0); }
+}
+
+.contact-sticker-attention {
+  animation: contact-sticker-attention 5.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .contact-sticker-attention {
+    animation: none;
+  }
+}
+
+/* Shared page canvas; cards and form surfaces retain their own backgrounds. */
+body { background-color: #f5f6f7; }
+
+@media (max-width: 639px) {
+  .contact-sticker-attention { animation: none; box-shadow: 0 3px 12px rgb(0 0 0 / 12%); }
 }
