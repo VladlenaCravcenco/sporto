@@ -29,12 +29,12 @@ export function SmartSearch({ language, mobile = false }: { language: 'ro' | 'ru
   const placeholder = language === 'ru' ? 'Поиск товаров, категорий...' : 'Caută produse, categorii...';
   return <div ref={root} className={mobile ? 'relative md:hidden' : 'relative hidden md:block flex-1 max-w-2xl'} onKeyDown={e => { if (e.key === 'Escape') setOpen(false); }} onBlur={e => { if (!e.currentTarget.contains(e.relatedTarget)) setOpen(false); }}>
     <form action={'/' + language + '/catalog'} method="get" onSubmit={() => { if (query.trim()) addToHistory(query.trim()); setOpen(false); }} className="relative">
-      <input name="search" aria-label={placeholder} aria-expanded={open} autoComplete="off" value={query} onFocus={() => setOpen(true)} onChange={e => { setQuery(e.target.value); setOpen(true); }} placeholder={placeholder} className="w-full h-9 pl-4 pr-12 text-base border border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-black" />
+      <input maxLength={160} name="search" aria-label={placeholder} aria-expanded={open} autoComplete="off" value={query} onFocus={() => setOpen(true)} onChange={e => { setQuery(e.target.value); setOpen(true); }} placeholder={placeholder} className="w-full h-9 pl-4 pr-12 text-base border border-gray-200 bg-gray-50 placeholder-gray-400 focus:outline-none focus:bg-white focus:border-black" />
       <button type="submit" aria-label={language === 'ru' ? 'Найти' : 'Caută'} className="absolute right-0 top-0 h-9 w-10 flex items-center justify-center text-gray-500 border-l border-gray-200"><Search className="h-4 w-4" /></button>
     </form>
     {open && <LanguageProvider initialLanguage={language}><CartProvider><CategoriesProvider>
       <Router location="/" navigator={navigator}>
-        <SearchDropdown query={query} onQueryChange={setQuery} onSelect={() => setOpen(false)} />
+        <SearchDropdown remote query={query} onQueryChange={setQuery} onSelect={() => setOpen(false)} />
       </Router>
     </CategoriesProvider></CartProvider></LanguageProvider>}
   </div>;

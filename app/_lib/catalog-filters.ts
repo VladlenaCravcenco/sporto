@@ -28,7 +28,7 @@ export function attributeKey(value: AttributeValue, type: string) {
 export const normalizeSearch = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLocaleLowerCase().replace(/ё/g, 'е');
 export function createProductMatcher(query: CatalogQuery, definitions: AttributeDefinition[], rows: AttributeValue[], categoryNames: Record<string, string> = {}) {
   const options = new Map<string, Map<string, Set<string>>>();
-  const types = new Map(definitions.map(d => [d.id, d.value_type]));
+  const types = new Map(definitions.filter(d => valuesOf(query, `attr.${d.id}`).length).map(d => [d.id, d.value_type]));
   for (const row of rows) {
     const type = types.get(row.attribute_id);
     if (!type) continue;
@@ -39,33 +39,38 @@ export function createProductMatcher(query: CatalogQuery, definitions: Attribute
     if (!map.has(key)) map.set(key, new Set());
     map.get(key)!.add(row.product_id);
   }
+  const dimensions = (['category', 'subcategory', 'brand'] as const)
+    .map(key => ({ key, selected: new Set(valuesOf(query, key)) })).filter(d => d.selected.size);
+  const attributes = definitions.map(d => {
+    const key = 'attr.' + d.id;
+    const selected = valuesOf(query, key);
+    const ids = new Set<string>();
+    for (const value of selected) for (const id of options.get(d.id)?.get(value) || []) ids.add(id);
+    return { key, selected, ids };
+  }).filter(d => d.selected.length);
+  const minRaw = valuesOf(query, 'minPrice')[0];
+  const maxRaw = valuesOf(query, 'maxPrice')[0];
+  const min = minRaw && Number.isFinite(Number(minRaw)) ? Number(minRaw) : -Infinity;
+  const max = maxRaw && Number.isFinite(Number(maxRaw)) ? Number(maxRaw) : Infinity;
+  const sale = valuesOf(query, 'sale').includes('true');
+  const warranty = valuesOf(query, 'warranty').includes('true');
+  const stock = new Set(valuesOf(query, 'stock'));
+  const terms = normalizeSearch(valuesOf(query, 'search')[0] || '').trim().split(/\s+/).filter(Boolean);
   return (product: CatalogProduct, exclude?: string) => {
-    for (const key of ['category', 'subcategory', 'brand'] as const) {
-      const selected = valuesOf(query, key);
-      if (exclude !== key && selected.length && !selected.includes(product[key] || '')) return false;
-    }
+    for (const { key, selected } of dimensions)
+      if (exclude !== key && !selected.has(product[key] || '')) return false;
     const price = effectivePrice(product);
-    if (exclude !== 'price') {
-      for (const key of ['minPrice', 'maxPrice']) {
-        const raw = valuesOf(query, key)[0];
-        if (raw && Number.isFinite(Number(raw)) && (key === 'minPrice' ? price < Number(raw) : price > Number(raw))) return false;
-      }
+    if (exclude !== 'price' && (price < min || price > max)) return false;
+    if (exclude !== 'sale' && sale && price === product.price) return false;
+    if (exclude !== 'warranty' && warranty && !product.has_warranty) return false;
+    if (exclude !== 'stock' && stock.size && !stock.has((product.qty ?? 0) > 0 ? 'inStock' : 'onOrder')) return false;
+    if (terms.length) {
+      const searchable = normalizeSearch([product.name_ro, product.name_ru, product.sku, product.brand,
+        categoryNames[product.category || ''], categoryNames[product.subcategory || '']].filter(Boolean).join(' '));
+      if (!terms.every(term => searchable.includes(term))) return false;
     }
-    if (exclude !== 'sale' && valuesOf(query, 'sale').includes('true') && price === product.price) return false;
-    if (exclude !== 'warranty' && valuesOf(query, 'warranty').includes('true') && !product.has_warranty) return false;
-    const stock = valuesOf(query, 'stock');
-    if (exclude !== 'stock' && stock.length && !stock.includes((product.qty ?? 0) > 0 ? 'inStock' : 'onOrder')) return false;
-    const terms = normalizeSearch(valuesOf(query, 'search')[0] || '').trim().split(/\s+/).filter(Boolean);
-    const searchable = normalizeSearch([
-      product.name_ro, product.name_ru, product.sku, product.brand,
-      categoryNames[product.category || ''], categoryNames[product.subcategory || ''],
-    ].filter(Boolean).join(' '));
-    if (!terms.every(term => searchable.includes(term))) return false;
-    for (const definition of definitions) {
-      const key = `attr.${definition.id}`;
-      const selected = valuesOf(query, key);
-      if (key !== exclude && selected.length && !selected.some(value => options.get(definition.id)?.get(value)?.has(product.id))) return false;
-    }
+    for (const attribute of attributes)
+      if (attribute.key !== exclude && !attribute.ids.has(product.id)) return false;
     return true;
   };
 }

@@ -1,3 +1,4 @@
+import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 
@@ -60,7 +61,7 @@ export function getProductYoutubeId(product: ProductDetail) {
   return extractYoutubeId(product.youtube_url);
 }
 
-export async function getProductDetail(identifier: string, sku?: string): Promise<ProductDetailData | null> {
+async function loadProductDetail(identifier: string, sku?: string): Promise<ProductDetailData | null> {
   const supabase = createServerSupabase();
   if (!supabase) return null;
 
@@ -154,3 +155,5 @@ export async function getRelatedProducts(product: ProductDetail): Promise<import
     return [];
   }
 }
+
+export const getProductDetail = cache(loadProductDetail);

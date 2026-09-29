@@ -1,3 +1,4 @@
+import { publicSnapshot } from './public-cache';
 import { createClient } from '@supabase/supabase-js';
 import { categories as fallbackCategories } from '../../src/app/data/products';
 import { getSupabasePublicConfig } from './supabase-env';
@@ -72,7 +73,7 @@ function navigationFallback(): CatalogNavigationCategory[] {
   }));
 }
 
-export async function getCatalogNavigation(): Promise<CatalogNavigationCategory[]> {
+async function loadgetCatalogNavigation(): Promise<CatalogNavigationCategory[]> {
   const supabase = createServerSupabase();
   if (!supabase) return navigationFallback();
 
@@ -295,3 +296,5 @@ export async function getCatalogPageData(
     totalPages,
   };
 }
+
+export const getCatalogNavigation = publicSnapshot(loadgetCatalogNavigation);

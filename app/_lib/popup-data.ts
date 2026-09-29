@@ -1,3 +1,4 @@
+import { publicSnapshot } from './public-cache';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 
@@ -40,7 +41,7 @@ function parsePopup(value: unknown): PopupData | null {
   }
 }
 
-export async function getPopupData(): Promise<PopupData | null> {
+async function loadgetPopupData(): Promise<PopupData | null> {
   if (!PROMO_POPUP_ENABLED) return null;
 
   const config = getSupabasePublicConfig();
@@ -59,3 +60,5 @@ export async function getPopupData(): Promise<PopupData | null> {
   if (error) return null;
   return parsePopup(data?.value);
 }
+
+export const getPopupData = publicSnapshot(loadgetPopupData);

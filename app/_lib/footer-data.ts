@@ -1,3 +1,4 @@
+import { publicSnapshot } from './public-cache';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 import { CONTACTS } from '../../src/lib/contacts';
@@ -58,7 +59,7 @@ const supportedSocials = new Set<SocialType>([
   'instagram', 'facebook', 'tiktok', 'youtube', 'linkedin', 'telegram', 'whatsapp', 'viber',
 ]);
 
-export async function getFooterData(): Promise<FooterData> {
+async function loadgetFooterData(): Promise<FooterData> {
   const config = getSupabasePublicConfig();
   if (!config) return fallback;
 
@@ -99,3 +100,5 @@ export async function getFooterData(): Promise<FooterData> {
     socials: socials.filter(social => social.url),
   };
 }
+
+export const getFooterData = publicSnapshot(loadgetFooterData);

@@ -30,7 +30,7 @@ mkdir -p "$release_dir"
 tar -xzf "/tmp/$release.tar.gz" -C "$release_dir"
 install -m 600 -o sporto -g sporto /var/www/sporto/.env.local "$release_dir/.env.local"
 chown -R sporto:sporto "$release_dir"
-runuser -u sporto -- bash -c 'cd "$1" && npm ci && npm run next:build' bash "$release_dir"
+runuser -u sporto -- bash -c 'cd "$1" && npm ci && node scripts/check-search-db.cjs && npm run next:build' bash "$release_dir"
 test -f "$release_dir/.next/standalone/server.js"
 cp -a "$release_dir/public" "$release_dir/.next/standalone/public"
 cp -a "$release_dir/.next/static" "$release_dir/.next/standalone/.next/static"
@@ -70,6 +70,12 @@ if ! curl -fsS --max-time 60 http://127.0.0.1:3000/ru/catalog > "$release_dir/ca
    ! grep -q 'data-product-card' "$release_dir/catalog-check.html"; then
   rollback
   echo "Catalog check failed; previous release restored."
+  exit 1
+fi
+if ! curl -fsS --max-time 30 'http://127.0.0.1:3000/api/search?q=insportline&lang=ro' > "$release_dir/search-check.json" ||
+   ! node -e 'const r=require(process.argv[1]); if (!r.result || !Array.isArray(r.result.hits) || r.result.hits.length>8 || !Number.isFinite(r.result.total)) process.exit(1)' "$release_dir/search-check.json"; then
+  rollback
+  echo "Search check failed; previous release restored."
   exit 1
 fi
 echo "Deployed: $release"

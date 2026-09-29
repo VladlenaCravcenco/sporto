@@ -1,3 +1,4 @@
+import { publicSnapshot } from './public-cache';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 
@@ -52,33 +53,12 @@ export interface BrandItem {
 }
 
 async function getActiveBrands(supabase: NonNullable<ReturnType<typeof createSupabase>>): Promise<BrandItem[]> {
-  const productBrands: Array<{ brand: string | null }> = [];
-
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await supabase
-      .from('products')
-      .select('brand')
-      .eq('active', true)
-      .not('brand', 'is', null)
-      .range(from, from + 999);
-
-    if (error || !data?.length) break;
-    productBrands.push(...data);
-    if (data.length < 1000) break;
+  const { data, error } = await supabase.rpc('sporto_active_brands_v1');
+  if (error) {
+    console.error('[brands] Could not load active brands', error);
+    return [];
   }
-
-  const names = [...new Set(productBrands.map(item => item.brand).filter((name): name is string => Boolean(name)))];
-  if (names.length === 0) return [];
-
-  const { data, error } = await supabase
-    .from('brands')
-    .select('id,name,slug,logo_url,active')
-    .in('name', names)
-    .order('name', { ascending: true });
-
-  if (error) return [];
-  const rows = (data ?? []) as Array<BrandItem & { active: boolean | null }>;
-  return rows.filter(item => item.active !== false).map(({ id, name, slug, logo_url }) => ({ id, name, slug, logo_url }));
+  return (data || []) as BrandItem[];
 }
 
 async function getFeaturedProducts(supabase: NonNullable<ReturnType<typeof createSupabase>>): Promise<FeaturedProduct[]> {
@@ -122,7 +102,7 @@ function promoDisplay(count: number) {
   return rounded > 0 ? `${rounded}+` : String(count);
 }
 
-export async function getHomeHeroData(): Promise<HomeHeroData> {
+async function loadgetHomeHeroData(): Promise<HomeHeroData> {
   const supabase = createSupabase();
   if (!supabase) {
     return {
@@ -150,3 +130,5 @@ export async function getHomeHeroData(): Promise<HomeHeroData> {
     promoCount: promosResult.error ? '...' : promoDisplay(promosResult.count ?? 0),
   };
 }
+
+export const getHomeHeroData = publicSnapshot(loadgetHomeHeroData);
