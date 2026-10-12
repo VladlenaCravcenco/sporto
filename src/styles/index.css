@@ -33,11 +33,11 @@ body .text-\[11px\] {
 }
 
 body .text-gray-400 {
-  color: #6b7280 !important;
+  color: #737373 !important;
 }
 
 body .text-gray-500 {
-  color: #4b5563 !important;
+  color: #525252 !important;
 }
 
 body h1,
@@ -84,7 +84,7 @@ a[class*="from-red-"] {
 }
 
 /* Shared page canvas; cards and form surfaces retain their own backgrounds. */
-body { background-color: #f5f6f7; }
+body { background-color: #f7f7f7; }
 
 @media (max-width: 639px) {
   .contact-sticker-attention { animation: none; box-shadow: 0 3px 12px rgb(0 0 0 / 12%); }

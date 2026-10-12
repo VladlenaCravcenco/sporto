@@ -1,3 +1,5 @@
+import { CatalogLink } from '../../_components/CatalogLink';
+import { productPath } from '../../_lib/product-url';
 import { CatalogSortControl } from '../../_components/CatalogSortControl';
 import { CatalogFilters } from '../../_components/CatalogFilters';
 import { getFilteredCatalog } from '../../_lib/catalog-filter-data';
@@ -18,22 +20,6 @@ interface CatalogPageProps {
 }
 
 export const dynamic = 'force-dynamic';
-
-function slugify(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' si ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '') || 'produs';
-}
-
-function productHref(product: CatalogProduct, language: Language) {
-  const name = language === 'ru' ? product.name_ru || product.name_ro : product.name_ro;
-  return `/${language}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
-}
 
 function parsePage(rawValue: string | string[] | undefined) {
   if (rawValue === undefined) return 1;
@@ -68,22 +54,25 @@ export async function generateMetadata({ params, searchParams }: CatalogPageProp
   const isRo = lang === 'ro';
   const parsedPage = parsePage(query.page);
   const page = parsedPage && parsedPage > 1 ? parsedPage : 1;
-  const canonical = `${siteUrl}${catalogHref(lang as Language, page, 'recommended')}`;
+  // Parameter combinations remain usable, but are not separate search landing pages.
+  const hasFilters = Object.keys(query).some(key => key !== 'page' && key !== 'sort' && query[key] !== undefined);
+  const canonical = `${siteUrl}${catalogHref(lang as Language, page, 'recommended', query)}`;
   const pageSuffix = page > 1 ? (isRo ? ` — pagina ${page}` : ` — страница ${page}`) : '';
 
   return {
     title: isRo
-      ? `Catalog de echipamente sportive${pageSuffix} | SPORTO`
-      : `Каталог спортивного оборудования${pageSuffix} | SPORTO`,
+      ? `Catalog de echipamente sportive${pageSuffix}`
+      : `Каталог спортивного оборудования${pageSuffix}`,
     description: isRo
       ? 'Catalogul SPORTO de echipamente sportive profesionale disponibile în Moldova.'
       : 'Каталог профессионального спортивного оборудования SPORTO в Молдове.',
+    robots: hasFilters ? { index: false, follow: true } : undefined,
     alternates: {
       canonical,
       languages: {
-        ro: `${siteUrl}${catalogHref('ro', page, 'recommended')}`,
-        ru: `${siteUrl}${catalogHref('ru', page, 'recommended')}`,
-        'x-default': `${siteUrl}${catalogHref('ro', page, 'recommended')}`,
+        ro: `${siteUrl}${catalogHref('ro', page, 'recommended', query)}`,
+        ru: `${siteUrl}${catalogHref('ru', page, 'recommended', query)}`,
+        'x-default': `${siteUrl}${catalogHref('ro', page, 'recommended', query)}`,
       },
     },
   };
@@ -136,17 +125,19 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
 
             <div className="grid grid-cols-2 gap-2 sm:gap-4 xl:grid-cols-3 2xl:grid-cols-4">
               {data.products.map(product => (
-                <ProductCardView key={product.id} product={product} language={language} href={productHref(product, language)} />
+                <ProductCardView linkComponent={CatalogLink} key={product.id}
+                  imageSizes="(max-width: 639px) calc(50vw - 46px), (max-width: 1023px) calc(50vw - 58px), (max-width: 1279px) calc(50vw - 218px), (max-width: 1535px) calc(33.333vw - 166px), (max-width: 1919px) calc(25vw - 135px), 345px"
+                  product={product} language={language} href={productPath(product, language)} />
               ))}
             </div>
 
             {data.totalPages > 1 && (
               <nav aria-label={language === 'ro' ? 'Paginarea catalogului' : 'Пагинация каталога'} className="mt-10 flex items-center justify-between gap-4 border-t border-gray-200 pt-6">
                 {data.page > 1 ? (
-                  <a href={catalogHref(language, data.page - 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-900">
+                  <CatalogLink href={catalogHref(language, data.page - 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] border border-gray-300 bg-white px-5 text-sm font-semibold text-gray-800 transition-colors hover:border-gray-900">
                     <ArrowLeft className="h-4 w-4" aria-hidden="true" />
                     {language === 'ro' ? 'Înapoi' : 'Назад'}
-                  </a>
+                  </CatalogLink>
                 ) : <span />}
 
                 <div className="hidden items-center gap-2 sm:flex">
@@ -155,22 +146,22 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
                     .map((item, index, visiblePages) => (
                       <span key={item} className="flex items-center gap-2">
                         {index > 0 && item - visiblePages[index - 1] > 1 && <span className="px-1 text-gray-400">…</span>}
-                        <a
+                        <CatalogLink
                           href={catalogHref(language, item, sort, filters)}
                           aria-current={item === data.page ? 'page' : undefined}
                           className={`flex h-11 min-w-11 items-center justify-center rounded-[5px] border px-3 text-sm font-semibold transition-colors ${item === data.page ? 'border-black bg-black text-white' : 'border-gray-300 bg-white text-gray-700 hover:border-gray-900'}`}
                         >
                           {item}
-                        </a>
+                        </CatalogLink>
                       </span>
                     ))}
                 </div>
 
                 {data.page < data.totalPages ? (
-                  <a href={catalogHref(language, data.page + 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-gray-800">
+                  <CatalogLink href={catalogHref(language, data.page + 1, sort, filters)} className="inline-flex min-h-11 items-center gap-2 rounded-[5px] bg-black px-5 text-sm font-semibold text-white transition-colors hover:bg-gray-800">
                     {language === 'ro' ? 'Înainte' : 'Далее'}
                     <ArrowRight className="h-4 w-4" aria-hidden="true" />
-                  </a>
+                  </CatalogLink>
                 ) : <span />}
               </nav>
             )}

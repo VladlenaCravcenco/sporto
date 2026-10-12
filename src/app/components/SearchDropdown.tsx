@@ -1,3 +1,4 @@
+import { StoreImage } from './StoreImage';
 import { useRemoteSearch } from '../hooks/useRemoteSearch';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { useNavigate } from 'react-router';
@@ -55,7 +56,7 @@ function Thumb({ product }: { product: Product }) {
   if (src && !imgErr) {
     return (
       <div className="w-11 h-11 flex-shrink-0 border border-gray-100 overflow-hidden bg-gray-50">
-        <img src={src} alt="" onError={() => setImgErr(true)} className="w-full h-full object-cover" />
+        <StoreImage variant="thumbnail" sizes="64px" loading="lazy" src={src} alt="" onError={() => setImgErr(true)} className="w-full h-full object-cover" />
       </div>
     );
   }

@@ -83,17 +83,14 @@ async function getFeaturedProducts(supabase: NonNullable<ReturnType<typeof creat
   return fallback.error ? [] : (fallback.data ?? []) as FeaturedProduct[];
 }
 
-async function getSaleProducts(supabase: NonNullable<ReturnType<typeof createSupabase>>): Promise<FeaturedProduct[]> {
-  const products: FeaturedProduct[] = [];
-  for (let from = 0; products.length < 20; from += 100) {
-    const { data, error } = await supabase.from('products')
-      .select('id,name_ro,name_ru,sku,brand,price,sale_price,image_url,qty')
-      .eq('active', true).gt('sale_price', 0).order('id').range(from, from + 99);
-    if (error || !data?.length) break;
-    products.push(...data.filter(item => item.sale_price < item.price));
-    if (data.length < 100) break;
+async function getSaleProducts(supabase: NonNullable<ReturnType<typeof createSupabase>>) {
+  const { data, error } = await supabase.rpc('sporto_home_sales_v1');
+  if (error || !data || !Array.isArray(data.products) || data.products.length > 20
+    || !Number.isSafeInteger(data.total) || data.total < data.products.length) {
+    console.error('[home sales] Could not load promotions', error || 'Invalid RPC response');
+    return { products: [] as FeaturedProduct[], total: null };
   }
-  return products.slice(0, 20);
+  return { products: data.products as FeaturedProduct[], total: data.total as number };
 }
 
 function promoDisplay(count: number) {
@@ -114,9 +111,8 @@ async function loadgetHomeHeroData(): Promise<HomeHeroData> {
     };
   }
 
-  const [bannersResult, promosResult, brands, featuredProducts, saleProducts] = await Promise.all([
+  const [bannersResult, brands, featuredProducts, sales] = await Promise.all([
     supabase.from('banners').select('*').eq('active', true).order('sort_order', { ascending: true }),
-    supabase.from('products').select('*', { count: 'exact', head: true }).eq('active', true).not('sale_price', 'is', null),
     getActiveBrands(supabase),
     getFeaturedProducts(supabase),
     getSaleProducts(supabase),
@@ -126,8 +122,8 @@ async function loadgetHomeHeroData(): Promise<HomeHeroData> {
     banners: bannersResult.error ? [] : ((bannersResult.data ?? []) as BannerRow[]),
     brands,
     featuredProducts,
-    saleProducts,
-    promoCount: promosResult.error ? '...' : promoDisplay(promosResult.count ?? 0),
+    saleProducts: sales.products,
+    promoCount: sales.total === null ? '...' : promoDisplay(sales.total),
   };
 }
 

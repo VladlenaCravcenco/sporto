@@ -61,7 +61,7 @@ function writeLocalAdminComments(next: Record<string, string>) {
 /* ─── status config is built in the component (needs t) ─── */
 
 export function AdminRequests() {
-  const { t } = useAdminLang();
+  const { t, lang } = useAdminLang();
 
   const STATUS_CONFIG: Record<Status, { label: string; bg: string; text: string; border: string; icon: ReactNode }> = {
     new:         { label: t.requests.statusNew,        bg: 'bg-black',       text: 'text-white',       border: 'border-black',       icon: <Clock       className="w-3 h-3" /> },
@@ -145,7 +145,8 @@ export function AdminRequests() {
 
   const deleteRequest = async (id: string) => {
     if (!confirm(t.requests.deleteConfirm ?? 'Удалить заявку?')) return;
-    await supabase.from('order_requests').delete().eq('id', id);
+    const { error } = await supabase.from('order_requests').delete().eq('id', id);
+    if (error) { showToast(error.message, false); return; }
     setRows(r => r.filter(req => req.id !== id));
     if (expandedId === id) setExpandedId(null);
     showToast(t.requests.deleted ?? 'Заявка удалена');
@@ -207,11 +208,11 @@ export function AdminRequests() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen admin-canvas flex flex-col">
 
       {/* ── Toast ── */}
       {toast && (
-        <div className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 sm:w-72 z-50 px-4 py-3 text-xs flex items-center gap-2 shadow-lg ${toast.ok ? 'bg-black text-white' : 'bg-red-600 text-white'}`}>
+        <div className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 sm:w-72 z-50 px-4 py-3 text-xs flex items-center gap-2 shadow-lg ${toast.ok ? 'admin-solid admin-on-solid' : 'bg-red-600 admin-on-solid'}`}>
           {toast.ok ? <Check className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
           {toast.msg}
         </div>
@@ -220,22 +221,22 @@ export function AdminRequests() {
       {/* ════════════════════════════════
           TOP BAR  
           ════════════════════════════════ */}
-      <div className="bg-white border-b border-gray-100 sticky top-12 z-20">
+      <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-12 z-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Row 1: title + counts + refresh */}
           <div className="flex items-center h-11 gap-2">
-            <ShoppingCart className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-sm text-gray-900 flex-shrink-0">
+            <ShoppingCart className="w-4 h-4 admin-muted flex-shrink-0" />
+            <span className="text-sm admin-ink flex-shrink-0">
               {t.requests.title}
             </span>
-            <span className="text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums flex-shrink-0">
+            <span className="text-[11px] admin-muted-surface admin-muted px-2 py-0.5 tabular-nums flex-shrink-0">
               {rows.length}
             </span>
             {counts.new > 0 && (
               <button
                 onClick={showNewestRequests}
-                className="text-[11px] bg-black text-white px-2 py-0.5 tabular-nums animate-pulse flex-shrink-0 hover:bg-gray-800 transition-colors"
+                className="text-[11px] admin-solid admin-on-solid px-2 py-0.5 tabular-nums animate-pulse flex-shrink-0 admin-hover-solid transition-colors"
               >
                 {counts.new} {t.requests.statusNew?.toLowerCase() ?? 'новых'}
               </button>
@@ -244,7 +245,7 @@ export function AdminRequests() {
             <button
               onClick={load}
               disabled={loading}
-              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+              className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
@@ -253,18 +254,18 @@ export function AdminRequests() {
           {/* Row 2: search — full width on mobile */}
           <div className="pb-2.5">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted pointer-events-none" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={t.requests.searchPlaceholder ?? 'Поиск по клиенту, email, телефону…'}
-                className="w-full h-8 pl-9 pr-8 text-xs border border-gray-200 focus:outline-none focus:border-black transition-colors bg-white"
+                className="w-full h-8 pl-9 pr-8 text-xs border admin-border focus:outline-none admin-focus-border transition-colors admin-surface"
               />
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -277,7 +278,7 @@ export function AdminRequests() {
       {/* ════════════════════════════════
           CONTENT
           ════════════════════════════════ */}
-      <div className="max-w-[1600px] mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 flex-1">
+      <div className="admin-page-body max-w-[1600px] mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 flex-1">
 
         {/* SQL notice */}
         {noTable && (
@@ -295,7 +296,7 @@ export function AdminRequests() {
                   {showSql ? 'Скрыть SQL' : 'Показать SQL'}
                 </button>
                 {showSql && (
-                  <pre className="bg-amber-100/50 border border-amber-200 p-3 text-[10px] text-amber-900 overflow-x-auto leading-relaxed mt-1 whitespace-pre-wrap break-all">
+                  <pre className="bg-amber-100/50 border border-amber-200 p-3 text-xs text-amber-900 overflow-x-auto leading-relaxed mt-1 whitespace-pre-wrap break-all">
                     {SQL_SETUP}
                   </pre>
                 )}
@@ -313,15 +314,15 @@ export function AdminRequests() {
                 onClick={() => setStatusFilter(s)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[11px] border transition-colors ${
                   statusFilter === s
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-black'
+                    ? 'admin-solid admin-on-solid admin-border-strong'
+                    : 'admin-surface admin-muted admin-border hover:border-gray-400 admin-hover-ink'
                 }`}
               >
                 {s !== 'all' && STATUS_CONFIG[s as Status].icon}
                 <span className="whitespace-nowrap">
                   {s === 'all' ? (t.requests.filterAll ?? 'Все') : STATUS_CONFIG[s as Status].label}
                 </span>
-                <span className="tabular-nums text-[10px] opacity-60">{counts[s]}</span>
+                <span className="tabular-nums text-xs opacity-60">{counts[s]}</span>
               </button>
             ))}
           </div>
@@ -332,13 +333,13 @@ export function AdminRequests() {
           loading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white border border-gray-100 animate-pulse h-20 sm:h-[72px]" />
+                <div key={i} className="admin-surface border admin-border animate-pulse h-20 sm:h-[72px]" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="bg-white border border-gray-100 py-16 text-center">
+            <div className="admin-surface border admin-border py-16 text-center">
               <ShoppingCart className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">
+              <p className="text-sm admin-muted">
                 {search || statusFilter !== 'all'
                   ? (t.requests.nothingFound ?? 'Ничего не найдено')
                   : (t.requests.empty ?? 'Заявок пока нет')}
@@ -357,8 +358,8 @@ export function AdminRequests() {
                 return (
                   <div
                     key={req.id}
-                    className={`bg-white border transition-all ${
-                      expanded ? 'border-gray-300' : 'border-gray-100'
+                    className={`admin-surface border transition-all ${
+                      expanded ? 'admin-border' : 'admin-border'
                     }`}
                   >
 
@@ -376,11 +377,11 @@ export function AdminRequests() {
 
                         {/* Row 1: status + date */}
                         <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 uppercase tracking-wide ${cfg.bg} ${cfg.text}`}>
+                          <span className={`inline-flex items-center gap-1 text-xs px-2 py-0.5   ${cfg.bg} ${cfg.text}`}>
                             {cfg.icon}
                             {cfg.label}
                           </span>
-                          <span className="text-[10px] text-gray-400 tabular-nums flex-shrink-0">
+                          <span className="text-xs admin-muted tabular-nums flex-shrink-0">
                             {fmtDate(req.created_at)}
                           </span>
                         </div>
@@ -388,26 +389,26 @@ export function AdminRequests() {
                         {/* Row 2: name + total */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-900 truncate leading-snug">
+                            <p className="text-xs admin-ink truncate leading-snug">
                               {req.client_name}
                             </p>
                             {req.client_company && (
-                              <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                              <p className="text-xs admin-muted truncate mt-0.5">
                                 {req.client_company}
                               </p>
                             )}
-                            <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                            <p className="text-xs admin-muted truncate mt-0.5">
                               {req.client_email}
                             </p>
                           </div>
                           {/* Price + item count */}
                           <div className="text-right flex-shrink-0">
-                            <p className="text-sm text-gray-900 tabular-nums leading-snug">
+                            <p className="text-sm admin-ink tabular-nums leading-snug">
                               {req.total_price.toLocaleString()}
-                              <span className="text-[10px] text-gray-400 ml-0.5">MDL</span>
+                              <span className="text-xs admin-muted ml-0.5">MDL</span>
                             </p>
                             {items.length > 0 && (
-                              <p className="text-[10px] text-gray-400 mt-0.5">
+                              <p className="text-xs admin-muted mt-0.5">
                                 {items.length} {t.requests.items ?? 'поз.'}
                               </p>
                             )}
@@ -417,20 +418,25 @@ export function AdminRequests() {
 
                       {/* Right: actions */}
                       <div
-                        className="flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100"
+                        className="flex flex-col items-center justify-center gap-1 px-2 border-l admin-border"
                         onClick={e => e.stopPropagation()}
                       >
                         <a
                           href={`mailto:${req.client_email}`}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+                          className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
                           title={req.client_email}
                         >
                           <Mail className="w-3.5 h-3.5" />
                         </a>
+                        {import.meta.env.VITE_NEXT_SSR && req.client_id && (
+                          <a href={`/admin/requests/history?client=${encodeURIComponent(req.client_id)}`} className="text-xs underline" title={lang === 'ru' ? 'История клиента' : 'Istoricul clientului'}>
+                            {lang === 'ru' ? 'История' : 'Istoric'}
+                          </a>
+                        )}
                         {req.client_phone && (
                           <a
                             href={`tel:${req.client_phone}`}
-                            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+                            className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
                             title={req.client_phone}
                           >
                             <Phone className="w-3.5 h-3.5" />
@@ -438,7 +444,7 @@ export function AdminRequests() {
                         )}
                         <button
                           onClick={() => setExpandedId(expanded ? null : req.id)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-black transition-colors"
+                          className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
                         >
                           {expanded
                             ? <ChevronUp className="w-3.5 h-3.5" />
@@ -449,13 +455,13 @@ export function AdminRequests() {
 
                     {/* ─── Expanded detail ─── */}
                     {expanded && (
-                      <div className="border-t border-gray-100 bg-gray-50">
+                      <div className="border-t admin-border admin-canvas">
 
                         {/* ── Client + comments ── */}
-                        <div className="px-3 sm:px-5 py-4 bg-white border-b border-gray-100">
+                        <div className="px-3 sm:px-5 py-4 admin-surface border-b admin-border">
                           <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1.3fr_1fr] gap-4">
                             <div>
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                              <p className="text-xs   admin-muted mb-2">
                                 {t.requests.client ?? 'Клиент'}
                               </p>
                               <div className="space-y-1.5">
@@ -466,7 +472,7 @@ export function AdminRequests() {
                             </div>
 
                             <div>
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                              <p className="text-xs   admin-muted mb-2">
                                 {t.requests.clientComment ?? 'Комментарий клиента'}
                               </p>
                               <div className="space-y-1.5">
@@ -477,7 +483,7 @@ export function AdminRequests() {
                             </div>
 
                             <div>
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                              <p className="text-xs   admin-muted mb-2">
                                 {t.requests.adminComment ?? 'Комментарий администратора'}
                               </p>
                               <textarea
@@ -485,16 +491,16 @@ export function AdminRequests() {
                                 onChange={e => setAdminComments(prev => ({ ...prev, [req.id]: e.target.value }))}
                                 placeholder={t.requests.adminCommentPlaceholder ?? 'Добавить комментарий...'}
                                 rows={8}
-                                className="w-full h-44 border border-gray-200 bg-white px-4 py-3 text-[11px] text-gray-700 placeholder:text-gray-300 leading-relaxed align-top focus:outline-none focus:border-black transition-colors resize-none"
+                                className="w-full h-44 border admin-border admin-surface px-4 py-3 text-[11px] admin-ink placeholder:text-gray-300 leading-relaxed align-top focus:outline-none admin-focus-border transition-colors resize-none"
                               />
                               <div className="mt-2">
                                 <button
                                   onClick={() => saveAdminComment(req.id)}
                                   disabled={savingCommentId === req.id || !isCommentChanged}
-                                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-[11px] uppercase tracking-widest transition-colors ${
+                                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-[11px]   transition-colors ${
                                     savingCommentId === req.id || !isCommentChanged
-                                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-default'
-                                      : 'bg-black text-white hover:bg-gray-800'
+                                      ? 'admin-muted-surface admin-muted border admin-border cursor-default'
+                                      : 'admin-solid admin-on-solid admin-hover-solid'
                                   }`}
                                 >
                                   {savingCommentId === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SendHorizonal className="w-3.5 h-3.5" />}
@@ -506,8 +512,8 @@ export function AdminRequests() {
                         </div>
 
                         {/* ── Status changer ── */}
-                        <div className="px-3 sm:px-5 py-3 border-b border-gray-100 bg-white">
-                          <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                        <div className="px-3 sm:px-5 py-3 border-b admin-border admin-surface">
+                          <p className="text-xs   admin-muted mb-2">
                             {t.requests.status ?? 'Статус'}
                           </p>
                           <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
@@ -522,7 +528,7 @@ export function AdminRequests() {
                                   className={`flex items-center justify-center gap-1.5 px-2 py-2 text-[11px] border transition-all ${
                                     isCurrent
                                       ? `${sc.bg} ${sc.text} ${sc.border}`
-                                      : 'border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black bg-white'
+                                      : 'admin-border admin-muted hover:border-gray-400 admin-hover-ink admin-surface'
                                   }`}
                                 >
                                   {updatingId === req.id && !isCurrent
@@ -538,36 +544,36 @@ export function AdminRequests() {
 
                         {/* ── Cart items ── */}
                         <div className="px-3 sm:px-5 py-3">
-                          <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                          <p className="text-xs   admin-muted mb-2">
                             {t.requests.cartItems ?? 'Товары'} ({items.length})
                           </p>
 
                           {items.length === 0 ? (
-                            <p className="text-xs text-gray-400 py-4 text-center">
+                            <p className="text-xs admin-muted py-4 text-center">
                               {t.requests.noItems ?? 'Нет товаров'}
                             </p>
                           ) : (
                             <div className="space-y-1.5">
                               {items.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-2.5 bg-white border border-gray-100 px-3 py-2.5">
+                                <div key={idx} className="flex items-center gap-2.5 admin-surface border admin-border px-3 py-2.5">
                                   {/* Thumb */}
-                                  <div className="w-9 h-9 flex-shrink-0 bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+                                  <div className="w-9 h-9 flex-shrink-0 admin-canvas border admin-border flex items-center justify-center overflow-hidden">
                                     {item.image_url
                                       ? <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-                                      : <Package className="w-3.5 h-3.5 text-gray-300" />}
+                                      : <Package className="w-3.5 h-3.5 admin-muted" />}
                                   </div>
                                   {/* Name + SKU */}
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] text-gray-900 leading-tight line-clamp-2">
+                                    <p className="text-[11px] admin-ink leading-tight line-clamp-2">
                                       {item.name_ru || item.name_ro}{item.sku ? ` [${item.sku}]` : ''}
                                     </p>
                                   </div>
                                   {/* Qty × price */}
                                   <div className="flex-shrink-0 text-right">
-                                    <p className="text-[11px] text-gray-900 tabular-nums">
+                                    <p className="text-[11px] admin-ink tabular-nums">
                                       {(item.price * item.qty).toLocaleString()} MDL
                                     </p>
-                                    <p className="text-[10px] text-gray-400">
+                                    <p className="text-xs admin-muted">
                                       {item.qty} × {item.price.toLocaleString()}
                                     </p>
                                   </div>
@@ -575,8 +581,8 @@ export function AdminRequests() {
                               ))}
 
                               {/* Total row */}
-                              <div className="bg-black text-white px-3 py-2.5 flex items-center justify-between">
-                                <span className="text-[10px] uppercase tracking-widest">
+                              <div className="admin-solid admin-on-solid px-3 py-2.5 flex items-center justify-between">
+                                <span className="text-xs  ">
                                   {t.requests.total ?? 'Итого'}
                                 </span>
                                 <span className="text-sm tabular-nums">
@@ -589,7 +595,7 @@ export function AdminRequests() {
                           {/* Delete */}
                           <button
                             onClick={() => deleteRequest(req.id)}
-                            className="mt-3 w-full flex items-center justify-center gap-2 text-[11px] text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-200 py-2.5 transition-colors"
+                            className="mt-3 w-full flex items-center justify-center gap-2 text-[11px] admin-muted hover:text-red-500 border admin-border hover:border-red-200 py-2.5 transition-colors"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
                             {t.requests.delete ?? 'Удалить заявку'}
@@ -611,10 +617,10 @@ export function AdminRequests() {
 function InfoRow({ icon, value, link, multiline = false }: { icon: React.ReactNode; value: string; link?: string; multiline?: boolean }) {
   return (
     <div className={`flex gap-2 ${multiline ? 'items-start' : 'items-center'}`}>
-      <span className={`text-gray-400 flex-shrink-0 ${multiline ? 'mt-0.5' : ''}`}>{icon}</span>
+      <span className={`admin-muted flex-shrink-0 ${multiline ? 'mt-0.5' : ''}`}>{icon}</span>
       {link
-        ? <a href={link} className="text-[11px] text-gray-700 hover:text-black hover:underline truncate">{value}</a>
-        : <span className={`text-[11px] text-gray-700 ${multiline ? 'leading-relaxed whitespace-pre-wrap' : 'truncate'}`}>{value}</span>}
+        ? <a href={link} className="text-[11px] admin-ink admin-hover-ink hover:underline truncate">{value}</a>
+        : <span className={`text-[11px] admin-ink ${multiline ? 'leading-relaxed whitespace-pre-wrap' : 'truncate'}`}>{value}</span>}
     </div>
   );
 }

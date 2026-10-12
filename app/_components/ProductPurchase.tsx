@@ -9,7 +9,7 @@ function PurchaseButton({ item, language, inStock }: { inStock: boolean; item: O
   const { addToCart } = useCart();
   const [added, setAdded] = useState(false);
   return <div className="mt-5 flex flex-wrap items-center gap-4">
-    <button type="button" onClick={() => { addToCart(item); setAdded(true); }} className="inline-flex min-h-12 items-center justify-center gap-3 rounded-[5px] bg-red-600 px-7 py-3 text-sm font-semibold text-white transition-colors hover:bg-red-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600">
+    <button type="button" onClick={() => { addToCart(item); setAdded(true); }} className={`inline-flex min-h-12 items-center justify-center gap-3 rounded-[5px] border px-7 py-3 text-sm font-semibold transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inStock ? 'border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover focus-visible:outline-brand' : 'border-gray-900 bg-white text-gray-900 hover:bg-gray-100 focus-visible:outline-gray-900'}`}>
       {added ? <Check className="h-5 w-5" /> : <ShoppingCart className="h-5 w-5" />}
       {inStock ? (language === 'ro' ? 'Adaugă în coș' : 'Добавить в корзину') : (language === 'ro' ? 'La comandă' : 'Под заказ')}
     </button>

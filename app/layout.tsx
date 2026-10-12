@@ -20,6 +20,10 @@ export default async function RootLayout({ children }: { children: ReactNode }) 
 
   return (
     <html lang={language}>
+      <head>
+        <link rel="preload" href="/fonts/inter/InterLatin.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        {language === 'ru' && <link rel="preload" href="/fonts/inter/InterCyrillic.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />}
+      </head>
       <body>{children}</body>
     </html>
   );

@@ -39,18 +39,15 @@ function saveConsent(value: Consent) {
   document.cookie = `${cookieName}=${value}; Path=/; Max-Age=${cookieLifetime}; SameSite=Lax${secure}`;
 }
 
-export function CookieConsent({ language }: { language: Language }) {
-  const [consent, setConsent] = useState<Consent | null>(null);
-  const [ready, setReady] = useState(false);
+export function CookieConsent({ language, initialConsent }: { language: Language; initialConsent: Consent | null }) {
+  const [consent, setConsent] = useState<Consent | null>(initialConsent);
   const text = copy[language];
 
   useEffect(() => {
     setConsent(readConsent());
-    setReady(true);
 
     function reopenSettings() {
       setConsent(null);
-      setReady(true);
     }
 
     window.addEventListener('sporto:open-cookie-settings', reopenSettings);
@@ -65,7 +62,7 @@ export function CookieConsent({ language }: { language: Language }) {
 
   return (
     <>
-      {ready && consent === null && (
+      {consent === null && (
         <section
           role="dialog"
           aria-live="polite"

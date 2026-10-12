@@ -1,3 +1,4 @@
+import { AdminEditorWorkspace } from '../components/AdminEditorWorkspace';
 import { useState, useEffect } from 'react';
 import { Save, Eye } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
@@ -372,28 +373,28 @@ export function AdminContentPages() {
   ];
 
   return (
-    <div className="flex min-h-[calc(100vh-48px)] flex-col overflow-x-hidden bg-black lg:h-[calc(100vh-48px)] lg:flex-row lg:overflow-hidden">
+    <AdminEditorWorkspace>
       
       {/* ══ LEFT — EDITOR ══ */}
-      <div className="w-full min-w-0 shrink-0 flex flex-col border-b border-white/10 lg:w-[520px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
+      <div className="admin-editor-pane">
 
         {/* Header */}
-        <div className="sticky top-[88px] z-10 bg-black border-b border-white/10 px-4 py-4 sm:px-5 lg:top-0">
+        <div className="sticky top-[88px] z-10 admin-surface border-b admin-border px-4 py-4 sm:px-5 lg:top-0">
           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">Контентные страницы</p>
-              <h1 className="text-sm text-white sm:text-base">
+              <p className="text-xs admin-muted  ">Контентные страницы</p>
+              <h1 className="text-sm admin-ink sm:text-base">
                 {isRu
                   ? (activeTab === 'terms' ? 'Условия сотрудничества' : activeTab === 'delivery' ? 'Условия доставки' : 'Конфиденциальность')
                   : (activeTab === 'terms' ? 'Condiții de Colaborare' : activeTab === 'delivery' ? 'Condiții de Livrare' : 'Politica de Confidențialitate')}
               </h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={handleReset} className="h-8 px-3 text-[10px] text-gray-600 border border-white/10 hover:border-white/30 hover:text-gray-300 transition-colors uppercase tracking-wider">
+              <button onClick={handleReset} className="h-8 px-3 text-xs admin-muted border admin-border admin-hover-border hover:text-gray-300 transition-colors  ">
                 {isRu ? 'Сброс' : 'Reset'}
               </button>
               <button onClick={handleSave} disabled={!hasChanges}
-                className={`flex items-center gap-1.5 px-4 h-8 text-xs uppercase tracking-widest transition-colors ${hasChanges ? 'bg-white text-black hover:bg-gray-100' : 'bg-white/10 text-gray-600 cursor-default'}`}>
+                className={`flex items-center gap-1.5 px-4 h-8 text-xs   transition-colors ${hasChanges ? 'admin-solid admin-on-solid admin-hover-surface' : 'admin-muted-surface admin-muted cursor-default'}`}>
                 <Save className="w-3 h-3" />
                 {isRu ? 'Сохранить' : 'Salvează'}
               </button>
@@ -406,10 +407,10 @@ export function AdminContentPages() {
               <button
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
-                className={`px-3 py-2 text-[11px] uppercase tracking-wider text-left transition-colors sm:text-center ${
+                className={`px-3 py-2 text-[11px]   text-left transition-colors sm:text-center ${
                   activeTab === tab.key
-                    ? 'bg-white/10 text-white border-b-2 border-white'
-                    : 'text-gray-600 hover:text-gray-400'
+                    ? 'admin-muted-surface admin-ink border-b-2 border-white'
+                    : 'admin-muted hover:text-gray-400'
                 }`}
               >
                 {isRu ? tab.label_ru : tab.label_ro}
@@ -418,7 +419,7 @@ export function AdminContentPages() {
           </div>
 
           {hasChanges && (
-            <div className="mt-2 text-[9px] text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+            <div className="mt-2 text-xs text-amber-500   flex items-center gap-1.5">
               <span className="w-1 h-1 rounded-full bg-amber-500 inline-block" />
               {isRu ? 'Есть несохранённые изменения' : 'Modificări nesalvate'}
             </div>
@@ -427,70 +428,70 @@ export function AdminContentPages() {
 
         {/* Fields */}
         <div className="min-w-0 px-4 py-5 space-y-4 sm:px-5">
-          <div ref={registerField('title_ro')} className={activeFieldId === 'title_ro' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
+          <div ref={registerField('title_ro')} className={activeFieldId === 'title_ro' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
+            <label className="block text-xs   admin-muted mb-1.5">
               {isRu ? 'Заголовок (RO)' : 'Titlu (RO)'}
             </label>
             <input
               value={current.title_ro}
               onChange={e => update('title_ro', e.target.value)}
-              className="w-full h-9 bg-black border border-white/20 px-3 text-sm text-white focus:border-white focus:outline-none transition-colors"
+              className="w-full h-9 admin-surface border admin-border px-3 text-sm admin-ink admin-focus-border focus:outline-none transition-colors"
             />
           </div>
 
-          <div ref={registerField('title_ru')} className={activeFieldId === 'title_ru' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
+          <div ref={registerField('title_ru')} className={activeFieldId === 'title_ru' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
+            <label className="block text-xs   admin-muted mb-1.5">
               {isRu ? 'Заголовок (RU)' : 'Titlu (RU)'}
             </label>
             <input
               value={current.title_ru}
               onChange={e => update('title_ru', e.target.value)}
-              className="w-full h-9 bg-black border border-white/20 px-3 text-sm text-white focus:border-white focus:outline-none transition-colors"
+              className="w-full h-9 admin-surface border admin-border px-3 text-sm admin-ink admin-focus-border focus:outline-none transition-colors"
             />
           </div>
 
-          <div ref={registerField('content_ro')} className={activeFieldId === 'content_ro' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
+          <div ref={registerField('content_ro')} className={activeFieldId === 'content_ro' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
+            <label className="block text-xs   admin-muted mb-1.5">
               {isRu ? 'Контент (RO) — Markdown' : 'Conținut (RO) — Markdown'}
             </label>
             <textarea
               value={current.content_ro}
               onChange={e => update('content_ro', e.target.value)}
               rows={20}
-              className="w-full bg-black border border-white/20 px-3 py-2 text-sm text-white font-mono leading-relaxed focus:border-white focus:outline-none transition-colors resize-none"
+              className="w-full admin-surface border admin-border px-3 py-2 text-sm admin-ink font-mono leading-relaxed admin-focus-border focus:outline-none transition-colors resize-none"
             />
           </div>
 
-          <div ref={registerField('content_ru')} className={activeFieldId === 'content_ru' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <label className="block text-[9px] uppercase tracking-widest text-gray-600 mb-1.5">
+          <div ref={registerField('content_ru')} className={activeFieldId === 'content_ru' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
+            <label className="block text-xs   admin-muted mb-1.5">
               {isRu ? 'Контент (RU) — Markdown' : 'Conținut (RU) — Markdown'}
             </label>
             <textarea
               value={current.content_ru}
               onChange={e => update('content_ru', e.target.value)}
               rows={20}
-              className="w-full bg-black border border-white/20 px-3 py-2 text-sm text-white font-mono leading-relaxed focus:border-white focus:outline-none transition-colors resize-none"
+              className="w-full admin-surface border admin-border px-3 py-2 text-sm admin-ink font-mono leading-relaxed admin-focus-border focus:outline-none transition-colors resize-none"
             />
           </div>
         </div>
       </div>
 
       {/* ══ RIGHT — PREVIEW ══ */}
-      <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-white/10 bg-black px-4 py-3 sm:px-5">
+      <div className="admin-preview-pane min-w-0 flex-1 flex flex-col overflow-hidden">
+        <div className="border-b admin-border admin-surface px-4 py-3 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <Eye className="w-3.5 h-3.5 text-gray-600" />
-            <span className="text-[10px] text-gray-600 uppercase tracking-widest">Превью</span>
+            <Eye className="w-3.5 h-3.5 admin-muted" />
+            <span className="text-xs admin-muted  ">Превью</span>
           </div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPreviewLang('ro')} className={`px-3 py-1 text-[10px] uppercase tracking-wider transition-colors ${previewLang === 'ro' ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>RO</button>
-            <button onClick={() => setPreviewLang('ru')} className={`px-3 py-1 text-[10px] uppercase tracking-wider transition-colors ${previewLang === 'ru' ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>RU</button>
+            <button onClick={() => setPreviewLang('ro')} className={`px-3 py-1 text-xs   transition-colors ${previewLang === 'ro' ? 'admin-muted-surface admin-ink' : 'admin-muted hover:text-gray-400'}`}>RO</button>
+            <button onClick={() => setPreviewLang('ru')} className={`px-3 py-1 text-xs   transition-colors ${previewLang === 'ru' ? 'admin-muted-surface admin-ink' : 'admin-muted hover:text-gray-400'}`}>RU</button>
           </div>
           </div>
         </div>
 
-        <div className="flex-1 overflow-y-auto bg-white p-4 sm:p-8">
+        <div data-admin-preview className="flex-1 overflow-y-auto bg-white p-4 sm:p-8">
           <div className="max-w-3xl mx-auto prose prose-sm">
             <button
               type="button"
@@ -509,6 +510,6 @@ export function AdminContentPages() {
           </div>
         </div>
       </div>
-    </div>
+    </AdminEditorWorkspace>
   );
 }

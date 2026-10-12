@@ -1,3 +1,4 @@
+import { CatalogLink } from './CatalogLink';
 import { ArrowRight, Award, CheckCircle, TrendingUp, Users } from 'lucide-react';
 
 const content = {
@@ -52,8 +53,8 @@ export function HomeCallToAction({ language }: { language: 'ro' | 'ru' }) {
     <div className="mx-auto flex max-w-[1920px] flex-col items-start justify-between gap-8 px-4 sm:px-6 md:flex-row md:items-center lg:px-8">
       <h2 className="text-3xl font-semibold">{text.cta}</h2>
       <div className="flex w-full flex-col gap-3 sm:w-auto sm:flex-row">
-        <a href={`/${language}/order-request`} className="inline-flex min-h-11 items-center justify-center gap-3 bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-100">{text.button}<ArrowRight className="h-4 w-4" aria-hidden="true" /></a>
-        <a href={`/${language}/catalog`} className="inline-flex min-h-11 items-center justify-center border border-gray-700 px-6 py-3 text-sm font-medium text-gray-300 transition-colors hover:border-white hover:text-white">{language === 'ro' ? 'Vezi catalogul' : 'Смотреть каталог'}</a>
+        <CatalogLink href={`/${language}/order-request`} className="inline-flex min-h-11 items-center justify-center gap-3 bg-white px-6 py-3 text-sm font-semibold text-black transition-colors hover:bg-gray-100">{text.button}<ArrowRight className="h-4 w-4" aria-hidden="true" /></CatalogLink>
+        <CatalogLink href={`/${language}/catalog`} className="inline-flex min-h-11 items-center justify-center border border-gray-700 px-6 py-3 text-sm font-medium text-gray-300 transition-colors hover:border-white hover:text-white">{language === 'ro' ? 'Vezi catalogul' : 'Смотреть каталог'}</CatalogLink>
       </div>
     </div>
   </section>;

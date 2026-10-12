@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { StoreImage } from './StoreImage';
+import type { ReactNode, ElementType } from 'react';
 import { ProductCardCartAction } from './ProductCardCartAction';
 import { ArrowUpRight, Package, ShieldCheck, Tag } from 'lucide-react';
 
@@ -14,9 +15,9 @@ function formatPrice(value: number, language: 'ro' | 'ru') {
   }).format(value);
 }
 
-export function ProductCardView({ product, language, href, actions, brandControl, listView = false }: {
+export function ProductCardView({ product, language, href, actions, brandControl, listView = false, imageSizes, linkComponent: CardLink = 'a' }: {
   product: CardProduct; language: 'ro' | 'ru'; href: string;
-  actions?: ReactNode; brandControl?: ReactNode; listView?: boolean;
+  linkComponent?: ElementType; actions?: ReactNode; brandControl?: ReactNode; listView?: boolean; imageSizes?: string;
 }) {
   const name = language === 'ru' ? product.name_ru || product.name_ro : product.name_ro;
   const inStock = (product.qty ?? 0) > 0;
@@ -28,10 +29,12 @@ export function ProductCardView({ product, language, href, actions, brandControl
       data-product-card
       className="group flex min-w-0 flex-col overflow-hidden rounded-[5px] border border-gray-100 bg-white transition duration-300 hover:-translate-y-0.5 hover:border-gray-200 hover:shadow-[0_14px_34px_rgba(15,23,42,0.10)]"
     >
-      <a href={href} className={`flex flex-1 min-w-0 ${listView ? "flex-row" : "flex-col"}`} >
+      <CardLink href={href} className={`flex flex-1 min-w-0 ${listView ? "flex-row" : "flex-col"}`} >
       <div className={`relative flex items-center justify-center overflow-hidden bg-white ${listView ? "w-32 shrink-0" : "aspect-[4/3]"}`}>
         {product.image_url ? (
-          <img
+          <StoreImage
+            variant="card"
+            sizes={listView ? "104px" : imageSizes}
             src={product.image_url}
             alt={name}
             loading="lazy"
@@ -49,13 +52,13 @@ export function ProductCardView({ product, language, href, actions, brandControl
 
         {product.has_warranty && (
           <span className="absolute right-1.5 bottom-1.5 sm:bottom-auto sm:right-3 sm:top-3 inline-flex items-center gap-1 rounded-[3px] border border-gray-200 bg-white px-2 py-1 text-[11px] font-medium text-gray-700 shadow-sm">
-            <ShieldCheck className="h-3 w-3 text-red-600" aria-hidden="true" />
+            <ShieldCheck className="h-3 w-3 text-brand" aria-hidden="true" />
             {language === 'ro' ? 'Garanție' : 'Гарантия'}
           </span>
         )}
 
         {onSale && (
-          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-[3px] bg-red-600 px-2 py-1 text-[11px] font-medium text-white">
+          <span className="absolute bottom-3 left-3 inline-flex items-center gap-1 rounded-[3px] bg-brand px-2 py-1 text-[11px] font-medium text-white">
             <Tag className="h-3 w-3" aria-hidden="true" />
             {language === 'ro' ? 'Promoție' : 'Акция'}
           </span>
@@ -69,13 +72,13 @@ export function ProductCardView({ product, language, href, actions, brandControl
         <h2 className="line-clamp-2 min-h-11 text-xs sm:text-[15px] font-medium leading-[1.45] text-gray-900">{name}</h2>
         <p className="text-xs text-gray-400">{product.sku || `ART-${product.id}`}</p>
         <div className="mt-auto flex flex-wrap items-baseline gap-x-2 sm:gap-x-3 gap-y-1 border-t border-gray-100 pt-3">
-          <p className={`whitespace-nowrap text-xl sm:text-2xl font-semibold ${onSale ? 'text-red-600' : 'text-gray-900'}`}>
+          <p className={`whitespace-nowrap text-xl sm:text-2xl font-semibold ${onSale ? 'text-brand' : 'text-gray-900'}`}>
             {formatPrice(currentPrice, language)} <span className="text-sm font-normal">MDL</span>
           </p>
           {onSale && <p className="whitespace-nowrap text-sm text-gray-400 line-through">{formatPrice(product.price, language)} MDL</p>}
         </div>
       </div>
-      </a>
+      </CardLink>
       {<div className="flex flex-wrap items-center justify-between gap-2 px-2 pb-2 sm:px-4 sm:pb-4">{brandControl}<div className="ml-auto flex justify-end">{actions ?? <ProductCardCartAction product={product} language={language} />}</div></div>}
     </article>
   );

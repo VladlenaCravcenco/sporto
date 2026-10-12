@@ -84,42 +84,42 @@ export function AdminAttributes() {
   };
 
   return (
-    <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
-      <div className="flex items-center justify-between gap-4 mb-6">
+    <div className="admin-section">
+      <div className="admin-section-heading">
         <div>
-          <h1 className="text-xl text-gray-900">{l('Caracteristici și filtre', 'Характеристики и фильтры')}</h1>
-          <p className="text-xs text-gray-400 mt-1">
+          <h1 className="text-xl admin-ink">{l('Caracteristici și filtre', 'Характеристики и фильтры')}</h1>
+          <p className="text-xs admin-muted mt-1">
             {l('Configurați câmpurile disponibile pentru fiecare categorie.', 'Настройте поля, доступные для каждой категории.')}
           </p>
         </div>
         <button
           onClick={() => { setEditId(null); setForm(EMPTY); setOpen(true); }}
-          className="flex items-center gap-2 bg-black text-white px-4 py-2 !text-xs uppercase tracking-wider"
+          className="flex items-center gap-2 admin-solid admin-on-solid px-4 py-2 !text-xs  "
         >
           <Plus className="w-3.5 h-3.5" />
           {l('Caracteristică nouă', 'Новая характеристика')}
         </button>
       </div>
 
-      {message && <div className="mb-4 border border-gray-200 bg-white px-4 py-3 text-xs">{message}</div>}
+      {message && <div className="mb-4 border admin-border admin-surface px-4 py-3 text-xs">{message}</div>}
 
-      <div className="border border-gray-200 bg-white">
+      <div className="admin-card">
         {rows.length === 0 ? (
-          <div className="p-10 text-center text-sm text-gray-400">
+          <div className="p-10 text-center text-sm admin-muted">
             {l('Nu există caracteristici. Rulați migrarea SQL și creați prima caracteristică.', 'Характеристик пока нет. Запустите SQL-миграцию и создайте первую.')}
           </div>
         ) : rows.map((row) => (
-          <div key={row.id} className="flex items-center gap-4 px-4 py-3 border-b border-gray-100 last:border-0">
+          <div key={row.id} className="flex items-center gap-4 px-4 py-3 border-b admin-border last:border-0">
             <button onClick={() => edit(row)} className="flex-1 text-left min-w-0">
-              <div className="text-sm text-gray-900">{lang === 'ru' ? row.name_ru : row.name_ro}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">
+              <div className="text-sm admin-ink">{lang === 'ru' ? row.name_ru : row.name_ro}</div>
+              <div className="text-xs admin-muted mt-0.5">
                 {row.value_type}{(lang === 'ru' ? row.unit_ru : row.unit_ro) || row.unit ? ` · ${(lang === 'ru' ? row.unit_ru : row.unit_ro) || row.unit}` : ''} · {row.category_ids.length} cat.
               </div>
             </button>
-            <span className={`text-[10px] px-2 py-1 ${row.filter_enabled ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
+            <span className={`text-xs px-2 py-1 ${row.filter_enabled ? 'admin-solid admin-on-solid' : 'admin-muted-surface admin-muted'}`}>
               {l('Filtru', 'Фильтр')}
             </span>
-            <button onClick={() => remove(row.id)} className="text-gray-300 hover:text-red-500">
+            <button onClick={() => remove(row.id)} className="admin-muted hover:text-red-500">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
@@ -128,19 +128,19 @@ export function AdminAttributes() {
 
       {open && (
         <div className="fixed inset-0 z-[200] bg-black/50 flex justify-end">
-          <div className="w-full max-w-xl bg-white h-full overflow-y-auto p-5 sm:p-7">
+          <div className="w-full max-w-xl admin-surface h-full overflow-y-auto p-5 sm:p-7">
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg">{editId ? l('Editare', 'Редактирование') : l('Caracteristică nouă', 'Новая характеристика')}</h2>
               <button onClick={() => setOpen(false)}><X className="w-5 h-5" /></button>
             </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <Field label="Nume RO" placeholder="De ex.: Greutatea maximă a utilizatorului" value={form.name_ro} onChange={(name_ro) => setForm({ ...form, name_ro })} />
                 <Field label="Название RU" placeholder="Например: Максимальный вес пользователя" value={form.name_ru} onChange={(name_ru) => setForm({ ...form, name_ru })} />
               </div>
-              <div className={form.value_type === 'number' ? 'space-y-3' : 'grid grid-cols-2 gap-3'}>
-                <label className="text-xs text-gray-500">
+              <div className={form.value_type === 'number' ? 'space-y-3' : 'grid grid-cols-1 sm:grid-cols-2 gap-3'}>
+                <label className="text-xs admin-muted">
                   {l('Tip valoare', 'Тип значения')}
                   <select
                     value={form.value_type}
@@ -155,7 +155,7 @@ export function AdminAttributes() {
                         options: value_type === 'select' ? form.options : [],
                       });
                     }}
-                    className="mt-1 w-full h-10 border border-gray-200 px-3 text-sm bg-white"
+                    className="mt-1 w-full h-10 border admin-border px-3 text-sm admin-surface"
                   >
                     <option value="number">{l('Număr / valori exacte', 'Число / точные значения')}</option>
                     <option value="select">{l('Listă de valori', 'Список значений')}</option>
@@ -164,7 +164,7 @@ export function AdminAttributes() {
                   </select>
                 </label>
                 {form.value_type === 'number' ? (
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <Field label="Unitate RO" placeholder="De ex.: kg, cm, W" value={form.unit_ro ?? form.unit ?? ''} onChange={(unit_ro) => setForm({ ...form, unit_ro })} />
                     <Field label="Единица RU" placeholder="Например: кг, см, Вт" value={form.unit_ru ?? form.unit ?? ''} onChange={(unit_ru) => setForm({ ...form, unit_ru })} />
                   </div>
@@ -179,7 +179,7 @@ export function AdminAttributes() {
                     })}
                   />
                 ) : (
-                  <label className="text-xs text-gray-500">
+                  <label className="text-xs admin-muted">
                     {l('Valoare', 'Значение')}
                     <input
                       readOnly
@@ -188,17 +188,17 @@ export function AdminAttributes() {
                           ? l('Da sau Nu', 'Да или Нет')
                           : l('De ex.: Motor cu curent alternativ', 'Например: Двигатель переменного тока')
                       }
-                      className="mt-1 w-full h-10 border border-gray-200 bg-gray-50 px-3 text-sm text-gray-400"
+                      className="mt-1 w-full h-10 border admin-border admin-canvas px-3 text-sm admin-muted"
                     />
                   </label>
                 )}
               </div>
 
               <div>
-                <p className="text-xs text-gray-500 mb-2">{l('Categorii', 'Категории')}</p>
+                <p className="text-xs admin-muted mb-2">{l('Categorii', 'Категории')}</p>
                 <div className="grid grid-cols-2 gap-2">
                   {categories.map((category) => (
-                    <label key={category.id} className="flex items-center gap-2 border border-gray-100 px-3 py-2 text-xs">
+                    <label key={category.id} className="flex items-center gap-2 border admin-border px-3 py-2 text-xs">
                       <input type="checkbox" checked={form.category_ids.includes(category.id)} onChange={() => toggleCategory(category.id)} />
                       {category.name[lang]}
                     </label>
@@ -214,7 +214,7 @@ export function AdminAttributes() {
                 <input type="checkbox" checked={form.filter_enabled} disabled={form.value_type === 'text'} onChange={(event) => setForm({ ...form, filter_enabled: event.target.checked })} />
                 {l('Afișează ca filtru în catalog', 'Показывать как фильтр в каталоге')}
               </label>
-              <button onClick={save} className="w-full flex items-center justify-center gap-2 bg-black text-white py-3 !text-xs uppercase tracking-wider">
+              <button onClick={save} className="w-full flex items-center justify-center gap-2 admin-solid admin-on-solid py-3 !text-xs  ">
                 <Save className="w-4 h-4" />
                 {l('Salvează', 'Сохранить')}
               </button>
@@ -228,13 +228,13 @@ export function AdminAttributes() {
 
 function Field({ label, value, onChange, placeholder }: { label: string; value: string; onChange: (value: string) => void; placeholder?: string }) {
   return (
-    <label className="text-xs text-gray-500">
+    <label className="text-xs admin-muted">
       {label}
       <input
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}
-        className="mt-1 w-full h-10 border border-gray-200 px-3 text-sm"
+        className="mt-1 w-full h-10 border admin-border px-3 text-sm"
       />
     </label>
   );

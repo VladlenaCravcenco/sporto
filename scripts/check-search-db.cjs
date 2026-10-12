@@ -9,6 +9,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABA
   const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
   const spec = { raw: ['insportline'], synonyms: [], concepts: [] };
   const requests = [
+    ['sporto_home_sales_v1', {}, 20],
     ['sporto_search_v1', { spec, locale: 'ro' }, 8],
     ['sporto_catalog_search_v1', { filters: { searchSpec: spec }, page_number: 1, sort_order: 'recommended', locale: 'ru' }, 24],
   ];
@@ -20,7 +21,8 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABA
     console.log(`${name}: OK (${data.products.length} rows)`);
   }
 })().catch(error => {
-  console.error('Search database check failed:', error.message);
+  console.error('Database preflight failed:', error.message);
+  console.error('For sporto_home_sales_v1 apply src/database/2026-09-30_home_sales_rpc.sql first.');
   console.error('Apply src/database/2026-09-28_search_rpc.sql in Supabase SQL Editor before deploying.');
   process.exitCode = 1;
 });

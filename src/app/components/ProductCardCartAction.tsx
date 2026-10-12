@@ -10,6 +10,7 @@ function CartAction({ product, language }: Props) {
   const { cart, addToCart, removeFromCart, updateQuantity } = useCart();
   const quantity = cart.find(item => item.id === product.id)?.quantity || 0;
   const ru = language === 'ru';
+  const inStock = (product.qty ?? 0) > 0;
   if (quantity) return <div className="flex h-10 items-center rounded-[5px] bg-black text-white" aria-label={ru ? 'Количество в корзине' : 'Cantitate în coș'}>
     <button type="button" aria-label={ru ? 'Уменьшить количество' : 'Micșorează cantitatea'} onClick={() => quantity === 1 ? removeFromCart(product.id) : updateQuantity(product.id, -1)} className="flex h-10 w-10 items-center justify-center rounded-l-[5px] hover:bg-gray-800"><Minus className="h-4 w-4" /></button>
     <span aria-live="polite" className="min-w-10 text-center text-sm tabular-nums">{quantity}</span>
@@ -19,8 +20,8 @@ function CartAction({ product, language }: Props) {
     id: product.id, name: { ro: product.name_ro, ru: product.name_ru || product.name_ro },
     price: product.sale_price != null && product.sale_price > 0 && product.sale_price < product.price ? product.sale_price : product.price,
     image: product.image_url || '', category: product.category || '', sku: product.sku || undefined,
-  })} className="inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[5px] bg-red-600 px-2 sm:px-4 text-xs sm:text-sm font-medium text-white hover:bg-red-700">
-    <ShoppingCart className="h-4 w-4 shrink-0" />{(product.qty ?? 0) > 0 ? (ru ? 'Добавить в корзину' : 'Adaugă în coș') : (ru ? 'Под заказ' : 'La comandă')}
+  })} className={`inline-flex min-h-10 items-center justify-center gap-1.5 rounded-[5px] border px-2 sm:px-4 text-xs sm:text-sm font-medium transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 ${inStock ? 'border-brand bg-brand text-white hover:border-brand-hover hover:bg-brand-hover focus-visible:outline-brand' : 'border-gray-900 bg-white text-gray-900 hover:bg-gray-100 focus-visible:outline-gray-900'}`}>
+    <ShoppingCart className="h-4 w-4 shrink-0" />{inStock ? (ru ? 'Добавить в корзину' : 'Adaugă în coș') : (ru ? 'Под заказ' : 'La comandă')}
   </button>;
 }
 

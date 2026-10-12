@@ -105,10 +105,10 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
   const IconGrid = ({ cols = 8 }: { cols?: number }) => (
     <div className="flex-1 overflow-y-auto p-3 space-y-4">
       {Object.entries(sections).length === 0 ? (
-        <p className="text-[11px] text-gray-400 text-center py-8">Nu s-au găsit iconițe</p>
+        <p className="text-[11px] admin-muted text-center py-8">Nu s-au găsit iconițe</p>
       ) : Object.entries(sections).map(([section, opts]) => (
         <div key={section}>
-          <div className="text-[9px] uppercase tracking-widest text-gray-300 mb-2">{section}</div>
+          <div className="text-xs   admin-muted mb-2">{section}</div>
           <div className={`grid gap-0.5`} style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}>
             {opts.map(opt => (
               <button
@@ -118,8 +118,8 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
                 onClick={() => { onChange(opt.key); setOpen(false); setSearch(''); }}
                 className={`flex h-9 w-full items-center justify-center border transition-colors ${
                   value === opt.key
-                    ? 'border-black bg-black text-white'
-                    : 'border-transparent text-gray-400 hover:border-gray-200 hover:text-black'
+                    ? 'admin-border-strong admin-solid admin-on-solid'
+                    : 'border-transparent admin-muted hover:border-gray-200 admin-hover-ink'
                 }`}
               >
                 {opt.icon}
@@ -132,8 +132,8 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
   );
 
   const SearchBar = ({ className = '' }: { className?: string }) => (
-    <div className={`flex items-center gap-2 border border-gray-200 px-3 focus-within:border-black ${className}`}>
-      <Search className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />
+    <div className={`flex items-center gap-2 border admin-border px-3 focus-within:border-black ${className}`}>
+      <Search className="w-3.5 h-3.5 admin-muted flex-shrink-0" />
       <input
         autoFocus
         value={search}
@@ -143,18 +143,18 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
       />
       {search && (
         <button onClick={() => setSearch('')}>
-          <X className="w-3 h-3 text-gray-400 hover:text-black" />
+          <X className="w-3 h-3 admin-muted admin-hover-ink" />
         </button>
       )}
     </div>
   );
 
   const ClearBtn = () => value ? (
-    <div className="border-t border-gray-100 p-2 flex-shrink-0">
+    <div className="border-t admin-border p-2 flex-shrink-0">
       <button
         type="button"
         onClick={() => { onChange(''); setOpen(false); }}
-        className="w-full text-[10px] text-gray-400 hover:text-red-500 transition-colors py-1.5 border border-gray-100 hover:border-red-200"
+        className="w-full text-xs admin-muted hover:text-red-500 transition-colors py-1.5 border admin-border hover:border-red-200"
       >
         Elimină iconița
       </button>
@@ -167,26 +167,26 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
         type="button"
         onClick={() => { setOpen(v => !v); setSearch(''); }}
         className={`flex items-center gap-2 px-3 h-9 border text-xs w-full text-left transition-colors ${
-          open ? 'border-black text-black' : 'border-gray-200 text-gray-500 hover:border-black hover:text-black'
+          open ? 'admin-border-strong admin-ink' : 'admin-border admin-muted admin-hover-border admin-hover-ink'
         }`}
       >
-        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 text-gray-700">
-          {selectedIcon || <Tag className="w-4 h-4 text-gray-400" />}
+        <span className="w-4 h-4 flex items-center justify-center flex-shrink-0 admin-ink">
+          {selectedIcon || <Tag className="w-4 h-4 admin-muted" />}
         </span>
-        <span className="flex-1 truncate text-gray-600">{value || 'Alege iconița...'}</span>
-        <ChevronDown className={`w-3.5 h-3.5 text-gray-400 transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
+        <span className="flex-1 truncate admin-muted">{value || 'Alege iconița...'}</span>
+        <ChevronDown className={`w-3.5 h-3.5 admin-muted transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
 
       {/* Mobile fullscreen */}
       {isMobile && open && (
-        <div className="fixed inset-0 z-[600] flex flex-col bg-white">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 flex-shrink-0">
-            <span className="text-xs uppercase tracking-widest text-black">Alege iconița</span>
-            <button onClick={() => { setOpen(false); setSearch(''); }} className="text-gray-400 hover:text-black p-1">
+        <div className="fixed inset-0 z-[600] flex flex-col admin-surface">
+          <div className="flex items-center justify-between px-4 py-3 border-b admin-border flex-shrink-0">
+            <span className="text-xs   admin-ink">Alege iconița</span>
+            <button onClick={() => { setOpen(false); setSearch(''); }} className="admin-muted admin-hover-ink p-1">
               <X className="w-4 h-4" />
             </button>
           </div>
-          <div className="px-3 py-2 border-b border-gray-100 flex-shrink-0">
+          <div className="px-3 py-2 border-b admin-border flex-shrink-0">
             <SearchBar />
           </div>
           <IconGrid cols={9} />
@@ -196,8 +196,8 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
 
       {/* Desktop dropdown */}
       {!isMobile && open && (
-        <div className="absolute left-0 top-full mt-1 z-[200] w-80 bg-white border border-black shadow-xl flex flex-col" style={{ maxHeight: '320px' }}>
-          <div className="p-2 border-b border-gray-100 flex-shrink-0">
+        <div className="absolute left-0 top-full mt-1 z-[200] w-80 admin-surface border admin-border-strong shadow-xl flex flex-col" style={{ maxHeight: '320px' }}>
+          <div className="p-2 border-b admin-border flex-shrink-0">
             <SearchBar className="h-8" />
           </div>
           <IconGrid cols={8} />
@@ -240,9 +240,9 @@ function EditForm({
 
   const field = (label: string, node: React.ReactNode, hint?: string) => (
     <div>
-      <label className="text-[9px] uppercase tracking-widest text-gray-400 block mb-1">{label}</label>
+      <label className="text-xs   admin-muted block mb-1">{label}</label>
       {node}
-      {hint && <p className="text-[9px] text-gray-300 mt-0.5">{hint}</p>}
+      {hint && <p className="text-xs admin-muted mt-0.5">{hint}</p>}
     </div>
   );
 
@@ -251,7 +251,7 @@ function EditForm({
     return (
       <input
         {...rest}
-        className={`w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black ${mono ? 'font-mono' : ''}`}
+        className={`w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border ${mono ? 'font-mono' : ''}`}
       />
     );
   };
@@ -281,10 +281,10 @@ function EditForm({
       {isCat && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {field('Descriere RO',
-            <textarea value={form.description_ro} onChange={e => setForm(f => ({ ...f, description_ro: e.target.value }))} rows={2} className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black resize-none" />
+            <textarea value={form.description_ro} onChange={e => setForm(f => ({ ...f, description_ro: e.target.value }))} rows={2} className="w-full px-3 py-2 text-xs border admin-border admin-surface focus:outline-none admin-focus-border resize-none" />
           )}
           {field('Описание RU',
-            <textarea value={form.description_ru} onChange={e => setForm(f => ({ ...f, description_ru: e.target.value }))} rows={2} className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black resize-none" />
+            <textarea value={form.description_ru} onChange={e => setForm(f => ({ ...f, description_ru: e.target.value }))} rows={2} className="w-full px-3 py-2 text-xs border admin-border admin-surface focus:outline-none admin-focus-border resize-none" />
           )}
         </div>
       )}
@@ -297,14 +297,14 @@ function EditForm({
         <button
           onClick={() => onSave(form)}
           disabled={saving}
-          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 bg-black text-white text-xs px-5 h-9 hover:bg-gray-800 transition-colors disabled:opacity-50"
+          className="flex-1 sm:flex-none flex items-center justify-center gap-1.5 admin-solid admin-on-solid text-xs px-5 h-9 admin-hover-solid transition-colors disabled:opacity-50"
         >
           {saving ? <Loader2 className="w-3 h-3 animate-spin" /> : <Check className="w-3 h-3" />}
           {saving ? 'Se salvează...' : 'Salvează'}
         </button>
         <button
           onClick={onCancel}
-          className="flex items-center gap-1.5 text-xs px-4 h-9 border border-gray-200 text-gray-500 hover:border-black hover:text-black transition-colors"
+          className="flex items-center gap-1.5 text-xs px-4 h-9 border admin-border admin-muted admin-hover-border admin-hover-ink transition-colors"
         >
           <X className="w-3 h-3" />
           <span className="hidden sm:inline">Anulează</span>
@@ -324,13 +324,13 @@ function BottomSheet({ title, onClose, children }: { title: string; onClose: () 
   return (
     <div className="fixed inset-0 z-[400] flex flex-col justify-end">
       <div className="absolute inset-0 bg-black/50" onClick={onClose} />
-      <div className="relative bg-white w-full max-h-[92vh] flex flex-col">
+      <div className="relative admin-surface w-full max-h-[92vh] flex flex-col">
         <div className="flex justify-center pt-3 pb-1 flex-shrink-0">
-          <div className="w-10 h-1 bg-gray-200" />
+          <div className="w-10 h-1 admin-muted-surface" />
         </div>
-        <div className="flex items-center justify-between px-4 pb-3 pt-1 flex-shrink-0 border-b border-gray-100">
-          <span className="text-xs uppercase tracking-widest text-black">{title}</span>
-          <button onClick={onClose} className="text-gray-400 hover:text-black p-1 -mr-1">
+        <div className="flex items-center justify-between px-4 pb-3 pt-1 flex-shrink-0 border-b admin-border">
+          <span className="text-xs   admin-ink">{title}</span>
+          <button onClick={onClose} className="admin-muted admin-hover-ink p-1 -mr-1">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -482,21 +482,21 @@ export function AdminCategories() {
   });
 
   return (
-    <div className="max-w-[900px] mx-auto px-3 sm:px-6 py-6">
+    <div className="admin-section">
 
       {/* Header */}
-      <div className="flex items-center justify-between mb-5">
+      <div className="admin-section-heading">
         <div>
-          <h1 className="text-base sm:text-xl text-black">Categorii & Subcategorii</h1>
-          <p className="text-[10px] text-gray-400 mt-0.5 hidden sm:block">
+          <h1 className="text-base sm:text-xl admin-ink">Categorii & Subcategorii</h1>
+          <p className="text-xs admin-muted mt-0.5 hidden sm:block">
             {cats.length} categorii · {subs.length} subcategorii · modificările se propagă automat pe site
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <button onClick={loadData} className="w-8 h-8 flex items-center justify-center border border-gray-200 text-gray-400 hover:text-black hover:border-black transition-colors">
+          <button onClick={loadData} className="w-8 h-8 flex items-center justify-center border admin-border admin-muted admin-hover-ink admin-hover-border transition-colors">
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
           </button>
-          <button onClick={() => openEdit({ type: 'new-cat' })} className="flex items-center gap-1.5 bg-black text-white text-xs px-3 sm:px-4 h-8 hover:bg-gray-800 transition-colors">
+          <button onClick={() => openEdit({ type: 'new-cat' })} className="flex items-center gap-1.5 admin-solid admin-on-solid text-xs px-3 sm:px-4 h-8 admin-hover-solid transition-colors">
             <Plus className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Categorie nouă</span>
             <span className="sm:hidden">Nouă</span>
@@ -511,15 +511,15 @@ export function AdminCategories() {
             <AlertCircle className="w-4 h-4 text-orange-500 flex-shrink-0 mt-0.5" />
             <div className="flex-1 min-w-0">
               <p className="text-xs text-orange-800 mb-2">Tabelele nu există în Supabase.</p>
-              <pre className="text-[10px] bg-white border border-orange-100 p-3 overflow-x-auto text-gray-700 whitespace-pre-wrap mb-3">{SQL_SETUP}</pre>
+              <pre className="text-xs admin-surface border border-orange-100 p-3 overflow-x-auto admin-ink whitespace-pre-wrap mb-3">{SQL_SETUP}</pre>
               <button
                 onClick={() => { navigator.clipboard.writeText(SQL_SETUP).then(() => { setSqlCopied(true); setTimeout(() => setSqlCopied(false), 2500); }); }}
-                className={`flex items-center gap-2 text-xs px-4 py-2 transition-colors ${sqlCopied ? 'bg-green-500 text-white' : 'bg-orange-600 text-white hover:bg-orange-700'}`}
+                className={`flex items-center gap-2 text-xs px-4 py-2 transition-colors ${sqlCopied ? 'bg-green-500 admin-on-solid' : 'bg-orange-600 admin-on-solid hover:bg-orange-700'}`}
               >
                 {sqlCopied ? <Check className="w-3.5 h-3.5" /> : <Upload className="w-3.5 h-3.5" />}
                 {sqlCopied ? 'Copiat!' : 'Copiază SQL'}
               </button>
-              <p className="text-[10px] text-orange-500 mt-2">Eroare: <code>{dbError}</code></p>
+              <p className="text-xs text-orange-500 mt-2">Eroare: <code>{dbError}</code></p>
             </div>
           </div>
         </div>
@@ -528,9 +528,9 @@ export function AdminCategories() {
       {!dbError && (
         <>
           {/* Filters */}
-          <div className="flex border border-gray-200 w-fit mb-3">
+          <div className="flex border admin-border w-fit mb-3">
             {(['all', 'active', 'inactive'] as const).map(s => (
-              <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 h-8 text-xs transition-colors border-r last:border-0 border-gray-100 ${statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'}`}>
+              <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 h-8 text-xs transition-colors border-r last:border-0 admin-border ${statusFilter === s ? 'admin-solid admin-on-solid' : 'admin-muted admin-hover-ink'}`}>
                 {s === 'all' ? 'Toate' : s === 'active' ? 'Active' : 'Inactive'}
               </button>
             ))}
@@ -538,9 +538,9 @@ export function AdminCategories() {
 
           {/* Desktop: new cat form */}
           {!isMobile && editMode?.type === 'new-cat' && (
-            <div className="mb-3 border border-black">
-              <div className="px-4 py-2 bg-black">
-                <span className="text-[9px] uppercase tracking-widest text-white">Categorie nouă</span>
+            <div className="mb-3 border admin-border-strong">
+              <div className="px-4 py-2 admin-solid">
+                <span className="text-xs   admin-on-solid">Categorie nouă</span>
               </div>
               <div className="p-4">
                 <EditForm mode={editMode} isCat={true} onSave={handleSave} onCancel={closeEdit} saving={saving} saveErr={saveErr} />
@@ -550,10 +550,10 @@ export function AdminCategories() {
 
           {/* Empty state */}
           {!loading && cats.length === 0 && (
-            <div className="border border-dashed border-gray-200 p-10 text-center">
+            <div className="border border-dashed admin-border p-10 text-center">
               <FolderOpen className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-500 mb-4">Baza de date este goală.</p>
-              <button onClick={populateFromStatic} disabled={populating} className="flex items-center gap-2 bg-black text-white text-xs px-5 py-2.5 hover:bg-gray-800 mx-auto disabled:opacity-50">
+              <p className="text-sm admin-muted mb-4">Baza de date este goală.</p>
+              <button onClick={populateFromStatic} disabled={populating} className="flex items-center gap-2 admin-solid admin-on-solid text-xs px-5 py-2.5 admin-hover-solid mx-auto disabled:opacity-50">
                 {populating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Upload className="w-3.5 h-3.5" />}
                 {populating ? 'Se importă...' : 'Importă categoriile predefinite'}
               </button>
@@ -561,12 +561,12 @@ export function AdminCategories() {
           )}
 
           {loading ? (
-            <div className="flex items-center gap-2 py-12 text-gray-400">
+            <div className="flex items-center gap-2 py-12 admin-muted">
               <Loader2 className="w-4 h-4 animate-spin" />
               <span className="text-xs">Se încarcă...</span>
             </div>
           ) : (
-            <div className="border border-gray-200 divide-y divide-gray-100">
+            <div className="border admin-border divide-y admin-divide">
               {filteredCats.map(cat => {
                 const catSubs = subs.filter(s => s.category_slug === cat.slug);
                 const prodCount = productCounts[cat.slug] || 0;
@@ -578,42 +578,42 @@ export function AdminCategories() {
                 return (
                   <div key={cat.id}>
                     {/* Category row */}
-                    <div className={`flex items-center gap-2 px-2 sm:px-3 py-3 transition-colors ${isEditingCat ? 'bg-gray-50' : 'hover:bg-gray-50/50'}`}>
-                      <button onClick={() => setExpandedCat(isExpanded ? null : cat.id)} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-black flex-shrink-0">
+                    <div className={`flex items-center gap-2 px-2 sm:px-3 py-3 transition-colors ${isEditingCat ? 'admin-canvas' : 'hover:bg-gray-50/50'}`}>
+                      <button onClick={() => setExpandedCat(isExpanded ? null : cat.id)} className="w-6 h-6 flex items-center justify-center admin-muted admin-hover-ink flex-shrink-0">
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
                       </button>
-                      <div className="w-5 h-5 flex items-center justify-center text-gray-400 flex-shrink-0">
-                        {catIcon || (isExpanded ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4 text-gray-300" />)}
+                      <div className="w-5 h-5 flex items-center justify-center admin-muted flex-shrink-0">
+                        {catIcon || (isExpanded ? <FolderOpen className="w-4 h-4" /> : <Folder className="w-4 h-4 admin-muted" />)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-baseline gap-1.5">
-                          <span className="text-xs text-black font-medium leading-tight truncate">{cat.name_ro}</span>
-                          <span className="text-[10px] text-gray-400 truncate hidden sm:inline max-w-[100px]">/ {cat.name_ru}</span>
+                          <span className="text-xs admin-ink font-medium leading-tight truncate">{cat.name_ro}</span>
+                          <span className="text-xs admin-muted truncate hidden sm:inline max-w-[100px]">/ {cat.name_ru}</span>
                         </div>
                         <div className="flex items-center gap-1.5 mt-0.5">
-                          <code className="text-[9px] text-gray-300 bg-gray-50 px-1 py-px">{cat.slug}</code>
-                          <span className="text-[9px] text-gray-300">{catSubs.length} sub.</span>
+                          <code className="text-xs admin-muted admin-canvas px-1 py-px">{cat.slug}</code>
+                          <span className="text-xs admin-muted">{catSubs.length} sub.</span>
                         </div>
                       </div>
 
                       {/* Count - desktop only */}
                       <div className="flex-shrink-0 text-center hidden sm:block">
-                        <div className={`text-xs tabular-nums px-2 py-0.5 ${prodCount > 0 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>{prodCount}</div>
-                        <div className="text-[9px] text-gray-400 mt-0.5">prod.</div>
+                        <div className={`text-xs tabular-nums px-2 py-0.5 ${prodCount > 0 ? 'admin-solid admin-on-solid' : 'admin-muted-surface admin-muted'}`}>{prodCount}</div>
+                        <div className="text-xs admin-muted mt-0.5">prod.</div>
                       </div>
 
                       {/* Actions */}
                       <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
-                        <button onClick={() => toggleActive(cat)} className={`w-8 h-5 rounded-full items-center flex-shrink-0 transition-colors hidden sm:flex ${(cat.active ?? true) ? 'bg-black' : 'bg-gray-200'}`}>
-                          <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${(cat.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
+                        <button onClick={() => toggleActive(cat)} className={`w-8 h-5 rounded-full items-center flex-shrink-0 transition-colors hidden sm:flex ${(cat.active ?? true) ? 'admin-solid' : 'admin-muted-surface'}`}>
+                          <span className={`w-3.5 h-3.5 admin-surface rounded-full shadow transition-transform mx-0.5 ${(cat.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
                         </button>
-                        <button onClick={() => { setExpandedCat(cat.id); openEdit({ type: 'new-sub', catSlug: cat.slug, catName: cat.name_ro }); }} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-black hover:bg-gray-100 transition-colors" title="Adaugă subcategorie">
+                        <button onClick={() => { setExpandedCat(cat.id); openEdit({ type: 'new-sub', catSlug: cat.slug, catName: cat.name_ro }); }} className="w-7 h-7 flex items-center justify-center admin-muted admin-hover-ink admin-hover-surface transition-colors" title="Adaugă subcategorie">
                           <Plus className="w-3 h-3" />
                         </button>
-                        <button onClick={() => isEditingCat ? closeEdit() : openEdit({ type: 'edit-cat', row: cat })} className={`w-7 h-7 flex items-center justify-center transition-colors ${isEditingCat ? 'text-black bg-gray-100' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}>
+                        <button onClick={() => isEditingCat ? closeEdit() : openEdit({ type: 'edit-cat', row: cat })} className={`w-7 h-7 flex items-center justify-center transition-colors ${isEditingCat ? 'admin-ink admin-muted-surface' : 'admin-muted admin-hover-ink admin-hover-surface'}`}>
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
-                        <button onClick={() => setDeleteTarget({ type: 'cat', id: cat.id, name: cat.name_ro, count: prodCount })} className="w-7 h-7 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                        <button onClick={() => setDeleteTarget({ type: 'cat', id: cat.id, name: cat.name_ro, count: prodCount })} className="w-7 h-7 flex items-center justify-center admin-muted hover:text-red-500 hover:bg-red-50 transition-colors">
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
                       </div>
@@ -621,42 +621,42 @@ export function AdminCategories() {
 
                     {/* Desktop inline edit for category */}
                     {isEditingCat && (
-                      <div className="border-t border-gray-100 bg-gray-50 px-4 py-4">
+                      <div className="border-t admin-border admin-canvas px-4 py-4">
                         <EditForm mode={editMode} isCat={true} onSave={handleSave} onCancel={closeEdit} saving={saving} saveErr={saveErr} />
                       </div>
                     )}
 
                     {/* Subcategories */}
                     {isExpanded && (
-                      <div className="border-t border-gray-100">
+                      <div className="border-t admin-border">
                         {catSubs.length === 0 && !isAddingSub && (
-                          <div className="pl-10 sm:pl-14 pr-4 py-3 text-[11px] text-gray-400 italic">Nicio subcategorie</div>
+                          <div className="pl-10 sm:pl-14 pr-4 py-3 text-[11px] admin-muted italic">Nicio subcategorie</div>
                         )}
                         <div className="divide-y divide-gray-50">
                           {catSubs.map(sub => {
                             const isEditingSub = !isMobile && editMode?.type === 'edit-sub' && editMode.row.id === sub.id;
                             return (
                               <div key={sub.id}>
-                                <div className={`flex items-center gap-2 pl-10 sm:pl-14 pr-2 sm:pr-3 py-2.5 transition-colors ${isEditingSub ? 'bg-gray-50' : 'hover:bg-gray-50/50'}`}>
+                                <div className={`flex items-center gap-2 pl-10 sm:pl-14 pr-2 sm:pr-3 py-2.5 transition-colors ${isEditingSub ? 'admin-canvas' : 'hover:bg-gray-50/50'}`}>
                                   <Tag className="w-3 h-3 text-gray-200 flex-shrink-0" />
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-baseline gap-1.5">
-                                      <span className="text-xs text-gray-700 truncate">{sub.name_ro}</span>
-                                      <span className="text-[10px] text-gray-400 truncate hidden sm:inline max-w-[100px]">/ {sub.name_ru}</span>
+                                      <span className="text-xs admin-ink truncate">{sub.name_ro}</span>
+                                      <span className="text-xs admin-muted truncate hidden sm:inline max-w-[100px]">/ {sub.name_ru}</span>
                                     </div>
-                                    <code className="text-[9px] text-gray-300 bg-gray-50 px-1 py-px">{sub.slug}</code>
+                                    <code className="text-xs admin-muted admin-canvas px-1 py-px">{sub.slug}</code>
                                   </div>
                                   <div className="flex items-center gap-0.5 flex-shrink-0">
-                                    <button onClick={() => isEditingSub ? closeEdit() : openEdit({ type: 'edit-sub', row: sub, catSlug: cat.slug, catName: cat.name_ro })} className={`w-6 h-6 flex items-center justify-center transition-colors ${isEditingSub ? 'text-black bg-gray-100' : 'text-gray-400 hover:text-black hover:bg-gray-100'}`}>
+                                    <button onClick={() => isEditingSub ? closeEdit() : openEdit({ type: 'edit-sub', row: sub, catSlug: cat.slug, catName: cat.name_ro })} className={`w-6 h-6 flex items-center justify-center transition-colors ${isEditingSub ? 'admin-ink admin-muted-surface' : 'admin-muted admin-hover-ink admin-hover-surface'}`}>
                                       <Pencil className="w-3 h-3" />
                                     </button>
-                                    <button onClick={() => setDeleteTarget({ type: 'sub', id: sub.id, name: sub.name_ro })} className="w-6 h-6 flex items-center justify-center text-gray-300 hover:text-red-500 hover:bg-red-50 transition-colors">
+                                    <button onClick={() => setDeleteTarget({ type: 'sub', id: sub.id, name: sub.name_ro })} className="w-6 h-6 flex items-center justify-center admin-muted hover:text-red-500 hover:bg-red-50 transition-colors">
                                       <Trash2 className="w-3 h-3" />
                                     </button>
                                   </div>
                                 </div>
                                 {isEditingSub && (
-                                  <div className="bg-gray-50 border-t border-gray-100 px-4 py-4">
+                                  <div className="admin-canvas border-t admin-border px-4 py-4">
                                     <EditForm mode={editMode} isCat={false} onSave={handleSave} onCancel={closeEdit} saving={saving} saveErr={saveErr} />
                                   </div>
                                 )}
@@ -666,18 +666,18 @@ export function AdminCategories() {
                         </div>
 
                         {isAddingSub && (
-                          <div className="border-t border-gray-100">
-                            <div className="pl-10 sm:pl-14 pr-4 py-1.5 bg-gray-50 border-b border-gray-100">
-                              <span className="text-[9px] uppercase tracking-widest text-gray-400">Subcategorie nouă · {cat.name_ro}</span>
+                          <div className="border-t admin-border">
+                            <div className="pl-10 sm:pl-14 pr-4 py-1.5 admin-canvas border-b admin-border">
+                              <span className="text-xs   admin-muted">Subcategorie nouă · {cat.name_ro}</span>
                             </div>
-                            <div className="px-4 py-4 bg-gray-50">
+                            <div className="px-4 py-4 admin-canvas">
                               <EditForm mode={editMode} isCat={false} onSave={handleSave} onCancel={closeEdit} saving={saving} saveErr={saveErr} />
                             </div>
                           </div>
                         )}
 
                         {!isAddingSub && (
-                          <button onClick={() => openEdit({ type: 'new-sub', catSlug: cat.slug, catName: cat.name_ro })} className="flex items-center gap-2 pl-10 sm:pl-14 pr-4 py-2.5 text-[11px] text-gray-400 hover:text-black hover:bg-gray-50 transition-colors w-full text-left border-t border-gray-50">
+                          <button onClick={() => openEdit({ type: 'new-sub', catSlug: cat.slug, catName: cat.name_ro })} className="flex items-center gap-2 pl-10 sm:pl-14 pr-4 py-2.5 text-[11px] admin-muted admin-hover-ink admin-hover-surface transition-colors w-full text-left border-t border-gray-50">
                             <Plus className="w-3 h-3" />
                             Adaugă subcategorie
                           </button>
@@ -703,27 +703,27 @@ export function AdminCategories() {
       {deleteTarget && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteTarget(null)} />
-          <div className="relative bg-white p-5 w-full max-w-sm shadow-2xl">
+          <div className="relative admin-surface p-5 w-full max-w-sm shadow-2xl">
             <div className="flex items-start gap-3 mb-4">
               <div className="w-9 h-9 bg-red-50 flex items-center justify-center flex-shrink-0">
                 <Trash2 className="w-4 h-4 text-red-500" />
               </div>
               <div>
-                <p className="text-xs text-black mb-1">Ștergi <strong>{deleteTarget.name}</strong>?</p>
+                <p className="text-xs admin-ink mb-1">Ștergi <strong>{deleteTarget.name}</strong>?</p>
                 {deleteTarget.type === 'cat' && (deleteTarget.count ?? 0) > 0 && (
                   <p className="text-[11px] text-amber-600">Atenție: {deleteTarget.count} produse au această categorie.</p>
                 )}
                 {deleteTarget.type === 'cat' && (
-                  <p className="text-[11px] text-gray-400 mt-1">Toate subcategoriile vor fi șterse automat.</p>
+                  <p className="text-[11px] admin-muted mt-1">Toate subcategoriile vor fi șterse automat.</p>
                 )}
               </div>
             </div>
             <div className="flex gap-2">
-              <button onClick={handleDelete} disabled={deleting} className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white text-xs py-2.5 hover:bg-red-600 transition-colors disabled:opacity-50">
+              <button onClick={handleDelete} disabled={deleting} className="flex-1 flex items-center justify-center gap-2 bg-red-500 admin-on-solid text-xs py-2.5 hover:bg-red-600 transition-colors disabled:opacity-50">
                 {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                 {deleting ? 'Se șterge...' : 'Da, șterge'}
               </button>
-              <button onClick={() => setDeleteTarget(null)} className="flex-1 text-xs border border-gray-200 py-2.5 text-gray-500 hover:border-black hover:text-black transition-colors">
+              <button onClick={() => setDeleteTarget(null)} className="flex-1 text-xs border admin-border py-2.5 admin-muted admin-hover-border admin-hover-ink transition-colors">
                 Anulează
               </button>
             </div>

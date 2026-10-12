@@ -175,7 +175,7 @@ export async function resolveProductIdsForAttributeFilters(filters: Record<strin
     const ids = new Set((data ?? []).map((row) => row.product_id as string));
     intersection = intersection == null
       ? ids
-      : new Set([...intersection].filter((id) => ids.has(id)));
+      : new Set<string>(Array.from(intersection as Set<string>).filter((id: string) => ids.has(id)));
   }
   return [...(intersection ?? new Set<string>())];
 }

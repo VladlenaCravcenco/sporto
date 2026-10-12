@@ -130,6 +130,8 @@ async function consumeRateLimit(keyHash: string, limit: number): Promise<boolean
 }
 
 async function linkClient(orderId: string, submission: Required<Omit<Submission, 'items' | 'website'>>): Promise<string | null> {
+  // Anonymous phone-only leads stay on the request; never merge contacts by an empty email.
+  if (!submission.email) return null;
   const response = await supabaseRest('rpc/link_order_request_client', {
     method: 'POST',
     body: JSON.stringify({
@@ -144,6 +146,62 @@ async function linkClient(orderId: string, submission: Required<Omit<Submission,
   });
   if (!response.ok) throw new Error(`Client linking RPC failed: ${response.status}`);
   return response.json() as Promise<string | null>;
+}
+
+// EmailJS limits sends to one per second. Serialize within this server process.
+let emailQueue: Promise<unknown> = Promise.resolve();
+async function sendOrderEmails(orderId: string, submission: {
+  name: string; email: string; phone: string; company: string;
+  clientType: string; deliveryAddress: string; notes: string; language: string;
+}, items: CartItem[], totalPrice: number) {
+  const env = process.env;
+  const service = env.EMAILJS_SERVICE_ID || env.VITE_EMAILJS_SERVICE_ID;
+  const publicKey = env.EMAILJS_PUBLIC_KEY || env.VITE_EMAILJS_PUBLIC_KEY;
+  const clientTemplate = env.EMAILJS_TEMPLATE_ORDER_CONFIRMATION;
+  const adminTemplate = env.EMAILJS_TEMPLATE_ADMIN || env.VITE_EMAILJS_TEMPLATE_ADMIN;
+  const adminEmail = env.ORDER_ADMIN_EMAIL || env.VITE_ADMIN_EMAIL;
+  const ru = submission.language === 'ru';
+  const delivery = totalPrice >= 500 ? 0 : 100;
+  const params = {
+    order_id: orderId.slice(0, 8).toUpperCase(),
+    order_date: new Intl.DateTimeFormat(ru ? 'ru-RU' : 'ro-RO', {dateStyle:'medium', timeStyle:'short', timeZone:'Europe/Chisinau'}).format(new Date()),
+    client_name: submission.name, client_email: submission.email,
+    client_phone: submission.phone, client_company: submission.company || '—',
+    client_type: submission.clientType === 'company' ? (ru ? 'Юрлицо' : 'Persoană juridică') : (ru ? 'Физлицо' : 'Persoană fizică'),
+    delivery_address: submission.deliveryAddress || '—', notes: submission.notes || '—',
+    total_items: items.reduce((sum, item) => sum + item.qty, 0),
+    total_price: totalPrice.toFixed(2), delivery_price: delivery.toFixed(2),
+    total_with_delivery: (totalPrice + delivery).toFixed(2),
+    items_list: items.map((item, i) => `${i + 1}. ${ru ? item.name_ru || item.name_ro : item.name_ro || item.name_ru}${item.sku ? ` [${item.sku}]` : ''}\n${item.qty} × ${item.price.toFixed(2)} MDL = ${(item.qty * item.price).toFixed(2)} MDL`).join('\n\n'),
+    confirmation_note: ru ? 'Заявка получена. Менеджер подтвердит наличие, итоговую цену и доставку. Это не подтверждение оплаты.' : 'Cererea a fost primită. Managerul va confirma disponibilitatea, prețul final și livrarea. Aceasta nu este o confirmare de plată.',
+    language: submission.language,
+  };
+  async function send(template: string | undefined, to: string | undefined): Promise<'sent' | 'failed' | 'not_configured'> {
+    if (!service || !publicKey || !template || !to) return 'not_configured';
+    const job = emailQueue.then(async () => {
+      try {
+        const response = await fetch('https://api.emailjs.com/api/v1.0/email/send', {
+          method: 'POST', headers: {'Content-Type':'application/json'},
+          signal: AbortSignal.timeout(10_000),
+          body: JSON.stringify({service_id:service, template_id:template, user_id:publicKey,
+            ...(env.EMAILJS_PRIVATE_KEY ? {accessToken:env.EMAILJS_PRIVATE_KEY} : {}),
+            template_params:{...params, to_email:to, to_name:submission.name}}),
+        });
+        if (!response.ok) console.error('[order-request] email rejected', orderId, response.status);
+        return response.ok ? 'sent' as const : 'failed' as const;
+      } catch {
+        console.error('[order-request] email transport failed', orderId);
+        return 'failed' as const;
+      } finally {
+        await new Promise(resolve => setTimeout(resolve, 1100));
+      }
+    });
+    emailQueue = job.catch(() => undefined);
+    return job;
+  }
+  const client = await send(clientTemplate, submission.email);
+  const admin = await send(adminTemplate, adminEmail);
+  return {client, admin};
 }
 
 export default async function handler(req: ApiRequest, res: ApiResponse) {
@@ -192,7 +250,7 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
   const phoneDigits = submission.phone.replace(/\D/g, '');
   const items = parseItems(body.items);
 
-  if (!submission.name || !isEmail(submission.email) || phoneDigits.length < 8 || !items) {
+  if (!submission.name || !isEmail(submission.email) || (submission.clientType === 'company' && !submission.company) || phoneDigits.length < 8 || !items) {
     return res.status(400).json({ error: 'invalid_submission' });
   }
 
@@ -246,7 +304,8 @@ export default async function handler(req: ApiRequest, res: ApiResponse) {
       console.error('[order-request] client linking failed', error);
     }
 
-    return res.status(201).json({ accepted: true, orderId, clientId });
+    const notifications = await sendOrderEmails(orderId, submission, items, totalPrice);
+    return res.status(201).json({ accepted: true, orderId, clientId, notifications });
   } catch (error) {
     console.error('[order-request] submission failed', error);
     return res.status(500).json({ error: 'service_error' });

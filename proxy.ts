@@ -3,9 +3,12 @@ import { createServerClient } from '@supabase/ssr';
 import type { Database } from './lib/supabase/database.types';
 
 export async function proxy(request: NextRequest) {
+  const locale = request.nextUrl.pathname.match(/^\/(ro|ru)(?:\/|$)/)?.[1] ?? 'ro';
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set('x-sporto-locale', locale);
   let response = NextResponse.next({
     request: {
-      headers: request.headers,
+      headers: requestHeaders,
     },
   });
 
@@ -20,18 +23,18 @@ export async function proxy(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
-          cookiesToSet.forEach(({ name, value, options }) => {
-            response.cookies.set(name, value, options);
-          });
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value));
+          requestHeaders.set('cookie', request.headers.get('cookie') || '');
+          response = NextResponse.next({ request: { headers: requestHeaders } });
+          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
         },
       },
     });
 
-    await supabase.auth.getSession();
+    await supabase.auth.getUser();
   }
 
   // Extract and set locale header
-  const locale = request.nextUrl.pathname.match(/^\/(ro|ru)(?:\/|$)/)?.[1] ?? 'ro';
   response.headers.set('x-sporto-locale', locale);
 
   return response;

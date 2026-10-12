@@ -14,22 +14,23 @@ export default function CallbackPage() {
       try {
         const supabase = createClient();
 
-        // Get the session from the URL
-        const { data: { session }, error } = await supabase.auth.getSession();
-
-        if (error) {
-          setError('Error processing auth link');
+        let checkout = '';
+        try {
+          const stored = sessionStorage.getItem('sporto:checkout-return') || '';
+          if (/^\/(ru|ro)\/order-request$/.test(stored)) checkout = stored;
+        } catch { /* Fall back to the existing account destination. */ }
+        // Browser client initialization handles the PKCE code exchange.
+        const { data: { user }, error } = await supabase.auth.getUser();
+        if (checkout) {
+          router.replace(user && !error ? checkout : `${checkout}?auth_error=1`);
+          return;
+        }
+        if (error || !user) {
+          setError('Не удалось завершить вход. Вернитесь на сайт и попробуйте ещё раз.');
           setLoading(false);
           return;
         }
-
-        if (session) {
-          // Session is valid, redirect to account page
-          router.push('/account?lang=ro');
-        } else {
-          // No session, redirect to login
-          router.push('/login?lang=ro');
-        }
+        router.replace('/account?lang=ro');
       } catch (err) {
         setError('Something went wrong');
         setLoading(false);

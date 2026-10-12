@@ -223,7 +223,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setCatalogOpen(open => !open)}
-                className="h-9 px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 text-xs uppercase tracking-wider transition-colors"
+                className="h-9 px-5 bg-brand hover:bg-brand-hover text-white flex items-center gap-2 text-xs uppercase tracking-wider transition-colors"
               >
                 {t('nav.catalog')}
                 <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${catalogOpen ? 'rotate-180' : ''}`} />
@@ -495,7 +495,7 @@ export function Header() {
               <button
                 type="button"
                 onClick={() => setCatalogOpen(open => !open)}
-                className="h-10 px-5 bg-red-600 hover:bg-red-700 text-white flex items-center gap-2 text-xs uppercase tracking-wider transition-colors"
+                className="h-10 px-5 bg-brand hover:bg-brand-hover text-white flex items-center gap-2 text-xs uppercase tracking-wider transition-colors"
               >
                 {t('nav.catalog')}
                 <ChevronDown className={`w-3 h-3 transition-transform duration-200 ${catalogOpen ? 'rotate-180' : ''}`} />

@@ -1,3 +1,4 @@
+import { AdminEditorWorkspace } from '../components/AdminEditorWorkspace';
 import { useState, useEffect } from 'react';
 import { Save, X, ArrowRight, Monitor, Globe } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
@@ -27,14 +28,14 @@ function Toggle({ value, onChange }: {
       aria-checked={value}
       onClick={() => onChange(!value)}
       className={`relative flex-shrink-0 w-11 h-6 transition-colors duration-200 focus:outline-none ${
-        value ? 'bg-white' : 'bg-white/10 border border-white/20'
+        value ? 'admin-solid' : 'admin-muted-surface border admin-border'
       }`}
     >
       <span
         className={`absolute top-1 w-4 h-4 transition-all duration-200 ${
           value
-            ? 'bg-black left-6'
-            : 'bg-white/30 left-1'
+            ? 'admin-surface left-6'
+            : 'admin-muted-surface left-1'
         }`}
       />
     </button>
@@ -53,50 +54,50 @@ function PopupCard({ data, lang, onClose }: {
   const isEmpty = !title && !body;
 
   return (
-    <div className="relative bg-black border border-white/15 max-w-md w-full shadow-2xl">
+    <div className="relative admin-surface border admin-border max-w-md w-full shadow-2xl">
       {/* accent line */}
-      <div className="absolute top-0 left-8 w-14 h-0.5 bg-white" />
+      <div className="absolute top-0 left-8 w-14 h-0.5 admin-solid" />
 
       {/* close (decorative) */}
       <button
         onClick={onClose}
-        className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center text-gray-600 hover:text-white transition-colors"
+        className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
       >
         <X className="w-4 h-4" />
       </button>
 
       <div className="px-8 pt-10 pb-9">
-        <p className="text-[10px] uppercase tracking-[0.2em] text-gray-600 mb-5">
+        <p className="text-xs   admin-muted mb-5">
           Sporto · SPORTOSFERA S.R.L.
         </p>
 
         {isEmpty ? (
           <div className="py-4">
-            <p className="text-gray-700 text-sm italic">
+            <p className="admin-ink text-sm italic">
               {lang === 'ro' ? '(completați câmpurile din stânga)' : '(заполните поля слева)'}
             </p>
           </div>
         ) : (
           <>
             {title && (
-              <h2 className="text-[1.6rem] leading-[1.15] tracking-tight text-white mb-4 whitespace-pre-line">
+              <h2 className="text-[1.6rem] leading-[1.15] tracking-tight admin-ink mb-4 whitespace-pre-line">
                 {title}
               </h2>
             )}
             {body && (
-              <p className="text-sm text-gray-400 leading-relaxed mb-8">{body}</p>
+              <p className="text-sm admin-muted leading-relaxed mb-8">{body}</p>
             )}
           </>
         )}
 
         <div className="flex items-center gap-5">
           {(cta || !isEmpty) && (
-            <div className="inline-flex items-center gap-2 bg-white text-black px-6 py-3 text-[10px] uppercase tracking-widest opacity-90">
+            <div className="inline-flex items-center gap-2 admin-solid admin-on-solid px-6 py-3 text-xs   opacity-90">
               {cta || (lang === 'ro' ? 'Buton CTA' : 'Кнопка CTA')}
               <ArrowRight className="w-3.5 h-3.5" />
             </div>
           )}
-          <span className="text-[10px] text-gray-700 uppercase tracking-widest">
+          <span className="text-xs admin-ink  ">
             {lang === 'ro' ? 'Închide' : 'Закрыть'}
           </span>
         </div>
@@ -152,24 +153,24 @@ export function AdminPopup() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-48px)] overflow-hidden bg-black">
+    <AdminEditorWorkspace>
 
       {/* ══════════════════════════════════════
           LEFT — EDITOR
       ══════════════════════════════════════ */}
-      <div className="w-[400px] shrink-0 flex flex-col border-r border-white/10 overflow-y-auto">
+      <div className="admin-editor-pane">
 
         {/* Sticky header */}
-        <div className="sticky top-0 z-10 bg-black border-b border-white/10 px-5 py-4">
+        <div className="sticky top-0 z-10 admin-surface border-b admin-border px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">{isRu ? 'Контент' : 'Conținut'}</p>
-              <h1 className="text-base text-white">{isRu ? 'Промо-попап' : 'Promo-popup'}</h1>
+              <p className="text-xs admin-muted  ">{isRu ? 'Контент' : 'Conținut'}</p>
+              <h1 className="text-base admin-ink">{isRu ? 'Промо-попап' : 'Promo-popup'}</h1>
             </div>
             <button
               onClick={handleSave}
               disabled={saving}
-              className="flex items-center gap-1.5 bg-white text-black px-4 py-2 text-xs uppercase tracking-widest hover:bg-gray-100 transition-colors disabled:opacity-50"
+              className="flex items-center gap-1.5 admin-solid admin-on-solid px-4 py-2 text-xs   admin-hover-surface transition-colors disabled:opacity-50"
             >
               <Save className="w-3 h-3" />
               {saving ? (isRu ? 'Сохранение...' : 'Se salvează...') : (isRu ? 'Сохранить' : 'Salvează')}
@@ -182,13 +183,13 @@ export function AdminPopup() {
 
           {/* Active */}
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">
+            <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Статус' : 'Status'}
             </p>
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-white">{isRu ? 'Показывать попап' : 'Afișează popup'}</p>
-                <p className="text-[11px] text-gray-600 mt-0.5">
+                <p className="text-sm admin-ink">{isRu ? 'Показывать попап' : 'Afișează popup'}</p>
+                <p className="text-[11px] admin-muted mt-0.5">
                   {isRu ? 'Появляется через N секунд после загрузки' : 'Apare după N secunde de la încărcare'}
                 </p>
               </div>
@@ -201,28 +202,28 @@ export function AdminPopup() {
 
           {/* Title */}
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">
+            <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Заголовок' : 'Titlu'}
             </p>
             <div className="space-y-2">
               <div>
-                <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">RO</div>
+                <div className="text-xs admin-ink   mb-1">RO</div>
                 <textarea
                   value={data.title_ro}
                   onChange={e => set('title_ro', e.target.value)}
                   rows={2}
                   placeholder={DEFAULT.title_ro}
-                  className="w-full bg-black border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors resize-none"
+                  className="w-full admin-surface border admin-border px-3 py-2 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors resize-none"
                 />
               </div>
               <div>
-                <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">RU</div>
+                <div className="text-xs admin-ink   mb-1">RU</div>
                 <textarea
                   value={data.title_ru}
                   onChange={e => set('title_ru', e.target.value)}
                   rows={2}
                   placeholder={DEFAULT.title_ru}
-                  className="w-full bg-black border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors resize-none"
+                  className="w-full admin-surface border admin-border px-3 py-2 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors resize-none"
                 />
               </div>
             </div>
@@ -230,28 +231,28 @@ export function AdminPopup() {
 
           {/* Body */}
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">
+            <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Описание' : 'Descriere'}
             </p>
             <div className="space-y-2">
               <div>
-                <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">RO</div>
+                <div className="text-xs admin-ink   mb-1">RO</div>
                 <textarea
                   value={data.body_ro}
                   onChange={e => set('body_ro', e.target.value)}
                   rows={3}
                   placeholder={DEFAULT.body_ro}
-                  className="w-full bg-black border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors resize-none"
+                  className="w-full admin-surface border admin-border px-3 py-2 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors resize-none"
                 />
               </div>
               <div>
-                <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">RU</div>
+                <div className="text-xs admin-ink   mb-1">RU</div>
                 <textarea
                   value={data.body_ru}
                   onChange={e => set('body_ru', e.target.value)}
                   rows={3}
                   placeholder={DEFAULT.body_ru}
-                  className="w-full bg-black border border-white/20 px-3 py-2 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors resize-none"
+                  className="w-full admin-surface border admin-border px-3 py-2 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors resize-none"
                 />
               </div>
             </div>
@@ -259,37 +260,37 @@ export function AdminPopup() {
 
           {/* CTA */}
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">
+            <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Кнопка' : 'Buton'}
             </p>
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">{isRu ? 'Текст RO' : 'Text RO'}</div>
+                  <div className="text-xs admin-ink   mb-1">{isRu ? 'Текст RO' : 'Text RO'}</div>
                   <input
                     value={data.cta_label_ro}
                     onChange={e => set('cta_label_ro', e.target.value)}
                     placeholder={DEFAULT.cta_label_ro}
-                    className="w-full h-9 bg-black border border-white/20 px-3 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors"
+                    className="w-full h-9 admin-surface border admin-border px-3 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors"
                   />
                 </div>
                 <div>
-                  <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">{isRu ? 'Текст RU' : 'Text RU'}</div>
+                  <div className="text-xs admin-ink   mb-1">{isRu ? 'Текст RU' : 'Text RU'}</div>
                   <input
                     value={data.cta_label_ru}
                     onChange={e => set('cta_label_ru', e.target.value)}
                     placeholder={DEFAULT.cta_label_ru}
-                    className="w-full h-9 bg-black border border-white/20 px-3 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors"
+                    className="w-full h-9 admin-surface border admin-border px-3 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors"
                   />
                 </div>
               </div>
               <div>
-                <div className="text-[9px] text-gray-700 uppercase tracking-widest mb-1">URL</div>
+                <div className="text-xs admin-ink   mb-1">URL</div>
                 <input
                   value={data.cta_url}
                   onChange={e => set('cta_url', e.target.value)}
                   placeholder="/catalog"
-                  className="w-full h-9 bg-black border border-white/20 px-3 text-sm text-white placeholder-gray-800 focus:border-white focus:outline-none transition-colors"
+                  className="w-full h-9 admin-surface border admin-border px-3 text-sm admin-ink placeholder-gray-800 admin-focus-border focus:outline-none transition-colors"
                 />
               </div>
             </div>
@@ -297,7 +298,7 @@ export function AdminPopup() {
 
           {/* Settings */}
           <div>
-            <p className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">
+            <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Настройки показа' : 'Setări afișare'}
             </p>
             <div className="space-y-4">
@@ -305,25 +306,25 @@ export function AdminPopup() {
               {/* Delay */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-white">{isRu ? 'Задержка появления' : 'Întârziere apariție'}</p>
-                  <p className="text-[11px] text-gray-600 mt-0.5">{isRu ? 'секунды после загрузки страницы' : 'secunde după încărcarea paginii'}</p>
+                  <p className="text-xs admin-ink">{isRu ? 'Задержка появления' : 'Întârziere apariție'}</p>
+                  <p className="text-[11px] admin-muted mt-0.5">{isRu ? 'секунды после загрузки страницы' : 'secunde după încărcarea paginii'}</p>
                 </div>
                 <div className="flex items-center gap-2">
                   <input
                     type="number" min={0} max={60}
                     value={data.delay_seconds}
                     onChange={e => set('delay_seconds', Math.max(0, parseInt(e.target.value) || 0))}
-                    className="w-16 h-9 bg-black border border-white/20 px-2 text-sm text-white text-center focus:border-white focus:outline-none transition-colors"
+                    className="w-16 h-9 admin-surface border admin-border px-2 text-sm admin-ink text-center admin-focus-border focus:outline-none transition-colors"
                   />
-                  <span className="text-xs text-gray-600">{isRu ? 'сек' : 'sec'}</span>
+                  <span className="text-xs admin-muted">{isRu ? 'сек' : 'sec'}</span>
                 </div>
               </div>
 
               {/* Show once */}
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-xs text-white">{isRu ? 'Показывать один раз' : 'Afișează o singură dată'}</p>
-                  <p className="text-[11px] text-gray-600 mt-0.5">{isRu ? 'sessionStorage — до закрытия вкладки' : 'sessionStorage — până la închiderea tab-ului'}</p>
+                  <p className="text-xs admin-ink">{isRu ? 'Показывать один раз' : 'Afișează o singură dată'}</p>
+                  <p className="text-[11px] admin-muted mt-0.5">{isRu ? 'sessionStorage — до закрытия вкладки' : 'sessionStorage — până la închiderea tab-ului'}</p>
                 </div>
                 <Toggle
                   value={data.show_once}
@@ -334,7 +335,7 @@ export function AdminPopup() {
               {/* Reset seen */}
               <button
                 onClick={handleResetSeen}
-                className="w-full border border-white/10 text-gray-600 hover:text-gray-300 hover:border-white/20 py-2 text-xs transition-colors"
+                className="w-full border admin-border admin-muted hover:text-gray-300 admin-hover-border py-2 text-xs transition-colors"
               >
                 {isRu ? 'Сбросить память браузера (показать снова)' : 'Resetați memoria browser-ului (afișați din nou)'}
               </button>
@@ -347,26 +348,26 @@ export function AdminPopup() {
       {/* ══════════════════════════════════════
           RIGHT — PREVIEW
       ══════════════════════════════════════ */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="admin-preview-pane flex-1 flex flex-col overflow-hidden">
 
         {/* Preview toolbar */}
-        <div className="shrink-0 bg-[#111] border-b border-white/10 px-5 py-2.5 flex items-center gap-3">
-          <Monitor className="w-4 h-4 text-gray-600" />
-          <span className="text-[10px] text-gray-600 flex-1 uppercase tracking-widest">
+        <div className="shrink-0 admin-surface border-b admin-border px-5 py-2.5 flex items-center gap-3">
+          <Monitor className="w-4 h-4 admin-muted" />
+          <span className="text-xs admin-muted flex-1  ">
             {isRu ? 'Живое превью попапа' : 'Preview live al popup-ului'}
           </span>
 
           {/* Lang toggle */}
-          <div className="flex items-center gap-1 border border-white/15">
+          <div className="flex items-center gap-1 border admin-border">
             <button
               onClick={() => setPreviewLang('ro')}
-              className={`flex items-center gap-1 px-2.5 py-1 text-[10px] uppercase tracking-wider transition-colors ${previewLang === 'ro' ? 'bg-white text-black' : 'text-gray-600 hover:text-white'}`}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs   transition-colors ${previewLang === 'ro' ? 'admin-solid admin-on-solid' : 'admin-muted admin-hover-ink'}`}
             >
               <Globe className="w-2.5 h-2.5" /> RO
             </button>
             <button
               onClick={() => setPreviewLang('ru')}
-              className={`flex items-center gap-1 px-2.5 py-1 text-[10px] uppercase tracking-wider transition-colors ${previewLang === 'ru' ? 'bg-white text-black' : 'text-gray-600 hover:text-white'}`}
+              className={`flex items-center gap-1 px-2.5 py-1 text-xs   transition-colors ${previewLang === 'ru' ? 'admin-solid admin-on-solid' : 'admin-muted admin-hover-ink'}`}
             >
               <Globe className="w-2.5 h-2.5" /> RU
             </button>
@@ -374,7 +375,7 @@ export function AdminPopup() {
         </div>
 
         {/* Simulated site background */}
-        <div className="flex-1 overflow-hidden relative">
+        <div data-admin-preview className="flex-1 overflow-hidden relative">
 
           {/* Blurred site mockup behind */}
           <div className="absolute inset-0 bg-white">
@@ -434,6 +435,6 @@ export function AdminPopup() {
           )}
         </div>
       </div>
-    </div>
+    </AdminEditorWorkspace>
   );
 }

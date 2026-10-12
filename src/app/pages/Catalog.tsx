@@ -871,12 +871,12 @@ export function Catalog() {
               onClick={() => setSaleOnly(v => !v)}
               className={`hidden relative flex-shrink-0 items-center justify-center border-l border-gray-100 transition-colors w-9 h-[44px] md:w-11 md:h-[52px] ${
                 saleOnly
-                  ? 'bg-red-500 text-white'
-                  : 'text-gray-400 hover:text-red-500 hover:bg-red-50'
+                  ? 'bg-gray-100 text-gray-900'
+                  : 'text-gray-500 hover:text-gray-900 hover:bg-gray-100'
               }`}
               title={language === 'ro' ? 'Doar produse la promoție' : 'Только товары по акции'}
             >
-              <Zap className={`w-3.5 h-3.5 ${saleOnly ? 'fill-white' : ''}`} />
+              <Zap className={`w-3.5 h-3.5 ${saleOnly ? 'fill-current' : ''}`} />
               {saleOnly && (
                 <span className="absolute top-2 right-2 w-1.5 h-1.5 bg-white rounded-full" />
               )}
@@ -1807,12 +1807,12 @@ export function Catalog() {
                     onClick={() => setDesktopFilterDraft((draft) => ({ ...draft, saleOnly: !draft.saleOnly }))}
                     className={`w-full flex items-center justify-between px-3 py-2 text-left !text-[11px] uppercase tracking-wider transition-colors ${
                       desktopFilterDraft.saleOnly
-                        ? 'bg-red-500 text-white'
-                        : 'text-gray-500 hover:bg-red-50 hover:text-red-500'
+                        ? 'bg-gray-100 text-gray-900'
+                        : 'text-gray-500 hover:bg-gray-100 hover:text-gray-900'
                     }`}
                   >
                     <span className="flex items-center gap-2">
-                      <Zap className={`w-3.5 h-3.5 ${desktopFilterDraft.saleOnly ? 'fill-white' : ''}`} />
+                      <Zap className={`w-3.5 h-3.5 ${desktopFilterDraft.saleOnly ? 'fill-current' : ''}`} />
                       {language === 'ro' ? 'Doar produse la promoție' : 'Только товары по акции'}
                     </span>
                     {desktopFilterDraft.saleOnly && <span className="w-1.5 h-1.5 bg-white" />}
@@ -1915,7 +1915,7 @@ export function Catalog() {
                   <button
                     type="button"
                     onClick={applyDesktopFilters}
-                    className="w-full h-11 bg-black text-white text-xs uppercase tracking-wider hover:bg-red-600 transition-colors"
+                    className="w-full h-11 bg-black text-white text-xs uppercase tracking-wider hover:bg-brand-hover transition-colors"
                   >
                     {language === 'ro'
                       ? `Arată ${desktopFacetCounts.total} produse`
@@ -2103,8 +2103,8 @@ export function Catalog() {
                   </span>
                 )}
                 {saleOnly && (
-                  <span className="flex items-center gap-1.5 text-xs bg-red-500 text-white px-3 py-1.5 uppercase tracking-wider">
-                    <Zap className="w-3 h-3 fill-white" />
+                  <span className="flex items-center gap-1.5 text-xs bg-gray-100 text-gray-900 px-3 py-1.5 uppercase tracking-wider">
+                    <Zap className="w-3 h-3 fill-current" />
                     {language === 'ro' ? 'Promoție' : 'Акция'}
                     <button onClick={() => setSaleOnly(false)} className="ml-1 hover:text-gray-300"><X className="w-3 h-3" /></button>
                   </span>

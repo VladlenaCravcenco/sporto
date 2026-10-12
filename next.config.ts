@@ -6,10 +6,11 @@ const nextConfig: NextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.next.json',
   },
-  webpack: (config, { isServer, webpack }) => {
+  webpack: (config, { webpack }) => {
     // Reused public pages retain Vite's public configuration names. Never
     // expose the server environment or the Supabase service-role key here.
     const publicEnv = {
+      VITE_NEXT_SSR: true,
       VITE_SUPABASE_URL: process.env.NEXT_PUBLIC_SUPABASE_URL,
       VITE_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       VITE_SITE_URL: process.env.NEXT_PUBLIC_SITE_URL,
@@ -22,47 +23,8 @@ const nextConfig: NextConfig = {
     config.plugins.push(new webpack.DefinePlugin({
       'import.meta.env': JSON.stringify(publicEnv),
     }));
-    // Optimize chunk splitting for better caching and performance
-    if (!isServer) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // React core
-            react: {
-              test: /[\\/]node_modules[\\/](react|react-dom|react-hook-form)[\\/]/,
-              name: 'react-vendors',
-              priority: 10,
-              reuseExistingChunk: true,
-            },
-            // Radix UI and component libraries
-            radix: {
-              test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
-              name: 'radix-vendors',
-              priority: 9,
-              reuseExistingChunk: true,
-            },
-            // Supabase
-            supabase: {
-              test: /[\\/]node_modules[\\/]@supabase[\\/]/,
-              name: 'supabase-vendors',
-              priority: 8,
-              reuseExistingChunk: true,
-            },
-            // Other node_modules
-            libs: {
-              test: /[\\/]node_modules[\\/]/,
-              name: 'libs-vendors',
-              priority: 7,
-              reuseExistingChunk: true,
-            },
-          },
-        },
-      };
-    }
+    // Preserve Next.js route-aware splitting. A single named vendor group
+    // pulls libraries from unrelated routes into the initial page download.
     return config;
   },
   compress: true,

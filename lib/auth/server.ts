@@ -17,9 +17,9 @@ export async function getAdminUser() {
   }
 
   // Check if user email matches admin email from environment
-  const adminEmail = process.env.ADMIN_EMAIL || process.env.VITE_ADMIN_LOGIN_EMAIL || 'sporto-admin@gmail.com';
+  const adminEmail = getAdminEmail();
   
-  if (user.email === adminEmail) {
+  if (adminEmail && user.email?.trim().toLowerCase() === adminEmail) {
     return user;
   }
 
@@ -51,4 +51,8 @@ export async function getCurrentUser() {
   } = await supabase.auth.getUser();
 
   return user;
+}
+
+export function getAdminEmail() {
+  return (process.env.ADMIN_EMAIL || process.env.VITE_ADMIN_LOGIN_EMAIL || process.env.VITE_ADMIN_EMAIL || '').trim().toLowerCase();
 }

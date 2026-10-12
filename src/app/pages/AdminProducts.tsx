@@ -105,13 +105,13 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
           onChange={e => { setQuery(e.target.value); onChange(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder="HMS, Technogym..."
-          className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+          className="w-full h-9 px-3 pr-8 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
         />
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setOpen(o => !o)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink transition-colors"
         >
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
@@ -120,7 +120,7 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
             type="button"
             tabIndex={-1}
             onClick={() => { setQuery(''); onChange(''); setOpen(true); }}
-            className="absolute right-7 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+            className="absolute right-7 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink transition-colors"
           >
             <X className="w-3 h-3" />
           </button>
@@ -128,19 +128,19 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
       </div>
 
       {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-white border border-gray-200 shadow-lg max-h-52 overflow-y-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 admin-surface border admin-border shadow-lg max-h-52 overflow-y-auto">
 
           {/* "Add new" option */}
           {isNew && (
             <button
               type="button"
               onMouseDown={() => select(query.trim())}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition-colors border-b border-gray-100 text-left"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs admin-hover-surface transition-colors border-b admin-border text-left"
             >
-              <Plus className="w-3 h-3 text-black flex-shrink-0" />
+              <Plus className="w-3 h-3 admin-ink flex-shrink-0" />
               <span>
-                <span className="text-gray-400">{lang === 'ru' ? 'Добавить новый бренд: ' : 'Adaugă brand nou: '}</span>
-                <span className="text-black">{query.trim()}</span>
+                <span className="admin-muted">{lang === 'ru' ? 'Добавить новый бренд: ' : 'Adaugă brand nou: '}</span>
+                <span className="admin-ink">{query.trim()}</span>
               </span>
             </button>
           )}
@@ -153,14 +153,14 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
                   key={opt}
                   type="button"
                   onMouseDown={() => select(opt)}
-                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors text-left ${opt === value ? 'bg-gray-50' : ''}`}
+                  className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs admin-hover-surface transition-colors text-left ${opt === value ? 'admin-canvas' : ''}`}
                 >
                   <span className="flex items-center gap-2">
-                    {opt === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
-                    <span className={opt === value ? 'text-black' : 'text-gray-700'}>{opt}</span>
+                    {opt === value && <Check className="w-3 h-3 admin-ink flex-shrink-0" />}
+                    <span className={opt === value ? 'admin-ink' : 'admin-ink'}>{opt}</span>
                   </span>
                   {supabaseBrandNames.includes(opt) && (
-                    <span className="text-[9px] uppercase tracking-wider text-gray-300 flex-shrink-0 flex items-center gap-1">
+                    <span className="text-xs   admin-muted flex-shrink-0 flex items-center gap-1">
                       <Tag className="w-2.5 h-2.5" />
                       db
                     </span>
@@ -169,7 +169,7 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
               );
             })
           ) : !isNew ? (
-            <div className="px-3 py-3 text-xs text-gray-400 text-center">{lang === 'ru' ? 'Бренды не найдены' : 'Niciun brand găsit'}</div>
+            <div className="px-3 py-3 text-xs admin-muted text-center">{lang === 'ru' ? 'Бренды не найдены' : 'Niciun brand găsit'}</div>
           ) : null}
         </div>
       )}
@@ -234,13 +234,13 @@ function CategoryCombobox({ value, onChange, categories, onCreate, lang }: Categ
           onChange={e => { setQuery(e.target.value); setOpen(true); }}
           onFocus={() => setOpen(true)}
           placeholder="Cardio, Fitness..."
-          className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+          className="w-full h-9 px-3 pr-8 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
         />
         <button
           type="button"
           tabIndex={-1}
           onClick={() => setOpen(o => !o)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+          className="absolute right-2 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink transition-colors"
         >
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
@@ -249,7 +249,7 @@ function CategoryCombobox({ value, onChange, categories, onCreate, lang }: Categ
             type="button"
             tabIndex={-1}
             onClick={() => { setQuery(''); onChange(''); setOpen(true); }}
-            className="absolute right-7 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+            className="absolute right-7 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink transition-colors"
           >
             <X className="w-3 h-3" />
           </button>
@@ -257,19 +257,19 @@ function CategoryCombobox({ value, onChange, categories, onCreate, lang }: Categ
       </div>
 
       {open && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-white border border-gray-200 shadow-lg max-h-52 overflow-y-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 admin-surface border admin-border shadow-lg max-h-52 overflow-y-auto">
           {isNew && (
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={createAndSelect}
               disabled={creating}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition-colors border-b border-gray-100 text-left disabled:opacity-50"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs admin-hover-surface transition-colors border-b admin-border text-left disabled:opacity-50"
             >
-              <Plus className="w-3 h-3 text-black flex-shrink-0" />
+              <Plus className="w-3 h-3 admin-ink flex-shrink-0" />
               <span>
-                <span className="text-gray-400">{lang === 'ru' ? 'Добавить категорию: ' : 'Adaugă categorie: '}</span>
-                <span className="text-black">{query.trim()}</span>
+                <span className="admin-muted">{lang === 'ru' ? 'Добавить категорию: ' : 'Adaugă categorie: '}</span>
+                <span className="admin-ink">{query.trim()}</span>
               </span>
             </button>
           )}
@@ -280,16 +280,16 @@ function CategoryCombobox({ value, onChange, categories, onCreate, lang }: Categ
                 key={cat.id}
                 type="button"
                 onMouseDown={() => select(cat.id)}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors text-left ${cat.id === value ? 'bg-gray-50' : ''}`}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs admin-hover-surface transition-colors text-left ${cat.id === value ? 'admin-canvas' : ''}`}
               >
                 <span className="flex items-center gap-2">
-                  {cat.id === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
-                  <span className={cat.id === value ? 'text-black' : 'text-gray-700'}>{cat.name[lang]}</span>
+                  {cat.id === value && <Check className="w-3 h-3 admin-ink flex-shrink-0" />}
+                  <span className={cat.id === value ? 'admin-ink' : 'admin-ink'}>{cat.name[lang]}</span>
                 </span>
               </button>
             ))
           ) : !isNew ? (
-            <div className="px-3 py-3 text-xs text-gray-400 text-center">{lang === 'ru' ? 'Категории не найдены' : 'Nicio categorie găsită'}</div>
+            <div className="px-3 py-3 text-xs admin-muted text-center">{lang === 'ru' ? 'Категории не найдены' : 'Nicio categorie găsită'}</div>
           ) : null}
         </div>
       )}
@@ -355,14 +355,14 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
           onFocus={() => !disabled && setOpen(true)}
           disabled={disabled}
           placeholder={disabled ? (lang === 'ru' ? 'Сначала выберите категорию' : 'Alege mai întâi categoria') : (lang === 'ru' ? 'Беговые дорожки, гантели...' : 'Benzi, Gantere...')}
-          className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors disabled:opacity-40"
+          className="w-full h-9 px-3 pr-8 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors disabled:opacity-40"
         />
         <button
           type="button"
           tabIndex={-1}
           disabled={disabled}
           onClick={() => !disabled && setOpen(o => !o)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors disabled:opacity-30"
+          className="absolute right-2 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink transition-colors disabled:opacity-30"
         >
           <ChevronDown className={`w-3.5 h-3.5 transition-transform ${open ? 'rotate-180' : ''}`} />
         </button>
@@ -371,7 +371,7 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
             type="button"
             tabIndex={-1}
             onClick={() => { setQuery(''); onChange(''); setOpen(true); }}
-            className="absolute right-7 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black transition-colors"
+            className="absolute right-7 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink transition-colors"
           >
             <X className="w-3 h-3" />
           </button>
@@ -379,19 +379,19 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
       </div>
 
       {open && !disabled && (
-        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 bg-white border border-gray-200 shadow-lg max-h-52 overflow-y-auto">
+        <div className="absolute z-50 top-full left-0 right-0 mt-0.5 admin-surface border admin-border shadow-lg max-h-52 overflow-y-auto">
           {isNew && (
             <button
               type="button"
               onMouseDown={(e) => e.preventDefault()}
               onClick={createAndSelect}
               disabled={creating}
-              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs hover:bg-gray-50 transition-colors border-b border-gray-100 text-left disabled:opacity-50"
+              className="w-full flex items-center gap-2 px-3 py-2.5 text-xs admin-hover-surface transition-colors border-b admin-border text-left disabled:opacity-50"
             >
-              <Plus className="w-3 h-3 text-black flex-shrink-0" />
+              <Plus className="w-3 h-3 admin-ink flex-shrink-0" />
               <span>
-                <span className="text-gray-400">{lang === 'ru' ? 'Добавить подкатегорию: ' : 'Adaugă subcategorie: '}</span>
-                <span className="text-black">{query.trim()}</span>
+                <span className="admin-muted">{lang === 'ru' ? 'Добавить подкатегорию: ' : 'Adaugă subcategorie: '}</span>
+                <span className="admin-ink">{query.trim()}</span>
               </span>
             </button>
           )}
@@ -402,16 +402,16 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
                 key={sub.id}
                 type="button"
                 onMouseDown={() => select(sub.id)}
-                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs hover:bg-gray-50 transition-colors text-left ${sub.id === value ? 'bg-gray-50' : ''}`}
+                className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-xs admin-hover-surface transition-colors text-left ${sub.id === value ? 'admin-canvas' : ''}`}
               >
                 <span className="flex items-center gap-2">
-                  {sub.id === value && <Check className="w-3 h-3 text-black flex-shrink-0" />}
-                  <span className={sub.id === value ? 'text-black' : 'text-gray-700'}>{sub.name[lang]}</span>
+                  {sub.id === value && <Check className="w-3 h-3 admin-ink flex-shrink-0" />}
+                  <span className={sub.id === value ? 'admin-ink' : 'admin-ink'}>{sub.name[lang]}</span>
                 </span>
               </button>
             ))
           ) : !isNew ? (
-            <div className="px-3 py-3 text-xs text-gray-400 text-center">{lang === 'ru' ? 'Подкатегории не найдены' : 'Nicio subcategorie găsită'}</div>
+            <div className="px-3 py-3 text-xs admin-muted text-center">{lang === 'ru' ? 'Подкатегории не найдены' : 'Nicio subcategorie găsită'}</div>
           ) : null}
         </div>
       )}
@@ -497,6 +497,7 @@ function applyAdminProductFilters(
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function AdminProducts() {
+  const [filtersExpanded, setFiltersExpanded] = useState(false);
   const { t, lang } = useAdminLang();
   const l = (ro: string, ru: string) => (lang === 'ru' ? ru : ro);
   const { allCategories: categories, refetchCategories } = useCategoriesContext();
@@ -918,7 +919,7 @@ export function AdminProducts() {
 
   const saveAttributeValues = async (productId: string) => {
     if (categoryAttributes.length === 0) return;
-    const filled = categoryAttributes.flatMap((attribute) => {
+    const filled = categoryAttributes.flatMap<Pick<ProductAttributeValue, 'product_id' | 'attribute_id'> & Partial<ProductAttributeValue>>((attribute) => {
       const value = attributeValues[attribute.id];
       const localizedText = attributeTextValues[attribute.id] ?? { ro: '', ru: '' };
       if (attribute.value_type === 'text' && !localizedText.ro.trim() && !localizedText.ru.trim()) return [];
@@ -1138,8 +1139,8 @@ export function AdminProducts() {
   };
 
   // ─── Quick toggle active ───────────────────────────────────────────────────
-  const handleLogout = () => {
-    logoutAdmin();
+  const handleLogout = async () => {
+    await logoutAdmin();
     navigate('/admin/login', { replace: true });
   };
 
@@ -1250,26 +1251,26 @@ export function AdminProducts() {
 
   // ─── Render ───────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen admin-canvas flex flex-col">
 
       {/* ── Top bar ── */}
-      <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
+      <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap sm:flex-nowrap items-center min-h-12 py-2 sm:py-0 gap-3 sm:gap-4">
             <div className="flex items-center gap-2 min-w-0">
-              <Package className="w-4 h-4 text-gray-400" />
-              <span className="text-sm text-gray-900 truncate">{t.products.title}</span>
-              <span className="text-xs bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums flex-shrink-0">{totalCount}</span>
+              <Package className="w-4 h-4 admin-muted" />
+              <span className="text-sm admin-ink truncate">{t.products.title}</span>
+              <span className="text-xs admin-muted-surface admin-muted px-2 py-0.5 tabular-nums flex-shrink-0">{totalCount}</span>
             </div>
             <div className="w-full sm:w-auto sm:ml-auto flex items-center justify-between sm:justify-end gap-2">
-              <button onClick={load} disabled={loading} className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors flex-shrink-0">
+              <button onClick={load} disabled={loading} className="flex items-center gap-1.5 text-xs admin-muted admin-hover-ink transition-colors flex-shrink-0">
                 <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">{t.common.refresh}</span>
               </button>
               <button
                 onClick={handleExportExcel}
                 disabled={exporting || totalCount === 0}
-                className="flex items-center justify-center gap-2 border border-gray-200 text-gray-700 hover:border-black hover:text-black px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-wider transition-colors disabled:opacity-40 min-w-0"
+                className="flex items-center justify-center gap-2 border admin-border admin-ink admin-hover-border admin-hover-ink px-3 sm:px-4 py-2 text-xs sm:text-xs   sm:tracking-wider transition-colors disabled:opacity-40 min-w-0"
               >
                 {exporting ? (
                   <>
@@ -1286,7 +1287,7 @@ export function AdminProducts() {
               </button>
               <button
                 onClick={openNew}
-                className="flex items-center justify-center gap-2 bg-black text-white px-3 sm:px-4 py-2 text-[10px] sm:text-xs uppercase tracking-[0.14em] sm:tracking-wider hover:bg-gray-800 transition-colors min-w-0"
+                className="flex items-center justify-center gap-2 admin-solid admin-on-solid px-3 sm:px-4 py-2 text-xs sm:text-xs   sm:tracking-wider admin-hover-solid transition-colors min-w-0"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t.products.newBtn}</span>
@@ -1297,19 +1298,22 @@ export function AdminProducts() {
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-5 flex-1">
+      <div className="admin-page-body max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 flex-1">
 
         {/* ── Filters ── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(240px,1.2fr)_repeat(4,minmax(160px,1fr))_auto] gap-2 mb-4">
+        <button type="button" className="admin-filter-toggle" aria-expanded={filtersExpanded} aria-controls="admin-product-filters" onClick={() => setFiltersExpanded(value => !value)}>
+          {lang === 'ru' ? (filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры') : (filtersExpanded ? 'Ascunde filtrele' : 'Arată filtrele')}
+        </button>
+        <div id="admin-product-filters" data-expanded={filtersExpanded} className="admin-product-filters grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-[minmax(180px,1.2fr)_repeat(4,minmax(100px,1fr))_auto] gap-2 mb-4">
           <div className="relative min-w-0 sm:col-span-2 xl:col-span-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-400" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted" />
             <input
               type="text" value={search} onChange={e => setSearch(e.target.value)}
               placeholder={l('Caută după SKU sau cod...', 'Поиск по SKU или коду...')}
-              className="w-full h-9 pl-9 pr-8 text-xs border border-gray-200 bg-white placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+              className="w-full h-9 pl-9 pr-8 text-xs border admin-border admin-surface admin-placeholder focus:outline-none admin-focus-border transition-colors"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
+              <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink">
                 <X className="w-3 h-3" />
               </button>
             )}
@@ -1322,7 +1326,7 @@ export function AdminProducts() {
                 setCatFilter(e.target.value);
                 setSubcatFilter('');
               }}
-              className="w-full h-9 px-3 text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-black transition-colors"
+              className="w-full h-9 px-3 text-xs border admin-border admin-surface admin-ink focus:outline-none admin-focus-border transition-colors"
             >
               <option value="">{l('Toate categoriile', 'Все категории')}</option>
               {allCategoryOptions.map((category) => (
@@ -1338,10 +1342,10 @@ export function AdminProducts() {
               value={brandFilter}
               onChange={e => setBrandFilter(e.target.value)}
               placeholder={l('Brand...', 'Бренд...')}
-              className="w-full h-9 px-3 pr-8 text-xs border border-gray-200 bg-white text-gray-700 placeholder-gray-400 focus:outline-none focus:border-black transition-colors"
+              className="w-full h-9 px-3 pr-8 text-xs border admin-border admin-surface admin-ink admin-placeholder focus:outline-none admin-focus-border transition-colors"
             />
             {brandFilter && (
-              <button onClick={() => setBrandFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
+              <button onClick={() => setBrandFilter('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink">
                 <X className="w-3 h-3" />
               </button>
             )}
@@ -1358,7 +1362,7 @@ export function AdminProducts() {
             <select
               value={subcatFilter}
               onChange={e => setSubcatFilter(e.target.value)}
-              className="w-full h-9 px-3 text-xs border border-gray-200 bg-white text-gray-700 focus:outline-none focus:border-black transition-colors"
+              className="w-full h-9 px-3 text-xs border admin-border admin-surface admin-ink focus:outline-none admin-focus-border transition-colors"
             >
               <option value="">{l('Toate subcategoriile', 'Все подкатегории')}</option>
               {allSubcategoryOptions
@@ -1369,13 +1373,13 @@ export function AdminProducts() {
             </select>
           </div>
 
-          <div className="flex border border-gray-200 bg-white min-w-0">
+          <div className="flex border admin-border admin-surface min-w-0">
             {(['all', 'active', 'inactive'] as const).map(s => (
               <button
                 key={s}
                 onClick={() => setStatusFilter(s)}
-                className={`flex-1 px-2 sm:px-3 h-9 text-[11px] sm:text-xs transition-colors border-r last:border-0 border-gray-100 whitespace-nowrap ${
-                  statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
+                className={`flex-1 px-2 sm:px-3 h-9 text-[11px] sm:text-xs transition-colors border-r last:border-0 admin-border whitespace-nowrap ${
+                  statusFilter === s ? 'admin-solid admin-on-solid' : 'admin-muted admin-hover-ink'
                 }`}
               >
                 {s === 'all' ? l('Toate', 'Все') : s === 'active' ? l('Active', 'Активные') : l('Inactive', 'Неактивные')}
@@ -1383,20 +1387,20 @@ export function AdminProducts() {
             ))}
           </div>
 
-          <div className="text-xs text-gray-400 flex items-center justify-end xl:justify-start">
+          <div className="text-xs admin-muted flex items-center justify-end xl:justify-start">
             {rows.length} {l('din', 'из')} {totalCount}
           </div>
         </div>
 
         {/* ── Table ── */}
-        <div className="bg-white border border-gray-100 overflow-hidden">
+        <div className="admin-surface border admin-border overflow-hidden">
           {/* Head */}
-          <div className="hidden lg:grid grid-cols-[56px_2fr_1fr_90px_90px_70px_70px_44px] gap-3 px-4 py-2.5 border-b border-gray-100 bg-gray-50 text-[10px] uppercase tracking-widest text-gray-400">
+          <div className="admin-product-table-head hidden lg:grid grid-cols-[44px_minmax(160px,2fr)_minmax(90px,1fr)_80px_55px_50px_50px_24px] gap-3 px-4 py-2.5 border-b admin-border admin-canvas text-xs   admin-muted">
             <div />
-            <button onClick={() => toggleSort('name_ro')} className="text-left hover:text-black transition-colors flex items-center">{t.products.colProduct} <SortArrow k="name_ro" /></button>
+            <button onClick={() => toggleSort('name_ro')} className="text-left admin-hover-ink transition-colors flex items-center">{t.products.colProduct} <SortArrow k="name_ro" /></button>
             <div>{t.products.colCategory}</div>
-            <button onClick={() => toggleSort('price')} className="text-right hover:text-black transition-colors flex items-center justify-end">{t.products.colPrice} <SortArrow k="price" /></button>
-            <button onClick={() => toggleSort('qty')} className="text-center hover:text-black transition-colors flex items-center justify-center">{t.products.colStock} <SortArrow k="qty" /></button>
+            <button onClick={() => toggleSort('price')} className="text-right admin-hover-ink transition-colors flex items-center justify-end">{t.products.colPrice} <SortArrow k="price" /></button>
+            <button onClick={() => toggleSort('qty')} className="text-center admin-hover-ink transition-colors flex items-center justify-center">{t.products.colStock} <SortArrow k="qty" /></button>
             <div className="text-center">{t.products.colActive}</div>
             <div className="text-center">{t.products.colFeatured}</div>
             <div />
@@ -1406,20 +1410,20 @@ export function AdminProducts() {
             <div className="divide-y divide-gray-50">
               {Array.from({ length: 10 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-4 px-4 py-3 animate-pulse">
-                  <div className="w-10 h-10 bg-gray-100 flex-shrink-0" />
+                  <div className="w-10 h-10 admin-muted-surface flex-shrink-0" />
                   <div className="flex-1 space-y-2">
-                    <div className="h-3 bg-gray-100 w-1/3" />
-                    <div className="h-2.5 bg-gray-50 w-1/5" />
+                    <div className="h-3 admin-muted-surface w-1/3" />
+                    <div className="h-2.5 admin-canvas w-1/5" />
                   </div>
-                  <div className="h-3 w-20 bg-gray-100" />
-                  <div className="h-3 w-16 bg-gray-100" />
+                  <div className="h-3 w-20 admin-muted-surface" />
+                  <div className="h-3 w-16 admin-muted-surface" />
                 </div>
               ))}
             </div>
           ) : rows.length === 0 ? (
             <div className="py-20 text-center">
               <Package className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">{t.products.noData}</p>
+              <p className="text-sm admin-muted">{t.products.noData}</p>
             </div>
           ) : (
             <div className="divide-y divide-gray-50">
@@ -1427,13 +1431,13 @@ export function AdminProducts() {
                 <div
                   key={row.id}
                   onClick={() => openEdit(row)}
-                  className="grid grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[56px_2fr_1fr_90px_90px_70px_70px_44px] gap-x-3 gap-y-2 items-start lg:items-center px-3 sm:px-4 py-3 cursor-pointer hover:bg-gray-50/70 transition-colors group"
+                  className="grid grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[44px_minmax(160px,2fr)_minmax(90px,1fr)_80px_55px_50px_50px_24px] gap-x-3 gap-y-2 items-start lg:items-center px-3 sm:px-4 py-2 cursor-pointer hover:bg-gray-50/70 transition-colors group"
                 >
                   {/* Thumb */}
-                  <div className="w-12 h-12 lg:w-10 lg:h-10 bg-gray-100 flex-shrink-0 overflow-hidden">
+                  <div className="w-12 h-12 lg:w-10 lg:h-10 admin-muted-surface flex-shrink-0 overflow-hidden">
                     {row.image_url
                       ? <img src={row.image_url} alt="" className="w-full h-full object-cover" />
-                      : <Package className="w-4 h-4 text-gray-300 m-4 lg:m-3" />
+                      : <Package className="w-4 h-4 admin-muted m-4 lg:m-3" />
                     }
                   </div>
 
@@ -1441,18 +1445,18 @@ export function AdminProducts() {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
                       {!row.active && <span className="w-1.5 h-1.5 bg-gray-300 rounded-full flex-shrink-0" />}
-                      {row.featured && <Star className="w-3 h-3 text-gray-400 fill-gray-200 flex-shrink-0" />}
-                      <span className="text-xs text-gray-900 truncate group-hover:text-black">{row.name_ro}</span>
+                      {row.featured && <Star className="w-3 h-3 admin-muted fill-gray-200 flex-shrink-0" />}
+                      <span className="text-xs admin-ink truncate group-hover:text-black">{row.name_ro}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-3 gap-y-1 mt-0.5">
-                      {row.sku && <span className="text-[10px] text-gray-400 font-mono break-all">{row.sku}</span>}
-                      {row.brand && <span className="text-[10px] text-gray-400 truncate">{row.brand}</span>}
+                      {row.sku && <span className="text-xs admin-muted font-mono break-all">{row.sku}</span>}
+                      {row.brand && <span className="text-xs admin-muted truncate">{row.brand}</span>}
                     </div>
                     <div className="lg:hidden flex flex-wrap items-center gap-x-3 gap-y-1 mt-2">
-                      <span className="text-[10px] text-gray-500 truncate max-w-full">{catLabel(categories, row.category)}</span>
-                      <span className="text-[10px] text-gray-700 font-mono">{Number(row.price).toLocaleString()} MDL</span>
-                      <span className={`text-[10px] font-mono ${
-                        Number(row.qty) === 0 ? 'text-red-400' : Number(row.qty) < 5 ? 'text-amber-500' : 'text-gray-700'
+                      <span className="text-xs admin-muted truncate max-w-full">{catLabel(categories, row.category)}</span>
+                      <span className="text-xs admin-ink font-mono">{Number(row.price).toLocaleString()} MDL</span>
+                      <span className={`text-xs font-mono ${
+                        Number(row.qty) === 0 ? 'text-red-400' : Number(row.qty) < 5 ? 'text-amber-500' : 'admin-ink'
                       }`}>
                         {l('Stoc', 'Сток')}: {row.qty ?? '—'}
                       </span>
@@ -1460,28 +1464,28 @@ export function AdminProducts() {
                     <div className="lg:hidden flex items-center gap-3 mt-2">
                       <button
                         onClick={e => toggleActive(row, e)}
-                        className={`w-8 h-5 rounded-full transition-colors flex items-center ${row.active ? 'bg-black' : 'bg-gray-200'}`}
+                        className={`w-8 h-5 rounded-full transition-colors flex items-center ${row.active ? 'admin-solid' : 'admin-muted-surface'}`}
                         aria-label={row.active ? l('Dezactivează', 'Деактивировать') : l('Activează', 'Активировать')}
                       >
-                        <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${row.active ? 'translate-x-3' : 'translate-x-0'}`} />
+                        <span className={`w-3.5 h-3.5 admin-surface rounded-full shadow transition-transform mx-0.5 ${row.active ? 'translate-x-3' : 'translate-x-0'}`} />
                       </button>
-                      <span className="text-[10px] text-gray-400">
+                      <span className="text-xs admin-muted">
                         {row.active ? l('Activ', 'Активен') : l('Inactiv', 'Неактивен')}
                       </span>
                     </div>
                   </div>
 
                   {/* Category — hidden on small */}
-                  <div className="hidden lg:block text-xs text-gray-400 truncate">{catLabel(categories, row.category)}</div>
+                  <div className="hidden lg:block text-xs admin-muted truncate">{catLabel(categories, row.category)}</div>
 
                   {/* Price */}
-                  <div className="hidden lg:block text-xs text-gray-700 text-right tabular-nums font-mono">
+                  <div className="hidden lg:block text-xs admin-ink text-right tabular-nums font-mono">
                     {Number(row.price).toLocaleString()}
                   </div>
 
                   {/* Qty */}
                   <div className={`hidden lg:block text-xs text-center tabular-nums font-mono ${
-                    Number(row.qty) === 0 ? 'text-red-400' : Number(row.qty) < 5 ? 'text-amber-500' : 'text-gray-700'
+                    Number(row.qty) === 0 ? 'text-red-400' : Number(row.qty) < 5 ? 'text-amber-500' : 'admin-ink'
                   }`}>
                     {row.qty ?? '—'}
                   </div>
@@ -1490,15 +1494,15 @@ export function AdminProducts() {
                   <div className="hidden lg:flex justify-center">
                     <button
                       onClick={e => toggleActive(row, e)}
-                      className={`w-8 h-5 rounded-full transition-colors flex items-center ${row.active ? 'bg-black' : 'bg-gray-200'}`}
+                      className={`w-8 h-5 rounded-full transition-colors flex items-center ${row.active ? 'admin-solid' : 'admin-muted-surface'}`}
                     >
-                      <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${row.active ? 'translate-x-3' : 'translate-x-0'}`} />
+                      <span className={`w-3.5 h-3.5 admin-surface rounded-full shadow transition-transform mx-0.5 ${row.active ? 'translate-x-3' : 'translate-x-0'}`} />
                     </button>
                   </div>
 
                   {/* Featured */}
                   <div className="hidden lg:flex justify-center">
-                    {row.featured && <Star className="w-3.5 h-3.5 text-gray-400 fill-gray-200" />}
+                    {row.featured && <Star className="w-3.5 h-3.5 admin-muted fill-gray-200" />}
                   </div>
 
                   {/* Arrow */}
@@ -1512,7 +1516,7 @@ export function AdminProducts() {
         </div>
 
         {totalCount > PAGE_SIZE && (
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3 text-xs text-gray-400">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mt-4 gap-3 text-xs admin-muted">
             <span>
               {lang === 'ro'
                 ? `${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, totalCount)} din ${totalCount}`
@@ -1522,17 +1526,17 @@ export function AdminProducts() {
               <button
                 onClick={() => setPage((current) => Math.max(1, current - 1))}
                 disabled={page === 1 || loading}
-                className="flex-1 sm:flex-none px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
+                className="flex-1 sm:flex-none px-3 h-8 border admin-border admin-muted admin-hover-border admin-hover-ink transition-colors disabled:opacity-30"
               >
                 {l('Înapoi', 'Назад')}
               </button>
-              <span className="tabular-nums text-gray-500 min-w-[56px] text-center">
+              <span className="tabular-nums admin-muted min-w-[56px] text-center">
                 {page} / {Math.max(1, Math.ceil(totalCount / PAGE_SIZE))}
               </span>
               <button
                 onClick={() => setPage((current) => current + 1)}
                 disabled={page >= Math.ceil(totalCount / PAGE_SIZE) || loading}
-                className="flex-1 sm:flex-none px-3 h-8 border border-gray-200 text-gray-600 hover:border-black hover:text-black transition-colors disabled:opacity-30"
+                className="flex-1 sm:flex-none px-3 h-8 border admin-border admin-muted admin-hover-border admin-hover-ink transition-colors disabled:opacity-30"
               >
                 {l('Înainte', 'Дальше')}
               </button>
@@ -1551,15 +1555,15 @@ export function AdminProducts() {
       )}
 
       {/* Panel */}
-      <div className={`fixed top-0 right-0 h-full w-full sm:w-[560px] bg-white shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
+      <div className={`fixed top-0 right-0 h-full w-full sm:w-[560px] admin-surface shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
         {/* Panel header */}
-        <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 py-4 border-b border-gray-100 flex-shrink-0 gap-3">
+        <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 py-4 border-b admin-border flex-shrink-0 gap-3">
           <div className="min-w-0">
-            <h2 className="text-sm text-gray-900">
+            <h2 className="text-sm admin-ink">
               {editId ? t.products.editTitle : t.products.newTitle}
             </h2>
-            {editId && <p className="text-[10px] text-gray-400 font-mono mt-0.5">#{editId}</p>}
+            {editId && <p className="text-xs admin-muted font-mono mt-0.5">#{editId}</p>}
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {editId && (
@@ -1573,13 +1577,13 @@ export function AdminProducts() {
                 })}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-black transition-colors px-2 py-1.5 border border-gray-100 hover:border-gray-300"
+                className="flex items-center gap-1.5 text-xs admin-muted admin-hover-ink transition-colors px-2 py-1.5 border admin-border hover:border-gray-300"
               >
                 <ExternalLink className="w-3 h-3" />
                 <span className="hidden sm:inline">{t.products.pageProduct}</span>
               </a>
             )}
-            <button onClick={closePanel} className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors">
+            <button onClick={closePanel} className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink transition-colors">
               <X className="w-4 h-4" />
             </button>
           </div>
@@ -1592,8 +1596,8 @@ export function AdminProducts() {
             {/* ── Images — 4 slots ── */}
             <div>
               <div className="flex items-center justify-between mb-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400">
-                  {l('Imagini', 'Изображения')} <span className="text-gray-300 normal-case tracking-normal">({l('max 4 · prima = principală', 'макс 4 · первое = главное')})</span>
+                <label className="text-xs   admin-muted">
+                  {l('Imagini', 'Изображения')} <span className="admin-muted normal-case tracking-normal">({l('max 4 · prima = principală', 'макс 4 · первое = главное')})</span>
                 </label>
               </div>
 
@@ -1619,16 +1623,16 @@ export function AdminProducts() {
                     >
                       {url ? (
                         // Filled slot
-                        <div className="relative w-full h-full border border-gray-200 overflow-hidden group">
-                          <img src={url} alt="" className="w-full h-full object-contain bg-gray-50" />
+                        <div className="relative w-full h-full border admin-border overflow-hidden group">
+                          <img src={url} alt="" className="w-full h-full object-contain admin-canvas" />
                           {/* Principal badge */}
                           {slot === 0 && (
-                            <span className="absolute top-1.5 left-1.5 text-[9px] uppercase tracking-widest bg-black text-white px-1.5 py-0.5">
+                            <span className="absolute top-1.5 left-1.5 text-xs   admin-solid admin-on-solid px-1.5 py-0.5">
                               {l('Principală', 'Главное')}
                             </span>
                           )}
                           {/* Paste hint */}
-                          <span className="absolute bottom-1.5 right-1.5 text-[9px] bg-black/50 text-white px-1.5 py-0.5 opacity-0 group-focus:opacity-100 transition-opacity pointer-events-none">
+                          <span className="absolute bottom-1.5 right-1.5 text-xs bg-black/50 admin-on-solid px-1.5 py-0.5 opacity-0 group-focus:opacity-100 transition-opacity pointer-events-none">
                             Ctrl+V
                           </span>
                           {/* Overlay actions */}
@@ -1639,7 +1643,7 @@ export function AdminProducts() {
                               className="w-7 h-7 bg-white/90 flex items-center justify-center hover:bg-white transition-colors"
                               title={l('Înlocuiește', 'Заменить')}
                             >
-                              <ImageIcon className="w-3.5 h-3.5 text-gray-700" />
+                              <ImageIcon className="w-3.5 h-3.5 admin-ink" />
                             </button>
                             <button
                               type="button"
@@ -1662,19 +1666,19 @@ export function AdminProducts() {
                           }}
                           className={`w-full h-full border-2 border-dashed flex flex-col items-center justify-center gap-1 transition-colors ${
                             isUploading
-                              ? 'border-gray-200 bg-gray-50'
-                              : 'border-gray-200 hover:border-black hover:bg-gray-50/50 cursor-pointer'
+                              ? 'admin-border admin-canvas'
+                              : 'admin-border admin-hover-border hover:bg-gray-50/50 cursor-pointer'
                           }`}
                         >
                           {isUploading ? (
-                            <RefreshCw className="w-5 h-5 text-gray-400 animate-spin" />
+                            <RefreshCw className="w-5 h-5 admin-muted animate-spin" />
                           ) : (
                             <>
-                              <Plus className="w-4 h-4 text-gray-300" />
-                              <span className="text-[10px] text-gray-400">
+                              <Plus className="w-4 h-4 admin-muted" />
+                              <span className="text-xs admin-muted">
                                 {slot === 0 ? l('Principală', 'Главное') : l(`Foto ${slot + 1}`, `Фото ${slot + 1}`)}
                               </span>
-                              <span className="text-[9px] text-gray-300 mt-0.5">
+                              <span className="text-xs admin-muted mt-0.5">
                                 {l('sau Ctrl+V', 'или Ctrl+V')}
                               </span>
                             </>
@@ -1700,7 +1704,7 @@ export function AdminProducts() {
               {storageNote && (
                 <div className="mt-3 bg-amber-50 border border-amber-200 p-3 flex gap-2">
                   <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
-                  <div className="text-[10px] text-amber-700 leading-relaxed">
+                  <div className="text-xs text-amber-700 leading-relaxed">
                     <strong>{l('Creați bucket-ul în Supabase:', 'Создайте bucket в Supabase:')}</strong><br />
                     Supabase Dashboard → Storage → New bucket<br />
                     Name: <code className="bg-amber-100 px-1">product-images</code> · Public: <strong>ON</strong><br />
@@ -1713,22 +1717,22 @@ export function AdminProducts() {
             {/* ── Names ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="col-span-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">
+                <label className="text-xs   admin-muted mb-1.5 block">
                   {t.products.nameRoLabel} <span className="text-red-400">*</span>
                 </label>
                 <input
                   type="text" value={form.name_ro ?? ''}
                   onChange={e => setForm(f => ({ ...f, name_ro: e.target.value }))}
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+                  className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
                   placeholder={t.products.namePlaceholder}
                 />
               </div>
               <div className="col-span-1 sm:col-span-2">
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.nameRuLabel}</label>
+                <label className="text-xs   admin-muted mb-1.5 block">{t.products.nameRuLabel}</label>
                 <input
                   type="text" value={form.name_ru ?? ''}
                   onChange={e => setForm(f => ({ ...f, name_ru: e.target.value }))}
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+                  className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
                   placeholder={t.products.nameRuPlaceholder}
                 />
               </div>
@@ -1737,7 +1741,7 @@ export function AdminProducts() {
             {/* ── Category ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">
+                <label className="text-xs   admin-muted mb-1.5 block">
                   {t.common.category} <span className="text-red-400">*</span>
                 </label>
                 <CategoryCombobox
@@ -1749,7 +1753,7 @@ export function AdminProducts() {
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.subcategory}</label>
+                <label className="text-xs   admin-muted mb-1.5 block">{t.products.subcategory}</label>
                 <SubcategoryCombobox
                   value={form.subcategory ?? ''}
                   onChange={(val) => setForm(f => ({ ...f, subcategory: val }))}
@@ -1762,16 +1766,16 @@ export function AdminProducts() {
             </div>
 
             {form.category && categoryAttributes.length > 0 && (
-              <div className="border border-gray-200 bg-gray-50 p-4">
+              <div className="border admin-border admin-canvas p-4">
                 <div className="mb-3">
-                  <p className="text-xs text-gray-900">{l('Caracteristici produs', 'Характеристики товара')}</p>
-                  <p className="text-[10px] text-gray-400 mt-0.5">
+                  <p className="text-xs admin-ink">{l('Caracteristici produs', 'Характеристики товара')}</p>
+                  <p className="text-xs admin-muted mt-0.5">
                     {l('Aceste valori apar în pagina produsului și în filtrele categoriei.', 'Эти значения появятся на странице товара и в фильтрах категории.')}
                   </p>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {categoryAttributes.map((attribute) => (
-                    <label key={attribute.id} className={`text-[10px] uppercase tracking-wider text-gray-400 ${attribute.value_type === 'text' ? 'sm:col-span-2' : ''}`}>
+                    <label key={attribute.id} className={`text-xs   admin-muted ${attribute.value_type === 'text' ? 'sm:col-span-2' : ''}`}>
                       {lang === 'ru' ? attribute.name_ru : attribute.name_ro}
                       {getAttributeUnit(attribute, lang) ? ` (${getAttributeUnit(attribute, lang)})` : ''}
                       {attribute.value_type === 'boolean' ? (
@@ -1781,7 +1785,7 @@ export function AdminProducts() {
                             ...values,
                             [attribute.id]: event.target.value === '' ? '' : event.target.value === 'true',
                           }))}
-                          className="mt-1 w-full h-9 px-3 text-xs border border-gray-200 bg-white"
+                          className="mt-1 w-full h-9 px-3 text-xs border admin-border admin-surface"
                         >
                           <option value="">{l('Nespecificat', 'Не указано')}</option>
                           <option value="true">{l('Da', 'Да')}</option>
@@ -1791,7 +1795,7 @@ export function AdminProducts() {
                         <select
                           value={String(attributeValues[attribute.id] ?? '')}
                           onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.value }))}
-                          className="mt-1 w-full h-9 px-3 text-xs border border-gray-200 bg-white"
+                          className="mt-1 w-full h-9 px-3 text-xs border admin-border admin-surface"
                         >
                           <option value="">{l('Selectați valoarea', 'Выберите значение')}</option>
                           {(attribute.options ?? []).map((option) => (
@@ -1808,7 +1812,7 @@ export function AdminProducts() {
                             }))}
                             rows={4}
                             placeholder="Descriere RO"
-                            className="w-full px-3 py-2 text-xs normal-case tracking-normal border border-gray-200 bg-white resize-y focus:outline-none focus:border-black"
+                            className="w-full px-3 py-2 text-xs normal-case tracking-normal border admin-border admin-surface resize-y focus:outline-none admin-focus-border"
                           />
                           <textarea
                             value={attributeTextValues[attribute.id]?.ru ?? ''}
@@ -1818,7 +1822,7 @@ export function AdminProducts() {
                             }))}
                             rows={4}
                             placeholder="Описание RU"
-                            className="w-full px-3 py-2 text-xs normal-case tracking-normal border border-gray-200 bg-white resize-y focus:outline-none focus:border-black"
+                            className="w-full px-3 py-2 text-xs normal-case tracking-normal border admin-border admin-surface resize-y focus:outline-none admin-focus-border"
                           />
                         </div>
                       ) : (
@@ -1834,7 +1838,7 @@ export function AdminProducts() {
                           }
                           value={String(attributeValues[attribute.id] ?? '')}
                           onChange={(event) => setAttributeValues((values) => ({ ...values, [attribute.id]: event.target.value }))}
-                          className="mt-1 w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black"
+                          className="mt-1 w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border"
                         />
                       )}
                     </label>
@@ -1846,32 +1850,32 @@ export function AdminProducts() {
             {/* ── Price / unit / qty ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.priceMdl}</label>
+                <label className="text-xs   admin-muted mb-1.5 block">{t.products.priceMdl}</label>
                 <input
                   type="number" min="0" step="0.01" value={form.price ?? 0}
                   onChange={e => setForm(f => ({ ...f, price: Number(e.target.value) }))}
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors font-mono"
+                  className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.unit}</label>
+                <label className="text-xs   admin-muted mb-1.5 block">{t.products.unit}</label>
                 <select
                   value={form.unit ?? 'BUC.'}
                   onChange={e => setForm(f => ({ ...f, unit: e.target.value }))}
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+                  className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
                 >
                   {['BUC.', 'set', 'pereche', 'kg', 'pcs'].map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">
+                <label className="text-xs   admin-muted mb-1.5 block">
                   {t.products.stockQty}
                 </label>
                 <input
                   type="number" min="0" step="1" value={form.qty ?? 0}
                   onChange={e => setForm(f => ({ ...f, qty: Number(e.target.value) }))}
-                  className={`w-full h-9 px-3 text-xs border bg-white focus:outline-none focus:border-black transition-colors font-mono ${
-                    Number(form.qty) === 0 ? 'border-red-200 text-red-500' : 'border-gray-200'
+                  className={`w-full h-9 px-3 text-xs border admin-surface focus:outline-none admin-focus-border transition-colors font-mono ${
+                    Number(form.qty) === 0 ? 'border-red-200 text-red-500' : 'admin-border'
                   }`}
                 />
               </div>
@@ -1879,7 +1883,7 @@ export function AdminProducts() {
 
             {/* ── Sale Price (акционная цена) ── */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 flex items-center gap-2">
+              <label className="text-xs   admin-muted mb-1.5 flex items-center gap-2">
                 <Tag className="w-3 h-3" />
                 {l('Preț promoțional (opțional)', 'Акционная цена (необязательно)')}
               </label>
@@ -1890,7 +1894,7 @@ export function AdminProducts() {
                 placeholder={l('Lasă gol dacă nu e promoție', 'Оставьте пустым, если акции нет')}
                 className="w-full h-9 px-3 text-xs border border-red-200 bg-red-50/30 focus:outline-none focus:border-red-500 transition-colors font-mono placeholder:text-gray-400"
               />
-              <p className="text-[10px] text-gray-400 mt-1">
+              <p className="text-xs admin-muted mt-1">
                 {l('Dacă este completat, prețul vechi va fi tăiat și va apărea badge-ul "PROMOȚIE"', 'Если заполнено, старая цена будет зачёркнута и появится бейдж "АКЦИЯ"')}
               </p>
             </div>
@@ -1898,16 +1902,16 @@ export function AdminProducts() {
             {/* ── SKU / Brand ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.sku}</label>
+                <label className="text-xs   admin-muted mb-1.5 block">{t.products.sku}</label>
                 <input
                   type="text" value={form.sku ?? ''}
                   onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
                   placeholder="17-47-121"
-                  className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors font-mono"
+                  className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors font-mono"
                 />
               </div>
               <div>
-                <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.common.brand}</label>
+                <label className="text-xs   admin-muted mb-1.5 block">{t.common.brand}</label>
                 <BrandCombobox
                   value={form.brand ?? ''}
                   onChange={val => setForm(f => ({ ...f, brand: val }))}
@@ -1920,65 +1924,65 @@ export function AdminProducts() {
 
             {/* ── Descriptions ── */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.descRoLabel}</label>
+              <label className="text-xs   admin-muted mb-1.5 block">{t.products.descRoLabel}</label>
               <textarea
                 value={form.description_ro ?? ''}
                 onChange={e => setForm(f => ({ ...f, description_ro: e.target.value }))}
                 rows={3}
                 placeholder={t.products.descRoPlaceholder}
-                className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+                className="w-full px-3 py-2 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors resize-none"
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.descRuLabel}</label>
+              <label className="text-xs   admin-muted mb-1.5 block">{t.products.descRuLabel}</label>
               <textarea
                 value={form.description_ru ?? ''}
                 onChange={e => setForm(f => ({ ...f, description_ru: e.target.value }))}
                 rows={3}
                 placeholder={t.products.descRuPlaceholder}
-                className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+                className="w-full px-3 py-2 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors resize-none"
               />
             </div>
 
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoDescRoLabel}</label>
+              <label className="text-xs   admin-muted mb-1.5 block">{t.products.seoDescRoLabel}</label>
               <textarea
                 value={form.seo_description_ro ?? ''}
                 onChange={e => setForm(f => ({ ...f, seo_description_ro: e.target.value }))}
                 rows={2}
                 placeholder={t.products.seoDescRoPlaceholder}
-                className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+                className="w-full px-3 py-2 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors resize-none"
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoDescRuLabel}</label>
+              <label className="text-xs   admin-muted mb-1.5 block">{t.products.seoDescRuLabel}</label>
               <textarea
                 value={form.seo_description_ru ?? ''}
                 onChange={e => setForm(f => ({ ...f, seo_description_ru: e.target.value }))}
                 rows={2}
                 placeholder={t.products.seoDescRuPlaceholder}
-                className="w-full px-3 py-2 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors resize-none"
+                className="w-full px-3 py-2 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors resize-none"
               />
             </div>
 
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoKeywordsRoLabel}</label>
+              <label className="text-xs   admin-muted mb-1.5 block">{t.products.seoKeywordsRoLabel}</label>
               <input
                 type="text"
                 value={form.seo_keywords_ro ?? ''}
                 onChange={e => setForm(f => ({ ...f, seo_keywords_ro: e.target.value }))}
                 placeholder={t.products.seoKeywordsRoPlaceholder}
-                className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
               />
             </div>
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">{t.products.seoKeywordsRuLabel}</label>
+              <label className="text-xs   admin-muted mb-1.5 block">{t.products.seoKeywordsRuLabel}</label>
               <input
                 type="text"
                 value={form.seo_keywords_ru ?? ''}
                 onChange={e => setForm(f => ({ ...f, seo_keywords_ru: e.target.value }))}
                 placeholder={t.products.seoKeywordsRuPlaceholder}
-                className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors"
+                className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors"
               />
             </div>
 
@@ -1988,13 +1992,13 @@ export function AdminProducts() {
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, active: !f.active }))}
-                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.active ? 'bg-black' : 'bg-gray-200'}`}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.active ? 'admin-solid' : 'admin-muted-surface'}`}
                 >
-                  <span className={`w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${form.active ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <span className={`w-4 h-4 admin-surface rounded-full shadow transition-transform mx-1 ${form.active ? 'translate-x-4' : 'translate-x-0'}`} />
                 </button>
                 <div>
-                  <div className="text-xs text-gray-900 flex items-center gap-1">
-                    {form.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3 text-gray-400" />}
+                  <div className="text-xs admin-ink flex items-center gap-1">
+                    {form.active ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3 admin-muted" />}
                     {form.active ? t.products.activeLabel : t.products.inactiveLabel}
                   </div>
                 </div>
@@ -2004,12 +2008,12 @@ export function AdminProducts() {
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, featured: !f.featured }))}
-                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.featured ? 'bg-black' : 'bg-gray-200'}`}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.featured ? 'admin-solid' : 'admin-muted-surface'}`}
                 >
-                  <span className={`w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${form.featured ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <span className={`w-4 h-4 admin-surface rounded-full shadow transition-transform mx-1 ${form.featured ? 'translate-x-4' : 'translate-x-0'}`} />
                 </button>
-                <div className="text-xs text-gray-900 flex items-center gap-1">
-                  <Star className={`w-3 h-3 ${form.featured ? 'fill-gray-400 text-gray-400' : 'text-gray-400'}`} />
+                <div className="text-xs admin-ink flex items-center gap-1">
+                  <Star className={`w-3 h-3 ${form.featured ? 'fill-gray-400 admin-muted' : 'admin-muted'}`} />
                   {form.featured ? t.products.featuredLabel : t.products.notFeaturedLabel}
                 </div>
               </label>
@@ -2018,11 +2022,11 @@ export function AdminProducts() {
                 <button
                   type="button"
                   onClick={() => setForm(f => ({ ...f, has_warranty: !f.has_warranty }))}
-                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.has_warranty ? 'bg-red-600' : 'bg-gray-200'}`}
+                  className={`w-10 h-6 rounded-full transition-colors flex items-center ${form.has_warranty ? 'admin-solid' : 'admin-muted-surface'}`}
                 >
-                  <span className={`w-4 h-4 bg-white rounded-full shadow transition-transform mx-1 ${form.has_warranty ? 'translate-x-4' : 'translate-x-0'}`} />
+                  <span className={`w-4 h-4 admin-surface rounded-full shadow transition-transform mx-1 ${form.has_warranty ? 'translate-x-4' : 'translate-x-0'}`} />
                 </button>
-                <div className="text-xs text-gray-900">
+                <div className="text-xs admin-ink">
                   {form.has_warranty ? l('Cu garanție', 'С гарантией') : l('Fără garanție', 'Без гарантии')}
                 </div>
               </label>
@@ -2030,12 +2034,12 @@ export function AdminProducts() {
 
             {/* ── YouTube URL ── */}
             <div>
-              <label className="text-[10px] uppercase tracking-widest text-gray-400 mb-1.5 block">URL YouTube</label>
+              <label className="text-xs   admin-muted mb-1.5 block">URL YouTube</label>
               <input
                 type="text" value={form.youtube_url ?? ''}
                 onChange={e => setForm(f => ({ ...f, youtube_url: e.target.value }))}
                 placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full h-9 px-3 text-xs border border-gray-200 bg-white focus:outline-none focus:border-black transition-colors font-mono"
+                className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors font-mono"
               />
             </div>
 
@@ -2045,7 +2049,7 @@ export function AdminProducts() {
         </div>
 
         {/* Panel footer */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-4 border-t border-gray-100 bg-white flex-shrink-0 gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-4 border-t admin-border admin-surface flex-shrink-0 gap-3">
           {editId ? (
             <button
               onClick={handleDelete}
@@ -2060,14 +2064,14 @@ export function AdminProducts() {
           <div className="flex items-center gap-2 w-full sm:w-auto order-1 sm:order-2">
             <button
               onClick={closePanel}
-              className="flex-1 sm:flex-none px-4 py-2 text-xs text-gray-500 border border-gray-200 hover:border-gray-400 hover:text-black transition-colors"
+              className="flex-1 sm:flex-none px-4 py-2 text-xs admin-muted border admin-border hover:border-gray-400 admin-hover-ink transition-colors"
             >
               {t.common.cancel}
             </button>
             <button
               onClick={handleSave}
               disabled={saving || uploadingSlot !== null}
-              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 bg-black text-white text-xs uppercase tracking-wider hover:bg-gray-800 transition-colors disabled:opacity-50"
+              className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 admin-solid admin-on-solid text-xs   admin-hover-solid transition-colors disabled:opacity-50"
             >
               {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
               {saving ? t.common.saving : t.common.save}
@@ -2078,8 +2082,8 @@ export function AdminProducts() {
 
       {/* Toast */}
       {toast && (
-        <div className={`fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[60] flex items-center gap-2 px-4 py-3 text-xs text-white shadow-xl transition-all ${
-          toast.ok ? 'bg-black' : 'bg-red-600'
+        <div className={`fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[60] flex items-center gap-2 px-4 py-3 text-xs admin-on-solid shadow-xl transition-all ${
+          toast.ok ? 'admin-solid' : 'bg-red-600'
         }`}>
           {toast.ok ? <Check className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
           {toast.msg}

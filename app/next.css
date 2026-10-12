@@ -1,5 +1,6 @@
 @import '../src/styles/fonts.css';
 @import 'tailwindcss' source(none);
+@import '../src/styles/brand.css';
 @source '../src/**/*.{js,ts,jsx,tsx}';
 @source './**/*.{js,ts,jsx,tsx}';
 @import 'tw-animate-css';

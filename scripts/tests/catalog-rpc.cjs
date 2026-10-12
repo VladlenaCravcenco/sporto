@@ -27,7 +27,7 @@ const {getRpcCatalog}=compile('app/_lib/catalog-rpc.ts',{
  './catalog-data':{getCatalogNavigation:async()=>[{id:'cardio',name:{ro:'Cardio',ru:'Кардио'},subcategories:[]}]},
  './public-cache':compile('app/_lib/public-cache.ts'),
  './catalog-filters':compile('app/_lib/catalog-filters.ts'),
- './search-query':compile('app/_lib/search-query.ts',{'../../src/lib/searchEngine':compile('src/lib/searchEngine.ts')})
+ './search-query':compile('app/_lib/search-query.ts',{'../../src/lib/searchEngine':compile('src/lib/searchEngine.ts', {'./search-history': compile('src/lib/search-history.ts')})})
 });
 (async()=>{
  const result=await getRpcCatalog({category:'cardio','attr.weight':['num:10'],minPrice:'invalid',page:'2',sort:'price-asc'},1,'price-asc','ru');

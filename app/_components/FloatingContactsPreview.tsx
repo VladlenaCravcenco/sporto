@@ -48,7 +48,7 @@ export function FloatingContactsPreview({
       <button
         type="button"
         onClick={() => setOpen(value => !value)}
-        className={`contact-sticker-attention relative h-12 w-12 rounded-full sm:h-14 sm:w-[310px] sm:rounded-[5px] overflow-hidden flex items-center text-left shadow-[0_12px_32px_rgba(220,38,38,0.28)] transition-colors duration-300 ${open ? 'bg-gray-900 hover:bg-black' : 'bg-red-600 hover:bg-red-700'}`}
+        className={`contact-sticker-attention relative h-12 w-12 rounded-full sm:h-14 sm:w-[310px] sm:rounded-[5px] overflow-hidden flex items-center text-left shadow-[0_12px_32px_rgba(215,25,63,0.22)] transition-colors duration-300 ${open ? 'bg-gray-900 hover:bg-black' : 'bg-brand hover:bg-brand-hover'}`}
         aria-expanded={open}
         aria-label={open
           ? (language === 'ro' ? 'Închideți contactele' : 'Закрыть контакты')

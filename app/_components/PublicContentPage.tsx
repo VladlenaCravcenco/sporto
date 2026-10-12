@@ -1,6 +1,8 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
 import { useMemo } from 'react';
+import dynamic from 'next/dynamic';
 import { Router, Routes, Route, createPath, type To } from 'react-router';
 import { HelmetProvider } from 'react-helmet-async';
 import { LanguageProvider } from '../../src/app/contexts/LanguageContext';
@@ -8,15 +10,15 @@ import { AuthProvider } from '../../src/app/contexts/AuthContext';
 import { CartProvider } from '../../src/app/contexts/CartContext';
 import { CategoriesProvider } from '../../src/app/contexts/CategoriesContext';
 import { Toaster } from '../../src/app/components/ui/sonner';
-import { About } from '../../src/app/pages/About';
-import { Contacts } from '../../src/app/pages/Contacts';
-import { TurnkeySolutions } from '../../src/app/pages/TurnkeySolutions';
-import { MaintenanceService } from '../../src/app/pages/MaintenanceService';
-import { TermsOfCooperation } from '../../src/app/pages/TermsOfCooperation';
-import { DeliveryTerms } from '../../src/app/pages/DeliveryTerms';
-import { PrivacyPolicy } from '../../src/app/pages/PrivacyPolicy';
-import { BrandPage } from '../../src/app/pages/BrandPage';
-import { OrderRequest } from '../../src/app/pages/OrderRequest';
+const About = dynamic(() => import('../../src/app/pages/About').then(module => module.About));
+const Contacts = dynamic(() => import('../../src/app/pages/Contacts').then(module => module.Contacts));
+const TurnkeySolutions = dynamic(() => import('../../src/app/pages/TurnkeySolutions').then(module => module.TurnkeySolutions));
+const MaintenanceService = dynamic(() => import('../../src/app/pages/MaintenanceService').then(module => module.MaintenanceService));
+const TermsOfCooperation = dynamic(() => import('../../src/app/pages/TermsOfCooperation').then(module => module.TermsOfCooperation));
+const DeliveryTerms = dynamic(() => import('../../src/app/pages/DeliveryTerms').then(module => module.DeliveryTerms));
+const PrivacyPolicy = dynamic(() => import('../../src/app/pages/PrivacyPolicy').then(module => module.PrivacyPolicy));
+const BrandPage = dynamic(() => import('../../src/app/pages/BrandPage').then(module => module.BrandPage));
+const OrderRequest = dynamic(() => import('../../src/app/pages/OrderRequest').then(module => module.OrderRequest));
 import type { Language } from './HeaderPreview';
 
 // Reuse page content only. The Next locale layout owns the site's header/footer.
@@ -25,6 +27,7 @@ import type { Language } from './HeaderPreview';
 export function PublicContentPage({ language, pathname, search }: {
   language: Language; pathname: string; search: string;
 }) {
+  const router = useRouter();
   const navigator = useMemo(() => {
     const href = (to: To) => {
       const value = typeof to === 'string' ? to : createPath(to);
@@ -34,10 +37,10 @@ export function PublicContentPage({ language, pathname, search }: {
     return {
       createHref: href,
       go: (delta: number) => window.history.go(delta),
-      push: (to: To) => window.location.assign(href(to)),
-      replace: (to: To) => window.location.replace(href(to)),
+      push: (to: To) => router.push(href(to)),
+      replace: (to: To) => router.replace(href(to)),
     };
-  }, [language]);
+  }, [language, router]);
 
   return (
     <HelmetProvider>

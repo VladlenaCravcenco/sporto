@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import { cookies } from 'next/headers';
 import { PageBreadcrumbs } from '../_components/PageBreadcrumbs';
 import { notFound } from 'next/navigation';
 import type { ReactNode } from 'react';
@@ -26,6 +27,8 @@ export default async function PublicLocaleLayout({
 }) {
   const { lang } = await params;
   if (!languages.has(lang as Language)) notFound();
+  const consentValue = (await cookies()).get('sporto_cookie_consent')?.value;
+  const initialConsent = consentValue === 'accepted' || consentValue === 'declined' ? consentValue : null;
   const [footerData, popupData, catalogNavigation] = await Promise.all([
     getFooterData(),
     PROMO_POPUP_ENABLED ? getPopupData() : Promise.resolve(null),
@@ -38,7 +41,7 @@ export default async function PublicLocaleLayout({
       <main><Suspense fallback={null}><PageBreadcrumbs categories={catalogNavigation} /></Suspense>{children}</main>
       <FooterPreview language={lang as Language} contacts={footerData} />
       <FloatingContactsPreview language={lang as Language} contacts={footerData} />
-      <CookieConsent language={lang as Language} />
+      <CookieConsent language={lang as Language} initialConsent={initialConsent} />
       {PROMO_POPUP_ENABLED && popupData && (
         <PromoPopupPreview language={lang as Language} config={popupData} />
       )}

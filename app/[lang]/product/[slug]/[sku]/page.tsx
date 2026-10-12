@@ -1,11 +1,13 @@
+import { productPath, productSlug } from '../../../../_lib/product-url';
+import { ProductGallery } from '../../../../_components/ProductGallery';
 import { FeaturedProductsSlider } from '../../../../_components/FeaturedProductsSlider';
 import { SiteBreadcrumbs } from '../../../../../src/app/components/SiteBreadcrumbs';
 import { ProductPurchase } from '../../../../_components/ProductPurchase';
 import { getCatalogNavigation } from '../../../../_lib/catalog-data';
 import type { Metadata } from 'next';
 import Link from 'next/link';
-import { notFound, redirect } from 'next/navigation';
-import { ArrowLeft, ArrowUpRight, Package, ShieldCheck, Tag } from 'lucide-react';
+import { notFound, permanentRedirect } from 'next/navigation';
+import { ArrowLeft, ArrowUpRight, ShieldCheck, Tag } from 'lucide-react';
 import { getProductDetail, getProductYoutubeId, getRelatedProducts, type ProductDetailData } from '../../../../_lib/product-data';
 import type { Language } from '../../../../_components/HeaderPreview';
 
@@ -14,15 +16,6 @@ const supportedLanguages = new Set<Language>(['ro', 'ru']);
 
 interface ProductPageProps {
   params: Promise<{ lang: string; slug: string; sku: string }>;
-}
-
-function slugify(value: string) {
-  return value.normalize('NFKD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produs';
-}
-
-function productPath(product: ProductDetailData['product'], language: Language) {
-  const name = language === 'ru' ? product.name_ru || product.name_ro : product.name_ro;
-  return `/${language}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
 }
 
 function formatPrice(value: number, language: Language) {
@@ -75,7 +68,7 @@ function ProductJsonLd({ data, language, canonical }: { data: ProductDetailData;
       '@context': 'https://schema.org', '@type': 'Product', name, description, sku: product.sku || product.id,
       url: canonical, image: getImages(data), brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
       offers: { '@type': 'Offer', url: canonical, priceCurrency: 'MDL', price: onSale ? product.sale_price : product.price, availability: product.qty && product.qty > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder' },
-    }) }} />
+    }).replace(/</g, '\\u003c') }} />
   );
 }
 
@@ -88,8 +81,8 @@ export default async function ProductPage({ params }: ProductPageProps) {
 
   const product = data.product;
   const canonical = `${siteUrl}${productPath(product, language)}`;
-  if (decodeURIComponent(slug) !== slugify(localizedText(language, product.name_ro, product.name_ru)) || sku !== product.id) {
-    redirect(productPath(product, language));
+  if (slug !== productSlug(product, language) || sku !== product.id) {
+    permanentRedirect(productPath(product, language));
   }
   const name = localizedText(language, product.name_ro, product.name_ru);
   const description = localizedText(language, product.description_ro, product.description_ru);
@@ -123,12 +116,7 @@ export default async function ProductPage({ params }: ProductPageProps) {
         <SiteBreadcrumbs items={[...breadcrumbs, { label: name, href: productPath(product, language) }]} language={language} siteUrl={siteUrl} className="mb-6" />
 
         <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
-          <div>
-            <div className="flex aspect-square items-center justify-center overflow-hidden bg-white">
-              {images[0] ? <img src={images[0]} alt={name} className="h-full w-full object-contain" /> : <Package className="h-12 w-12 text-gray-300" aria-hidden="true" />}
-            </div>
-            {images.length > 1 && <div className="mt-3 grid grid-cols-4 gap-3">{images.slice(1, 5).map(image => <img key={image} src={image} alt="" className="aspect-square w-full object-contain bg-white" />)}</div>}
-          </div>
+          <ProductGallery key={product.id} images={images} name={name} language={language} />
 
           <div className="flex flex-col gap-6">
             {data.brand?.slug && (

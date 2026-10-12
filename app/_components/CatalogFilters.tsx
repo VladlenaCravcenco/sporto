@@ -70,10 +70,10 @@ export function CatalogFilters({ facets, query, language }: { facets: CatalogFac
               onValueChange={([nextMin, nextMax]) => { setMin(String(nextMin)); setMax(String(nextMax)); }}
               className="relative mt-5 flex h-6 w-full touch-none select-none items-center">
               <Slider.Track className="relative h-1.5 grow rounded-full bg-gray-200">
-                <Slider.Range className="absolute h-full rounded-full bg-red-600" />
+                <Slider.Range className="absolute h-full rounded-full bg-gray-900" />
               </Slider.Track>
-              <Slider.Thumb aria-label={ro ? 'Preț minim' : 'Минимальная цена'} className="block h-5 w-5 rounded-full border-2 border-white bg-red-600 shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600" />
-              <Slider.Thumb aria-label={ro ? 'Preț maxim' : 'Максимальная цена'} className="block h-5 w-5 rounded-full border-2 border-white bg-red-600 shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-red-600" />
+              <Slider.Thumb aria-label={ro ? 'Preț minim' : 'Минимальная цена'} className="block h-5 w-5 rounded-full border-2 border-white bg-gray-900 shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900" />
+              <Slider.Thumb aria-label={ro ? 'Preț maxim' : 'Максимальная цена'} className="block h-5 w-5 rounded-full border-2 border-white bg-gray-900 shadow focus-visible:outline focus-visible:outline-2 focus-visible:outline-gray-900" />
             </Slider.Root>
           </details>
           {facets.groups.map(group => <Options key={group.key} group={group} query={query} language={language} />)}

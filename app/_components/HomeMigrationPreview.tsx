@@ -1,5 +1,7 @@
 'use client';
 
+import { CatalogLink } from './CatalogLink';
+import { StoreImage } from '../../src/app/components/StoreImage';
 import { HomeCategories } from './HomeCategories';
 import type { CatalogNavigationCategory } from '../_lib/catalog-data';
 import { ServicesBentoView } from '../../src/app/components/ServicesBentoView';
@@ -27,6 +29,7 @@ const interval = 5500;
 function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Language }) {
   const localePath = (path = '') => `/${language}${path}`;
   const [active, setActive] = useState(0);
+  const [visited, setVisited] = useState(() => new Set([0]));
   const [animating, setAnimating] = useState(false);
   const timer = useRef<ReturnType<typeof setInterval> | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -34,7 +37,9 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
   const goTo = useCallback((index: number) => {
     if (animating || index === active || banners.length < 2) return;
     setAnimating(true);
-    setActive((index + banners.length) % banners.length);
+    const target = (index + banners.length) % banners.length;
+    setVisited(previous => new Set([...previous, target]));
+    setActive(target);
     window.setTimeout(() => setAnimating(false), 600);
   }, [active, animating, banners.length]);
 
@@ -70,12 +75,12 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
           {language === 'ro' ? 'Echipamente profesionale pentru afacerea ta.' : 'Профессиональное оборудование для вашего бизнеса.'}
         </p>
         <div className="flex flex-wrap gap-3">
-          <a href={localePath('/order-request')} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
+          <CatalogLink href={localePath('/order-request')} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
             {language === 'ro' ? 'Solicită Ofertă' : 'Запросить предложение'}<ArrowRight className="w-4 h-4" />
-          </a>
-          <a href={localePath('/catalog')} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
+          </CatalogLink>
+          <CatalogLink href={localePath('/catalog')} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
             {language === 'ro' ? 'Vezi Catalogul' : 'Каталог'}<ArrowRight className="w-4 h-4" />
-          </a>
+          </CatalogLink>
         </div>
       </div>
     );
@@ -98,13 +103,14 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
     >
       {banners.map((item, index) => (
         <div key={item.id} className={`absolute inset-0 transition-opacity duration-700 ${index === active ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}>
-          {item.image_url && (
-            <img
+          {item.image_url && visited.has(index) && (
+            <StoreImage
+              variant="hero"
               src={item.image_url}
               alt={language === 'ro' ? item.title_ro || '' : item.title_ru || item.title_ro || ''}
               className="absolute inset-0 w-full h-full object-cover"
               style={{ opacity: 0.35 }}
-              loading={index === 0 ? 'eager' : 'lazy'}
+              loading="eager"
               fetchPriority={index === 0 ? 'high' : 'low'}
             />
           )}
@@ -125,12 +131,12 @@ function HeroSlider({ banners, language }: { banners: BannerRow[]; language: Lan
           <h1 key={`title-${active}`} className="text-3xl md:text-4xl lg:text-[3.25rem] text-white mb-6 leading-tight max-w-xl animate-[fadeSlideUp_0.6s_ease_forwards]">{title}</h1>
           {subtitle && <p key={`subtitle-${active}`} className="text-sm text-gray-400 mb-10 max-w-sm leading-relaxed animate-[fadeSlideUp_0.7s_ease_forwards]">{subtitle}</p>}
           <div className="flex flex-wrap gap-3">
-            <a href={ctaHref} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
+            <CatalogLink href={ctaHref} className="inline-flex items-center gap-2 bg-white text-black px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-100 transition-colors">
               {ctaText}<ArrowRight className="w-4 h-4" />
-            </a>
-            <a href={localePath('/catalog')} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
+            </CatalogLink>
+            <CatalogLink href={localePath('/catalog')} className="inline-flex items-center gap-2 border border-white/30 text-white/70 px-8 py-3 text-sm uppercase tracking-wider hover:border-white hover:text-white transition-colors">
               {language === 'ro' ? 'Vezi Catalogul' : 'Каталог'}<ArrowRight className="w-4 h-4" />
-            </a>
+            </CatalogLink>
           </div>
         </div>
 
@@ -162,7 +168,7 @@ export function HomeMigrationPreview({ language, banners, brands, featuredProduc
               <HeroSlider banners={banners} language={language} />
             </div>
             <div className="col-span-12 lg:col-span-4 grid grid-cols-2 lg:grid-cols-1 gap-2 md:gap-3">
-              <a href={`/${language}/turnkey-solutions`} className="bg-gray-950 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[180px] lg:min-h-0 lg:flex-1 group hover:bg-black transition-colors cursor-pointer">
+              <CatalogLink href={`/${language}/turnkey-solutions`} className="bg-gray-950 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[180px] lg:min-h-0 lg:flex-1 group hover:bg-black transition-colors cursor-pointer">
                 <div className="flex items-start justify-end mb-6">
                   <ArrowUpRight className="w-5 h-5 text-gray-500 group-hover:text-white transition-colors" />
                 </div>
@@ -170,11 +176,11 @@ export function HomeMigrationPreview({ language, banners, brands, featuredProduc
                   <div className="text-2xl sm:text-3xl lg:text-4xl text-white uppercase leading-tight mb-4">{language === 'ro' ? 'Soluții la cheie' : 'Решения под ключ'}</div>
                   <p className="text-xs sm:text-sm text-gray-400 leading-relaxed max-w-sm mb-5">{language === 'ro' ? 'De la proiectare și selecția echipamentelor până la livrare și instalare.' : 'От проектирования и подбора оборудования до доставки и установки.'}</p>
                 </div>
-              </a>
-              <a href={`/${language}/catalog?sale=true`} className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[120px] lg:min-h-0 lg:flex-1 group hover:from-red-700 hover:to-red-800 transition-all cursor-pointer">
+              </CatalogLink>
+              <CatalogLink href={`/${language}/catalog?sale=true`} className="bg-gradient-to-br from-red-600 to-red-700 text-white p-4 sm:p-6 md:p-8 flex flex-col justify-between min-h-[120px] lg:min-h-0 lg:flex-1 group hover:from-red-700 hover:to-red-800 transition-all cursor-pointer">
                 <div className="flex items-start justify-end mb-3"><Tag className="w-4 h-4 text-red-300 group-hover:text-white transition-colors" /></div>
                 <div><div className="text-5xl sm:text-6xl md:text-7xl text-white tabular-nums leading-none">{promoCount}</div><div className="text-[10px] sm:text-xs text-red-200 mt-1 uppercase tracking-widest">{language === 'ro' ? 'Promoții cu reducere' : 'Товаров со скидкой'}</div></div>
-              </a>
+              </CatalogLink>
             </div>
           </div>
         </div>

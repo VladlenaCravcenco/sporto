@@ -1,26 +1,12 @@
 'use client';
 
+import { CatalogLink } from './CatalogLink';
+import { productPath } from '../_lib/product-url';
 import { ProductCardView } from '../../src/app/components/ProductCardView';
 import { useCallback, useEffect, useRef } from 'react';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import type { FeaturedProduct } from '../_lib/home-data';
 import type { Language } from './HeaderPreview';
-
-function slugify(value: string) {
-  return value
-    .normalize('NFKD')
-    .replace(/[\u0300-\u036f]/g, '')
-    .toLowerCase()
-    .replace(/&/g, ' si ')
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .replace(/-{2,}/g, '') || 'produs';
-}
-
-function productPath(product: FeaturedProduct, language: Language) {
-  const name = language === 'ru' ? product.name_ru || product.name_ro : product.name_ro;
-  return `/${language}/product/${encodeURIComponent(slugify(name))}/${encodeURIComponent(product.id)}`;
-}
 
 export function FeaturedProductsSlider({ products: suppliedProducts, language, title, compact = false }: { products?: FeaturedProduct[] | null; language: Language; title?: string; compact?: boolean }) {
   const products = Array.isArray(suppliedProducts) ? suppliedProducts : [];
@@ -79,7 +65,7 @@ export function FeaturedProductsSlider({ products: suppliedProducts, language, t
         >
           {products.map(product => (
             <div key={product.id} data-product-card className="flex-none w-[calc((100%_-_12px)_/_2)] sm:w-[300px] lg:w-[calc((100%_-_36px)_/_4)] snap-start">
-              <ProductCardView product={product} language={language} href={productPath(product, language)} />
+              <ProductCardView linkComponent={CatalogLink} product={product} language={language} href={productPath(product, language)} />
             </div>
           ))}
         </div>
