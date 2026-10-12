@@ -356,13 +356,13 @@ export function AdminImport() {
 
   // ─────────────────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-white">
+    <div className="admin-section">
 
       {/* Header */}
-      <div className="bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <h1 className="text-2xl text-white">{L('Import produse din Excel', 'Импорт товаров из Excel')}</h1>
-          <p className="text-gray-500 text-sm mt-1">
+      <div className="admin-section-heading">
+        <div className="w-full">
+          <h1 className="admin-ink">{L('Import produse din Excel', 'Импорт товаров из Excel')}</h1>
+          <p className="admin-muted text-sm mt-1">
             {L(
               'Încarcă fișierul Excel — rândurile-separatoare și prețurile zero sunt ignorate automat',
               'Загрузи Excel-файл — строки-разделители и нулевые цены будут автоматически проигнорированы',
@@ -371,7 +371,7 @@ export function AdminImport() {
         </div>
       </div>
 
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="w-full">
 
         {/* ── UPLOAD ── */}
         {step === 'upload' && (
@@ -380,11 +380,13 @@ export function AdminImport() {
               onDrop={handleDrop}
               onDragOver={e => e.preventDefault()}
               onClick={() => fileRef.current?.click()}
-              className="border-2 border-dashed border-gray-200 hover:border-black transition-colors cursor-pointer p-16 text-center"
+              className="admin-import-drop transition-colors cursor-pointer"
+              role="button" tabIndex={0}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fileRef.current?.click(); } }}
             >
-              <Upload className="w-10 h-10 text-gray-300 mx-auto mb-4" />
-              <p className="text-gray-700 mb-1">{L('Trage fișierul sau apasă pentru a selecta', 'Перетащи файл или нажми для выбора')}</p>
-              <p className="text-sm text-gray-400">{L('Suportat: .xlsx, .xls', 'Поддерживается: .xlsx, .xls')}</p>
+              <Upload className="w-10 h-10 admin-muted mx-auto mb-4" />
+              <p className="admin-ink mb-1">{L('Trage fișierul sau apasă pentru a selecta', 'Перетащи файл или нажми для выбора')}</p>
+              <p className="text-sm admin-muted">{L('Suportat: .xlsx, .xls', 'Поддерживается: .xlsx, .xls')}</p>
               <input
                 ref={fileRef}
                 type="file"
@@ -401,11 +403,11 @@ export function AdminImport() {
               </div>
             )}
 
-            <div className="mt-6 border border-gray-100 bg-gray-50 p-5">
-              <p className="text-xs text-gray-500 uppercase tracking-wider mb-3 flex items-center gap-2">
+            <div className="mt-6 border admin-border admin-canvas p-5">
+              <p className="text-xs admin-muted   mb-3 flex items-center gap-2">
                 <Info className="w-3.5 h-3.5" /> {L('Ce se întâmplă automat', 'Что происходит автоматически')}
               </p>
-              <ul className="text-sm text-gray-600 space-y-1.5 list-disc list-inside">
+              <ul className="text-sm admin-muted space-y-1.5 list-disc list-inside">
                 <li>{L('Linii-separatoare (Plase sportive, Volei, - TRENAJOARE…) — ignorate', 'Строки-разделители (Plase sportive, Volei, - TRENAJOARE…) — игнорируются')}</li>
                 <li>{L('Linii cu preț = 0 — ignorate', 'Строки с ценой = 0 — игнорируются')}</li>
                 <li>{L('Categoria este determinată după numele produsului și contextul secțiunii', 'Категория определяется по названию товара и контексту секции')}</li>
@@ -422,21 +424,21 @@ export function AdminImport() {
             {/* Summary */}
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
-                <div className="border border-gray-200 px-4 py-2 text-center min-w-[72px]">
-                  <div className="text-xl text-gray-900">{rows.length}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">{L('Produse', 'Товары')}</div>
+                <div className="border admin-border px-4 py-2 text-center min-w-[72px]">
+                  <div className="text-xl admin-ink">{rows.length}</div>
+                  <div className="text-xs admin-muted  ">{L('Produse', 'Товары')}</div>
                 </div>
                 <div className="border border-green-200 bg-green-50 px-4 py-2 text-center min-w-[72px]">
                   <div className="text-xl text-green-700">{readyCount}</div>
-                  <div className="text-[10px] text-gray-400 uppercase tracking-wider">{L('Gata', 'Готово')}</div>
+                  <div className="text-xs admin-muted  ">{L('Gata', 'Готово')}</div>
                 </div>
                 {noCatCount > 0 && (
                   <div className="border border-amber-200 bg-amber-50 px-4 py-2 text-center min-w-[72px]">
                     <div className="text-xl text-amber-600">{noCatCount}</div>
-                    <div className="text-[10px] text-gray-400 uppercase tracking-wider">{L('Fără cat.', 'Без кат.')}</div>
+                    <div className="text-xs admin-muted  ">{L('Fără cat.', 'Без кат.')}</div>
                   </div>
                 )}
-                <span className="text-xs text-gray-400 hidden sm:block">{fileName}</span>
+                <span className="text-xs admin-muted hidden sm:block">{fileName}</span>
               </div>
 
               <div className="flex gap-2">
@@ -444,7 +446,7 @@ export function AdminImport() {
                   <button
                     onClick={() => setFilterNoCat(v => !v)}
                     className={`flex items-center gap-1.5 text-xs border px-3 py-2 transition-colors ${
-                      filterNoCat ? 'bg-amber-500 text-white border-amber-500' : 'border-gray-200 text-gray-500 hover:border-black'
+                      filterNoCat ? 'bg-amber-500 admin-on-solid border-amber-500' : 'admin-border admin-muted admin-hover-border'
                     }`}
                   >
                     <Tag className="w-3 h-3" />
@@ -453,14 +455,14 @@ export function AdminImport() {
                 )}
                 <button
                   onClick={downloadCsv}
-                  className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-black px-3 py-2 transition-colors"
+                  className="flex items-center gap-1.5 text-xs border admin-border admin-hover-border px-3 py-2 transition-colors"
                 >
                   <Download className="w-3.5 h-3.5" />
                   CSV
                 </button>
                 <button
                   onClick={() => { setStep('upload'); setRows([]); }}
-                  className="flex items-center gap-1.5 text-xs border border-gray-200 hover:border-black px-3 py-2 transition-colors"
+                  className="flex items-center gap-1.5 text-xs border admin-border admin-hover-border px-3 py-2 transition-colors"
                 >
                   <X className="w-3.5 h-3.5" />
                   {L('Alt fișier', 'Другой файл')}
@@ -469,38 +471,38 @@ export function AdminImport() {
             </div>
 
             {/* Table */}
-            <div className="border border-gray-200 overflow-hidden mb-6">
+            <div className="border admin-border overflow-hidden mb-6">
               <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
                 <table className="w-full text-xs">
-                  <thead className="bg-black text-white sticky top-0 z-10">
+                  <thead className="admin-solid admin-on-solid sticky top-0 z-10">
                     <tr>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider">Cod</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider min-w-[280px]">{L('Denumirea', 'Наименование')}</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider">SKU</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider">Brand</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider min-w-[160px]">{L('Categorie', 'Категория')}</th>
-                      <th className="px-3 py-2.5 text-right font-normal tracking-wider">{L('Preț', 'Цена')}</th>
-                      <th className="px-3 py-2.5 text-right font-normal tracking-wider">{L('Cant.', 'Кол-во')}</th>
-                      <th className="px-3 py-2.5 text-left font-normal tracking-wider">{L('Unit.', 'Ед.')}</th>
+                      <th className="px-3 py-2.5 text-left font-normal ">Cod</th>
+                      <th className="px-3 py-2.5 text-left font-normal  min-w-[280px]">{L('Denumirea', 'Наименование')}</th>
+                      <th className="px-3 py-2.5 text-left font-normal ">SKU</th>
+                      <th className="px-3 py-2.5 text-left font-normal ">Brand</th>
+                      <th className="px-3 py-2.5 text-left font-normal  min-w-[160px]">{L('Categorie', 'Категория')}</th>
+                      <th className="px-3 py-2.5 text-right font-normal ">{L('Preț', 'Цена')}</th>
+                      <th className="px-3 py-2.5 text-right font-normal ">{L('Cant.', 'Кол-во')}</th>
+                      <th className="px-3 py-2.5 text-left font-normal ">{L('Unit.', 'Ед.')}</th>
                     </tr>
                   </thead>
                   <tbody>
                     {displayRows.map(row => (
                       <tr
                         key={row.idx}
-                        className={`border-t border-gray-100 ${row.category ? 'hover:bg-gray-50/60' : 'bg-amber-50/40'}`}
+                        className={`border-t admin-border ${row.category ? 'hover:bg-gray-50/60' : 'bg-amber-50/40'}`}
                       >
-                        <td className="px-3 py-1.5 font-mono text-gray-400">{row.id}</td>
-                        <td className="px-3 py-1.5 text-gray-800">{row.name_ro}</td>
-                        <td className="px-3 py-1.5 font-mono text-gray-400 text-[11px]">{row.sku}</td>
-                        <td className="px-3 py-1.5 text-gray-500">{row.brand}</td>
+                        <td className="px-3 py-1.5 font-mono admin-muted">{row.id}</td>
+                        <td className="px-3 py-1.5 admin-ink">{row.name_ro}</td>
+                        <td className="px-3 py-1.5 font-mono admin-muted text-[11px]">{row.sku}</td>
+                        <td className="px-3 py-1.5 admin-muted">{row.brand}</td>
                         <td className="px-3 py-1.5">
                           <select
                             value={row.category}
                             onChange={e => setRowCategory(row.idx, e.target.value)}
                             className={`text-xs px-1.5 py-0.5 outline-none border rounded-none w-full max-w-[155px] ${
                               row.category
-                                ? 'border-gray-200 bg-white text-gray-700'
+                                ? 'admin-border admin-surface admin-ink'
                                 : 'border-amber-300 bg-amber-50 text-amber-700'
                             }`}
                           >
@@ -510,11 +512,11 @@ export function AdminImport() {
                             ))}
                           </select>
                         </td>
-                        <td className="px-3 py-1.5 text-right font-mono text-gray-700">
+                        <td className="px-3 py-1.5 text-right font-mono admin-ink">
                           {row.price.toLocaleString('ro-MD')}
                         </td>
-                        <td className="px-3 py-1.5 text-right font-mono text-gray-400">{row.qty.toLocaleString('ro-MD')}</td>
-                        <td className="px-3 py-1.5 text-gray-400">{row.unit}</td>
+                        <td className="px-3 py-1.5 text-right font-mono admin-muted">{row.qty.toLocaleString('ro-MD')}</td>
+                        <td className="px-3 py-1.5 admin-muted">{row.unit}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -547,7 +549,7 @@ export function AdminImport() {
               <button
                 onClick={handleImport}
                 disabled={importing || readyCount === 0}
-                className="flex items-center gap-2 bg-black text-white px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-2 admin-solid admin-on-solid px-8 py-3 text-sm   admin-hover-solid disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
               >
                 {importing && <Loader2 className="w-4 h-4 animate-spin" />}
                 {importing
@@ -555,7 +557,7 @@ export function AdminImport() {
                   : L(`Importă ${readyCount} produse în Supabase`, `Импортировать ${readyCount} товаров в Supabase`)}
               </button>
               {noCatCount > 0 && (
-                <p className="self-center text-xs text-gray-400">
+                <p className="self-center text-xs admin-muted">
                   {L(
                     `${noCatCount} produs${noCatCount === 1 ? '' : 'e'} fără categorie — vor fi ignorate`,
                     `${noCatCount} товар${noCatCount === 1 ? '' : 'ов'} без категории — будут проигнорированы`,
@@ -569,11 +571,11 @@ export function AdminImport() {
         {/* ── DONE ── */}
         {step === 'done' && importResult && (
           <div className="max-w-lg mx-auto text-center py-16">
-            <div className="w-16 h-16 bg-black flex items-center justify-center mx-auto mb-6">
-              <CheckCircle className="w-8 h-8 text-white" />
+            <div className="w-16 h-16 admin-solid flex items-center justify-center mx-auto mb-6">
+              <CheckCircle className="w-8 h-8 admin-on-solid" />
             </div>
-            <h2 className="text-2xl text-gray-900 mb-2">{L('Gata!', 'Готово!')}</h2>
-            <p className="text-gray-500 mb-8">
+            <h2 className="text-2xl admin-ink mb-2">{L('Gata!', 'Готово!')}</h2>
+            <p className="admin-muted mb-8">
               {L(
                 `${importResult.ok} produse au fost încărcate în Supabase. Catalogul a fost actualizat.`,
                 `${importResult.ok} товаров загружено в Supabase. Каталог обновлен.`,
@@ -582,13 +584,13 @@ export function AdminImport() {
             <div className="flex gap-3 justify-center">
               <a
                 href="/catalog"
-                className="bg-black text-white px-8 py-3 text-sm uppercase tracking-wider hover:bg-gray-800 transition-colors"
+                className="admin-solid admin-on-solid px-8 py-3 text-sm   admin-hover-solid transition-colors"
               >
                 {L('Deschide catalogul', 'Открыть каталог')}
               </a>
               <button
                 onClick={() => { setStep('upload'); setRows([]); setImportResult(null); setFileName(''); }}
-                className="border border-gray-200 hover:border-black px-6 py-3 text-sm transition-colors"
+                className="border admin-border admin-hover-border px-6 py-3 text-sm transition-colors"
               >
                 {L('Alt fișier', 'Другой файл')}
               </button>

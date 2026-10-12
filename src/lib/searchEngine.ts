@@ -352,25 +352,7 @@ export const POPULAR_QUERIES: Record<'ro' | 'ru', string[]> = {
 };
 
 // ─── История поиска (localStorage) ────────────────────────────────────────────
-const HISTORY_KEY = 'sporto_search_history';
-const MAX_HISTORY = 7;
-
-export function getSearchHistory(): string[] {
-  try { return JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]'); }
-  catch { return []; }
-}
-export function addToHistory(query: string): void {
-  if (!query.trim() || query.trim().length < 2) return;
-  const h = getSearchHistory().filter(q => q.toLowerCase() !== query.toLowerCase());
-  h.unshift(query.trim());
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(h.slice(0, MAX_HISTORY)));
-}
-export function removeFromHistory(query: string): void {
-  localStorage.setItem(HISTORY_KEY, JSON.stringify(getSearchHistory().filter(q => q !== query)));
-}
-export function clearHistory(): void {
-  localStorage.removeItem(HISTORY_KEY);
-}
+export { getSearchHistory, addToHistory, removeFromHistory, clearHistory } from './search-history';
 
 // ─── Парсинг цены из строки поиска ────────────────────────────────────────────
 export interface PriceRange { min?: number; max?: number }
@@ -455,6 +437,25 @@ export interface ScoredProduct {
   matchType: MatchType;
 }
 
+// Products in a loaded search snapshot are immutable. WeakMap releases prepared
+// strings when that snapshot is replaced; it does not accumulate by query.
+const preparedSearchText = new WeakMap<Product, {
+  ro: string; ru: string; descRo: string; descRu: string;
+  cat: string; sub: string; brand: string; sku: string; cod: string;
+}>();
+function prepareSearchText(product: Product) {
+  const cached = preparedSearchText.get(product);
+  if (cached) return cached;
+  const value = {
+    ro: norm(product.name.ro), ru: norm(product.name.ru),
+    descRo: norm(product.description.ro), descRu: norm(product.description.ru),
+    cat: norm(product.category), sub: norm(product.subcategory),
+    brand: norm(product.brand || ''), sku: norm(product.sku || ''), cod: norm(String(product.cod || '')),
+  };
+  preparedSearchText.set(product, value);
+  return value;
+}
+
 // ─── Основная функция скоринга ─────────────────────────────────────────────────
 export function scoreProduct(
   product: Product,
@@ -470,16 +471,12 @@ export function scoreProduct(
   // Нет токенов — только фильтр цены, все проходят
   if (rawTokens.length === 0) return { product, score: 1, matchType: 'exact' };
 
-  const otherLang: Language = lang === 'ro' ? 'ru' : 'ro';
-  const name      = norm(product.name[lang]);
-  const nameOther = norm(product.name[otherLang]);
-  const desc      = norm(product.description[lang]);
-  const descOther = norm(product.description[otherLang]);
-  const cat       = norm(product.category);
-  const sub       = norm(product.subcategory);
-  const brand     = norm(product.brand || '');
-  const sku       = norm(product.sku || '');
-  const cod       = norm(String(product.cod || ''));
+  const prepared = prepareSearchText(product);
+  const name = lang === 'ro' ? prepared.ro : prepared.ru;
+  const nameOther = lang === 'ro' ? prepared.ru : prepared.ro;
+  const desc = lang === 'ro' ? prepared.descRo : prepared.descRu;
+  const descOther = lang === 'ro' ? prepared.descRu : prepared.descRo;
+  const { cat, sub, brand, sku, cod } = prepared;
   const combined  = `${name} ${nameOther} ${desc} ${descOther} ${cat} ${sub} ${brand} ${sku} ${cod}`;
 
   let score = 0;

@@ -45,29 +45,29 @@ function LogoUpload({ value, onChange }: { value: string | null; onChange: (url:
 
   return (
     <div className="space-y-2">
-      <label className="text-[10px] uppercase tracking-widest text-gray-400">Logo PNG/JPG/SVG</label>
+      <label className="text-xs   admin-muted">Logo PNG/JPG/SVG</label>
       <div
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-200 hover:border-black cursor-pointer flex items-center justify-center bg-gray-50 h-20"
+        className="border-2 border-dashed admin-border admin-hover-border cursor-pointer flex items-center justify-center admin-canvas h-20"
       >
-        {uploading ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+        {uploading ? <Loader2 className="w-4 h-4 admin-muted animate-spin" />
           : value ? <img src={value} alt="logo" className="max-h-14 max-w-[140px] object-contain" />
-          : <div className="flex flex-col items-center gap-1 text-gray-400">
+          : <div className="flex flex-col items-center gap-1 admin-muted">
               <ImageIcon className="w-5 h-5" />
-              <span className="text-[10px] uppercase tracking-wider">Загрузить лого</span>
+              <span className="text-xs  ">Загрузить лого</span>
             </div>
         }
         <input ref={inputRef} type="file" accept="image/*" className="hidden"
           onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
       </div>
-      {err && <p className="text-[10px] text-red-500">{err}</p>}
+      {err && <p className="text-xs text-red-500">{err}</p>}
       {value && (
         <div className="flex gap-2">
           <input type="text" value={value} onChange={e => onChange(e.target.value)}
             placeholder="URL logo"
-            className="flex-1 h-8 text-[10px] px-2 border border-gray-200 focus:outline-none focus:border-black bg-white" />
+            className="flex-1 h-8 text-xs px-2 border admin-border focus:outline-none admin-focus-border admin-surface" />
           <button type="button" onClick={() => onChange('')}
-            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 border border-gray-200">
+            className="w-8 h-8 flex items-center justify-center admin-muted hover:text-red-500 border admin-border">
             <X className="w-3.5 h-3.5" />
           </button>
         </div>
@@ -97,31 +97,31 @@ function BannerUpload({ value, onChange, label, hint }: {
 
   return (
     <div className="space-y-1.5">
-      <label className="text-[10px] uppercase tracking-widest text-gray-400 flex items-center gap-1.5">
-        {label} <span className="normal-case text-gray-300">· {hint}</span>
+      <label className="text-xs   admin-muted flex items-center gap-1.5">
+        {label} <span className="normal-case admin-muted">· {hint}</span>
       </label>
       <div
         onClick={() => inputRef.current?.click()}
-        className="border-2 border-dashed border-gray-200 hover:border-black cursor-pointer flex items-center justify-center bg-gray-50 overflow-hidden h-16"
+        className="border-2 border-dashed admin-border admin-hover-border cursor-pointer flex items-center justify-center admin-canvas overflow-hidden h-16"
       >
-        {uploading ? <Loader2 className="w-4 h-4 text-gray-400 animate-spin" />
+        {uploading ? <Loader2 className="w-4 h-4 admin-muted animate-spin" />
           : value ? <img src={value} alt="banner" className="w-full h-full object-cover" />
-          : <div className="flex items-center gap-1.5 text-gray-400">
+          : <div className="flex items-center gap-1.5 admin-muted">
               <ImageIcon className="w-4 h-4" />
-              <span className="text-[10px] uppercase tracking-wider">Загрузить</span>
+              <span className="text-xs  ">Загрузить</span>
             </div>
         }
         <input ref={inputRef} type="file" accept="image/*" className="hidden"
           onChange={e => { if (e.target.files?.[0]) handleFile(e.target.files[0]); }} />
       </div>
-      {err && <p className="text-[10px] text-red-500">{err}</p>}
+      {err && <p className="text-xs text-red-500">{err}</p>}
       {value && (
         <div className="flex gap-2">
           <input type="text" value={value} onChange={e => onChange(e.target.value || null)}
             placeholder="URL banner"
-            className="flex-1 h-7 text-[10px] px-2 border border-gray-200 focus:outline-none focus:border-black bg-white" />
+            className="flex-1 h-7 text-xs px-2 border admin-border focus:outline-none admin-focus-border admin-surface" />
           <button type="button" onClick={() => onChange(null)}
-            className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-red-500 border border-gray-200">
+            className="w-7 h-7 flex items-center justify-center admin-muted hover:text-red-500 border admin-border">
             <X className="w-3 h-3" />
           </button>
         </div>
@@ -134,7 +134,7 @@ function BannerUpload({ value, onChange, label, hint }: {
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
-      <label className="text-[10px] uppercase tracking-widest text-gray-400 block mb-1">{label}</label>
+      <label className="text-xs   admin-muted block mb-1">{label}</label>
       {children}
     </div>
   );
@@ -149,14 +149,14 @@ function Section({ title, children, defaultOpen = true }: {
 }) {
   const [open, setOpen] = useState(defaultOpen);
   return (
-    <div className="border-t border-gray-100 pt-3">
+    <div className="border-t admin-border pt-3">
       <button
         type="button"
         onClick={() => setOpen(v => !v)}
         className="flex items-center justify-between w-full mb-2"
       >
-        <span className="text-[10px] uppercase tracking-widest text-gray-400">{title}</span>
-        {open ? <ChevronUp className="w-3 h-3 text-gray-400" /> : <ChevronDown className="w-3 h-3 text-gray-400" />}
+        <span className="text-xs   admin-muted">{title}</span>
+        {open ? <ChevronUp className="w-3 h-3 admin-muted" /> : <ChevronDown className="w-3 h-3 admin-muted" />}
       </button>
       {open && <div className="space-y-3">{children}</div>}
     </div>
@@ -284,24 +284,24 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
   const panelOpen = editingId !== null;
 
   return (
-    <div className="min-h-screen bg-gray-50 pb-16 lg:pb-0">
+    <div className="min-h-screen admin-canvas pb-16 lg:pb-0">
 
       {/* ══════════════════════════════════
           TOP BAR  (sticky)
           ══════════════════════════════════ */}
-      <div className="bg-white border-b border-gray-100 sticky top-12 z-20">
+      <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-12 z-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
 
           {/* Row 1: title + count + add button */}
           <div className="flex items-center h-11 gap-2">
-            <span className="text-sm text-gray-900 flex-shrink-0">{t.brands.title}</span>
-            <span className="text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums flex-shrink-0">
+            <span className="text-sm admin-ink flex-shrink-0">{t.brands.title}</span>
+            <span className="text-[11px] admin-muted-surface admin-muted px-2 py-0.5 tabular-nums flex-shrink-0">
               {brands.length}
             </span>
             <div className="flex-1" />
             <button
               onClick={openNew}
-              className="flex items-center gap-1.5 bg-black text-white text-xs px-3 h-8 hover:bg-gray-800 transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 admin-solid admin-on-solid text-xs px-3 h-8 admin-hover-solid transition-colors flex-shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">{t.brands.newBrand}</span>
@@ -312,25 +312,25 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
           {/* Row 2: search */}
           <div className="pb-2.5">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted pointer-events-none" />
               <input
                 type="text" value={search} onChange={e => setSearch(e.target.value)}
                 placeholder={t.brands.searchPlaceholder ?? 'Поиск бренда…'}
-                className="w-full h-8 pl-9 pr-8 text-xs border border-gray-200 focus:outline-none focus:border-black bg-white"
+                className="w-full h-8 pl-9 pr-8 text-xs border admin-border focus:outline-none admin-focus-border admin-surface"
               />
               {search && (
-                <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black">
+                <button onClick={() => setSearch('')} className="absolute right-2.5 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink">
                   <X className="w-3 h-3" />
                 </button>
               )}
             </div>
-            <div className="flex border border-gray-200 bg-white w-fit mt-2">
+            <div className="flex border admin-border admin-surface w-fit mt-2">
               {(['all', 'active', 'inactive'] as const).map(s => (
                 <button
                   key={s}
                   onClick={() => setStatusFilter(s)}
-                  className={`px-3 h-8 text-xs transition-colors border-r last:border-0 border-gray-100 ${
-                    statusFilter === s ? 'bg-black text-white' : 'text-gray-500 hover:text-black'
+                  className={`px-3 h-8 text-xs transition-colors border-r last:border-0 admin-border ${
+                    statusFilter === s ? 'admin-solid admin-on-solid' : 'admin-muted admin-hover-ink'
                   }`}
                 >
                   {s === 'all' ? 'Toate' : s === 'active' ? 'Active' : 'Inactive'}
@@ -357,7 +357,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                 </p>
                 <div className="flex items-center gap-2 mb-2">
                   <button onClick={copySQL}
-                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 transition-colors ${sqlCopied ? 'bg-green-500 text-white' : 'bg-orange-600 text-white hover:bg-orange-700'}`}>
+                    className={`flex items-center gap-1.5 text-xs px-3 py-1.5 transition-colors ${sqlCopied ? 'bg-green-500 admin-on-solid' : 'bg-orange-600 admin-on-solid hover:bg-orange-700'}`}>
                     {sqlCopied ? <Check className="w-3 h-3" /> : <Upload className="w-3 h-3" />}
                     {sqlCopied ? 'Скопировано!' : 'Скопировать SQL'}
                   </button>
@@ -366,11 +366,11 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                   </button>
                 </div>
                 {sqlExpanded && (
-                  <pre className="text-[10px] bg-white border border-orange-200 p-3 overflow-x-auto text-gray-700 leading-relaxed whitespace-pre-wrap break-all">
+                  <pre className="text-xs admin-surface border border-orange-200 p-3 overflow-x-auto admin-ink leading-relaxed whitespace-pre-wrap break-all">
                     {SQL_SETUP}
                   </pre>
                 )}
-                <p className="text-[10px] text-orange-500">Ошибка: <code>{error || saveErr}</code></p>
+                <p className="text-xs text-orange-500">Ошибка: <code>{error || saveErr}</code></p>
               </div>
             </div>
           </div>
@@ -383,12 +383,12 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
             {loading ? (
               <div className="space-y-1">
                 {Array.from({ length: 4 }).map((_, i) => (
-                  <div key={i} className="bg-white border border-gray-100 animate-pulse h-14" />
+                  <div key={i} className="admin-surface border admin-border animate-pulse h-14" />
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <div className="bg-white border border-gray-100 py-14 text-center">
-                <p className="text-xs text-gray-400">
+              <div className="admin-surface border admin-border py-14 text-center">
+                <p className="text-xs admin-muted">
                   {brands.length === 0 ? (t.brands.noBrands ?? 'Брендов пока нет') : (t.brands.noResults ?? 'Ничего не найдено')}
                 </p>
               </div>
@@ -400,15 +400,15 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                   return (
                     <div
                       key={brand.id}
-                      className={`flex items-center gap-3 px-3 py-2.5 bg-white border transition-colors ${
-                        isEditing ? 'border-black' : 'border-transparent hover:border-gray-200'
+                      className={`flex items-center gap-3 px-3 py-2.5 admin-surface border transition-colors ${
+                        isEditing ? 'admin-border-strong' : 'border-transparent hover:border-gray-200'
                       }`}
                     >
                       {/* Logo */}
-                      <div className="w-12 h-8 flex-shrink-0 bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+                      <div className="w-12 h-8 flex-shrink-0 admin-canvas border admin-border flex items-center justify-center overflow-hidden">
                         {brand.logo_url
                           ? <img src={brand.logo_url} alt={brand.name} className="max-h-6 max-w-[44px] object-contain" />
-                          : <span className="text-[8px] text-gray-300 uppercase tracking-wider text-center px-0.5 leading-tight">
+                          : <span className="text-xs admin-muted   text-center px-0.5 leading-tight">
                               {brand.name.slice(0, 6)}
                             </span>
                         }
@@ -417,13 +417,13 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                       {/* Name + meta */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-xs text-gray-900 truncate">{brand.name}</span>
+                          <span className="text-xs admin-ink truncate">{brand.name}</span>
                           {brand.country_flag && <span className="text-xs flex-shrink-0">{brand.country_flag}</span>}
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-[10px] text-gray-400 truncate">/{brand.slug}</span>
+                          <span className="text-xs admin-muted truncate">/{brand.slug}</span>
                           {brand.website && (
-                            <span className="hidden sm:flex items-center gap-0.5 text-[10px] text-gray-300">
+                            <span className="hidden sm:flex items-center gap-0.5 text-xs admin-muted">
                               <Globe className="w-2.5 h-2.5" />{brand.website}
                             </span>
                           )}
@@ -432,10 +432,10 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
 
                       {/* Count + active badge */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
-                        <div className={`text-[11px] tabular-nums px-2 py-0.5 flex-shrink-0 ${count > 0 ? 'bg-black text-white' : 'bg-gray-100 text-gray-400'}`}>
+                        <div className={`text-[11px] tabular-nums px-2 py-0.5 flex-shrink-0 ${count > 0 ? 'admin-solid admin-on-solid' : 'admin-muted-surface admin-muted'}`}>
                           {count}
                         </div>
-                        <span className={`hidden sm:inline text-[9px] uppercase tracking-wide px-1.5 py-0.5 flex-shrink-0 ${(brand.active ?? true) ? 'bg-green-50 text-green-600' : 'bg-gray-50 text-gray-400'}`}>
+                        <span className={`hidden sm:inline text-xs   px-1.5 py-0.5 flex-shrink-0 ${(brand.active ?? true) ? 'bg-green-50 text-green-600' : 'admin-canvas admin-muted'}`}>
                           {(brand.active ?? true) ? (t.brands.active ?? 'activ') : (t.brands.hidden ?? 'ascuns')}
                         </span>
                       </div>
@@ -444,20 +444,20 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                       <div className="flex items-center gap-0.5 flex-shrink-0">
                         <button
                           onClick={() => toggleBrandActive(brand)}
-                          className={`w-8 h-5 rounded-full transition-colors flex items-center ${(brand.active ?? true) ? 'bg-black' : 'bg-gray-200'}`}
+                          className={`w-8 h-5 rounded-full transition-colors flex items-center ${(brand.active ?? true) ? 'admin-solid' : 'admin-muted-surface'}`}
                           title={(brand.active ?? true) ? 'Ascunde de pe site' : 'Arată pe site'}
                         >
-                          <span className={`w-3.5 h-3.5 bg-white rounded-full shadow transition-transform mx-0.5 ${(brand.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
+                          <span className={`w-3.5 h-3.5 admin-surface rounded-full shadow transition-transform mx-0.5 ${(brand.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
                         </button>
                         <button
                           onClick={() => openEdit(brand)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black hover:bg-gray-100 transition-colors"
+                          className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink admin-hover-surface transition-colors"
                         >
                           <Pencil className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={() => setDeleteId(brand.id)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-50 transition-colors"
+                          className="w-8 h-8 flex items-center justify-center admin-muted hover:text-red-500 hover:bg-red-50 transition-colors"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -488,23 +488,23 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                 w-full lg:w-[360px] xl:w-96
                 max-h-[88vh] lg:max-h-[calc(100vh-7rem)]
                 overflow-y-auto
-                bg-white
-                border-t lg:border border-gray-200
+                admin-surface
+                border-t lg:border admin-border
                 shadow-2xl lg:shadow-none
                 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-28
               `}>
 
                 {/* Drag handle (mobile only) */}
                 <div className="lg:hidden flex justify-center pt-3 pb-1">
-                  <div className="w-10 h-1 bg-gray-200 rounded-full" />
+                  <div className="w-10 h-1 admin-muted-surface rounded-full" />
                 </div>
 
                 {/* Panel header */}
-                <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-                  <span className="text-xs uppercase tracking-widest text-gray-700">
+                <div className="flex items-center justify-between px-4 py-3 border-b admin-border">
+                  <span className="text-xs   admin-ink">
                     {editingId === 'new' ? (t.brands.newBrand ?? 'Новый бренд') : (t.brands.editBrand ?? 'Редактировать')}
                   </span>
-                  <button onClick={() => setEditingId(null)} className="w-7 h-7 flex items-center justify-center text-gray-400 hover:text-black">
+                  <button onClick={() => setEditingId(null)} className="w-7 h-7 flex items-center justify-center admin-muted admin-hover-ink">
                     <X className="w-4 h-4" />
                   </button>
                 </div>
@@ -528,7 +528,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                         <input value={form.slug}
                           onChange={e => { setSlugManual(true); set('slug', toSlug(e.target.value)); }}
                           placeholder="technogym" className={`${inp} font-mono`} />
-                        <p className="text-[9px] text-gray-400 mt-0.5">/brands/<strong>{form.slug || '…'}</strong></p>
+                        <p className="text-xs admin-muted mt-0.5">/brands/<strong>{form.slug || '…'}</strong></p>
                       </Field>
                     </div>
                   </div>
@@ -582,13 +582,13 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                   {/* Banners */}
                   <Section title={t.brands.banners ?? 'Баннеры'} defaultOpen={false}>
                     <div className="flex items-center gap-1.5 mb-1">
-                      <Monitor className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-[10px] text-gray-400 uppercase tracking-widest">Desktop</span>
+                      <Monitor className="w-3.5 h-3.5 admin-muted" />
+                      <span className="text-xs admin-muted  ">Desktop</span>
                     </div>
                     <BannerUpload value={form.banner_desktop_url} onChange={url => set('banner_desktop_url', url)} label="Banner Desktop" hint="1920×480px" />
                     <div className="flex items-center gap-1.5 mt-3 mb-1">
-                      <Smartphone className="w-3.5 h-3.5 text-gray-400" />
-                      <span className="text-[10px] text-gray-400 uppercase tracking-widest">Mobile</span>
+                      <Smartphone className="w-3.5 h-3.5 admin-muted" />
+                      <span className="text-xs admin-muted  ">Mobile</span>
                     </div>
                     <BannerUpload value={form.banner_mobile_url} onChange={url => set('banner_mobile_url', url)} label="Banner Mobile" hint="800×600px" />
                   </Section>
@@ -604,7 +604,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                           placeholder="https://example.com/catalog.pdf"
                           className={inp}
                         />
-                        <p className="text-[9px] text-gray-400 leading-relaxed">
+                        <p className="text-xs admin-muted leading-relaxed">
                           <FileText className="w-2.5 h-2.5 inline mr-0.5" />
                           Если указан PDF — на странице товара появится кнопка скачивания каталога бренда.
                         </p>
@@ -613,7 +613,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                             href={form.catalog_pdf}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 text-[10px] text-blue-600 hover:text-blue-800 hover:underline"
+                            className="inline-flex items-center gap-1.5 text-xs admin-ink admin-hover-ink hover:underline"
                           >
                             <FileText className="w-3 h-3" />
                             Открыть PDF
@@ -627,14 +627,14 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                   {saveErr && (
                     <div className="flex items-start gap-2 text-red-500 bg-red-50 px-3 py-2">
                       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
-                      <p className="text-[10px] leading-relaxed">{saveErr}</p>
+                      <p className="text-xs leading-relaxed">{saveErr}</p>
                     </div>
                   )}
 
                   {/* Save */}
                   <button
                     onClick={handleSave} disabled={saving}
-                    className="w-full flex items-center justify-center gap-2 bg-black text-white text-xs py-3 hover:bg-gray-800 disabled:opacity-50 transition-colors"
+                    className="w-full flex items-center justify-center gap-2 admin-solid admin-on-solid text-xs py-3 admin-hover-solid disabled:opacity-50 transition-colors"
                   >
                     {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
                     {saving ? (t.brands.saving ?? 'Сохранение…') : editingId === 'new' ? (t.brands.create ?? 'Создать бренд') : (t.brands.save ?? 'Сохранить')}
@@ -652,22 +652,22 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
       {/* ── Delete modal ── */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
-          <div className="bg-white w-full sm:max-w-sm p-6 border-t sm:border border-gray-200">
-            <h3 className="text-sm text-black mb-2">{t.brands.deleteConfirm ?? 'Удалить бренд?'}</h3>
-            <p className="text-xs text-gray-500 mb-5">
+          <div className="admin-surface w-full sm:max-w-sm p-6 border-t sm:border admin-border">
+            <h3 className="text-sm admin-ink mb-2">{t.brands.deleteConfirm ?? 'Удалить бренд?'}</h3>
+            <p className="text-xs admin-muted mb-5">
               Это действие необратимо. Товары бренда удалены не будут.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={handleDelete} disabled={deleting}
-                className="flex-1 flex items-center justify-center gap-2 bg-red-500 text-white text-xs py-2.5 hover:bg-red-600 disabled:opacity-50 transition-colors"
+                className="flex-1 flex items-center justify-center gap-2 bg-red-500 admin-on-solid text-xs py-2.5 hover:bg-red-600 disabled:opacity-50 transition-colors"
               >
                 {deleting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Trash2 className="w-3.5 h-3.5" />}
                 {deleting ? '…' : (t.brands.delete ?? 'Удалить')}
               </button>
               <button
                 onClick={() => setDeleteId(null)}
-                className="flex-1 border border-gray-200 text-gray-600 text-xs py-2.5 hover:border-black hover:text-black transition-colors"
+                className="flex-1 border admin-border admin-muted text-xs py-2.5 admin-hover-border admin-hover-ink transition-colors"
               >
                 {t.common.cancel ?? 'Отмена'}
               </button>

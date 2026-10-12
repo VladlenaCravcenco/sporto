@@ -302,7 +302,7 @@ export function Contacts() {
     };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={SEO_PAGES.contacts[language as Lang].title}
         description={SEO_PAGES.contacts[language as Lang].description}
@@ -314,7 +314,7 @@ export function Contacts() {
 
       {/* ── HERO ── */}
       <section className="bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-end">
             <div>
               <div className="flex items-center gap-3 mb-8">
@@ -343,8 +343,8 @@ export function Contacts() {
       </section>
 
       {/* ── MAIN CONTENT ── */}
-      <section className="py-14 md:py-20 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-14 md:py-20 bg-[#f5f6f7]">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
 
             {/* ── FORM ── */}
@@ -570,7 +570,7 @@ export function Contacts() {
 
       {/* ── MAP ── */}
       <section className="bg-gray-50 border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
@@ -607,7 +607,7 @@ export function Contacts() {
 
       {/* ── WHO WE WORK WITH ── */}
       <section className="py-14 md:py-20 bg-gray-50 border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-px h-4 bg-gray-300" />
@@ -635,8 +635,8 @@ export function Contacts() {
       </section>
 
       {/* ── WHY US ── */}
-      <section className="py-14 md:py-20 bg-white border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-14 md:py-20 bg-[#f5f6f7] border-t border-gray-100">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-px h-4 bg-gray-300" />
