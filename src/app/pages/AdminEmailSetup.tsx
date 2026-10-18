@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Mail, Copy, Check, ExternalLink, AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { EMAILJS, isEmailConfigured } from '../../lib/emailService';
 
-// ── HTML шаблоны ──────────────────────────────────────────────────────────────
-
 const HTML_WELCOME = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>
@@ -116,7 +114,6 @@ body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:24px}
 </div>
 </body></html>`;
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export function AdminEmailSetup() {
   const [copied, setCopied] = useState<string | null>(null);
   const [open, setOpen]     = useState<string | null>('t1');
@@ -183,7 +180,6 @@ export function AdminEmailSetup() {
     <div className="admin-section">
       <div className="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Header */}
         <div className="admin-section-heading">
           <Mail className="w-5 h-5 admin-muted" />
           <div>
@@ -201,7 +197,6 @@ export function AdminEmailSetup() {
           )}
         </div>
 
-        {/* Quick steps */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-px admin-muted-surface border admin-border mb-6">
           {[
             { n: '1', t: 'Сервис уже подключён', sub: 'service_odgatyo · Gmail' },
@@ -217,12 +212,10 @@ export function AdminEmailSetup() {
           ))}
         </div>
 
-        {/* Templates */}
         <div className="space-y-3 mb-6">
           {TEMPLATES.map(tpl => (
             <div key={tpl.id} className="admin-surface border admin-border">
 
-              {/* Accordion header */}
               <button
                 onClick={() => setOpen(open === tpl.id ? null : tpl.id)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left admin-hover-surface transition-colors"
@@ -243,7 +236,6 @@ export function AdminEmailSetup() {
               {open === tpl.id && (
                 <div className="border-t admin-border px-5 pb-6 pt-4 space-y-5">
 
-                  {/* Инструкция */}
                   <div className="admin-canvas border admin-border p-4 text-xs admin-muted leading-relaxed">
                     <span className="admin-ink">Как создать: </span>
                     <a href="https://dashboard.emailjs.com/admin/templates" target="_blank" rel="noopener noreferrer"
@@ -253,7 +245,6 @@ export function AdminEmailSetup() {
                     {' '}→ <strong>Create New Template</strong> → вставьте данные ниже → <strong>Save</strong>
                   </div>
 
-                  {/* To / Subject */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       { label: 'To Email', val: tpl.to,      key: `to-${tpl.id}` },
@@ -274,7 +265,6 @@ export function AdminEmailSetup() {
                     ))}
                   </div>
 
-                  {/* HTML */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <p className="text-xs admin-muted  ">
@@ -292,7 +282,6 @@ export function AdminEmailSetup() {
                     </pre>
                   </div>
 
-                  {/* Variables */}
                   <div>
                     <p className="text-xs admin-muted   mb-2">
                       Переменные в шаблоне
@@ -313,7 +302,6 @@ export function AdminEmailSetup() {
           ))}
         </div>
 
-        {/* ENV */}
         <div className="admin-surface border admin-border">
           <div className="px-5 py-4 border-b admin-border">
             <p className="text-sm admin-ink">Переменные окружения (.env)</p>
@@ -350,7 +338,6 @@ export function AdminEmailSetup() {
               </div>
             ))}
 
-            {/* Copy all */}
             <div className="pt-2 border-t admin-border">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-xs admin-muted  ">Скопировать шаблон .env</p>
@@ -368,7 +355,6 @@ export function AdminEmailSetup() {
           </div>
         </div>
 
-        {/* Done */}
         {configured && (
           <div className="mt-4 admin-solid admin-on-solid p-5 flex items-start gap-4">
             <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />

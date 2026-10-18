@@ -374,11 +374,9 @@ export function AdminContentPages() {
 
   return (
     <AdminEditorWorkspace>
-      
-      {/* ══ LEFT — EDITOR ══ */}
+
       <div className="admin-editor-pane">
 
-        {/* Header */}
         <div className="sticky top-[88px] z-10 admin-surface border-b admin-border px-4 py-4 sm:px-5 lg:top-0">
           <div className="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
@@ -401,7 +399,6 @@ export function AdminContentPages() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="grid grid-cols-1 gap-1 sm:grid-cols-3">
             {tabs.map(tab => (
               <button
@@ -426,7 +423,6 @@ export function AdminContentPages() {
           )}
         </div>
 
-        {/* Fields */}
         <div className="min-w-0 px-4 py-5 space-y-4 sm:px-5">
           <div ref={registerField('title_ro')} className={activeFieldId === 'title_ro' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <label className="block text-xs   admin-muted mb-1.5">
@@ -476,7 +472,6 @@ export function AdminContentPages() {
         </div>
       </div>
 
-      {/* ══ RIGHT — PREVIEW ══ */}
       <div className="admin-preview-pane min-w-0 flex-1 flex flex-col overflow-hidden">
         <div className="border-b admin-border admin-surface px-4 py-3 sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-2">

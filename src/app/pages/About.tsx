@@ -1,3 +1,4 @@
+import { usePublicPageData } from '../contexts/PublicPageData';
 import { useLanguage } from '../contexts/LanguageContext';
 import { SeoHead, buildFaqJsonLd } from '../components/SeoHead';
 import { Link } from 'react-router';
@@ -15,12 +16,13 @@ const content = {
     paragraphs: [
       'Sporto (SPORTOSFERA S.R.L.) a fost înființată în anul 2023, având ca domeniu principal de activitate comercializarea articolelor destinate sportului. Activăm în mai multe segmente de piață: B2C, B2B și B2G.',
       'Clienților noștri le oferim o abordare individuală, prețuri competitive și soluții avantajoase, adaptate necesităților fiecăruia. Pentru noi nu este importantă doar comercializarea produselor, ci și contribuția la dezvoltarea sportului în Republica Moldova, făcându-l mai accesibil pentru toți.',
-      'Reieșind din experiența noastră, am implementat mai multe procese care ne permit să oferim soluții personalizate pentru a satisface cerințele clienților din orice segment de activitate.',
-      'Marea majoritate a articolelor pe care le comercializăm provine din Italia și din alte state ale Uniunii Europene — branduri consacrate, producători de renume, calitate certificată. Pe lângă produsele comercializate, Sporto prestează și servicii specifice domeniului sportiv.',
+      'Lucrăm cu persoane care aleg echipamente pentru acasă, dar și cu săli de fitness, cluburi și instituții. O achiziție individuală începe cu alegerea modelului din catalog; pentru echiparea unui spațiu, discutăm împreună lista de echipamente și cerințele proiectului.',
+      'În catalog găsiți echipamente de la diferite branduri. Caracteristicile și informațiile disponibile despre fiecare model sunt prezentate în fișa produsului. Pentru întrebări despre selecție și servicii, contactați-ne.',
     ],
     slogan: 'Sporto te încurajează să adopți un mod activ de viață prin practicarea sportului!',
     ctaLabel: 'Solicită Ofertă',
     catalogLabel: 'Vezi Catalogul',
+    turnkeyLabel: 'Echiparea unui spațiu',
     segments: ['B2C', 'B2B', 'B2G'],
     segmentsLabel: 'Segmente de activitate',
     founded: '2023',
@@ -36,12 +38,13 @@ const content = {
     paragraphs: [
       'Sporto (SPORTOSFERA S.R.L.) была основана в 2023 году, и основным направлением её деятельности является продажа товаров, предназначенных для спорта. Мы работаем в нескольких рыночных сегментах: B2C, B2B и B2G.',
       'Нашим клиентам мы предлагаем индивидуальный подход, конкурентные цены и выгодные решения, адаптированные к их потребностям. Для нас важно не только продавать спортивные товары, но и вносить вклад в развитие спорта в Республике Молдова, делая его более доступным для всех.',
-      'Исходя из нашего опыта, мы внедрили ряд процессов, которые позволяют нам предлагать персонализированные решения и удовлетворять требования клиентов из любого сегмента рынка.',
-      'Большинство товаров, которые мы предлагаем, поступают из Италии и других стран Европейского союза — признанные бренды, производители с репутацией, сертифицированное качество. Помимо продажи товаров, Sporto также оказывает услуги, связанные со спортивной сферой.',
+      'Мы работаем с покупателями, которые выбирают оборудование для дома, а также с фитнес-залами, клубами и учреждениями. Отдельный товар можно подобрать в каталоге; для оснащения помещения мы обсуждаем список оборудования и требования проекта.',
+      'В каталоге представлено оборудование разных брендов. Характеристики и доступная информация о каждой модели указаны в карточке товара. По вопросам подбора и услуг можно обратиться к нам.',
     ],
     slogan: 'Sporto призывает вас вести активный образ жизни и заниматься спортом!',
     ctaLabel: 'Запросить Предложение',
     catalogLabel: 'Смотреть Каталог',
+    turnkeyLabel: 'Оснащение помещения',
     segments: ['B2C', 'B2B', 'B2G'],
     segmentsLabel: 'Сегменты деятельности',
     founded: '2023',
@@ -55,12 +58,14 @@ export function About() {
   const { language } = useLanguage();
   const c = content[language as 'ro' | 'ru'];
   const lang = language as 'ro' | 'ru';
+  const initial = usePublicPageData();
   const [openFaq, setOpenFaq] = useState<number | null>(null);
   const [faqRows, setFaqRows] = useState<FaqItem[]>(
-    FAQ_SEO_DEFAULTS.map((item, index) => ({ ...item, id: `fallback-${index}` })),
+    initial?.faq ?? FAQ_SEO_DEFAULTS.map((item, index) => ({ ...item, id: `fallback-${index}` })),
   );
 
   useEffect(() => {
+    if (initial) return;
     let cancelled = false;
 
     (async () => {
@@ -75,9 +80,9 @@ export function About() {
     })();
 
     return () => { cancelled = true; };
-  }, []);
+  }, [initial]);
 
-  const faqItems = toLocalizedFaq(faqRows, lang);
+  const faqItems = toLocalizedFaq(initial?.faq ?? faqRows, lang);
 
   return (
     <div className="min-h-screen bg-[#f5f6f7]">
@@ -92,48 +97,44 @@ export function About() {
         jsonLd={buildFaqJsonLd(faqItems)}
       />
 
-      {/* ── PAGE HEADER ── */}
       <section className="bg-black text-white">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-end">
             <div>
               <div className="flex items-center gap-3 mb-6">
                 <div className="w-px h-4 bg-gray-600" />
-                <span className="text-xs text-gray-500 uppercase tracking-[0.2em]">{c.tag}</span>
+                <span className="text-xs text-gray-400 uppercase tracking-[0.2em]">{c.tag}</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl text-white leading-tight">
                 {c.heading}
               </h1>
             </div>
 
-            {/* Stats strip */}
             <div className="grid grid-cols-3 gap-px bg-gray-800">
               <div className="bg-black p-6 text-center">
                 <div className="text-3xl text-white tabular-nums">{c.founded}</div>
-                <div className="text-xs text-gray-600 mt-1 uppercase tracking-widest">{c.foundedLabel}</div>
+                <div className="text-xs text-gray-400 mt-1 uppercase tracking-widest">{c.foundedLabel}</div>
               </div>
               <div className="bg-black p-6 text-center">
                 <div className="text-3xl text-white">3</div>
-                <div className="text-xs text-gray-600 mt-1 uppercase tracking-widest">{c.segmentsLabel}</div>
+                <div className="text-xs text-gray-400 mt-1 uppercase tracking-widest">{c.segmentsLabel}</div>
               </div>
               <div className="bg-black p-6 text-center">
                 <div className="text-xl text-white">🌍</div>
-                <div className="text-xs text-gray-600 mt-1 uppercase tracking-widest">{c.originLabel}</div>
+                <div className="text-xs text-gray-400 mt-1 uppercase tracking-widest">{c.originLabel}</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── MAIN CONTENT ── */}
       <section className="py-16 md:py-24">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-12 gap-12">
 
-            {/* Segments sidebar */}
             <div className="lg:col-span-3">
               <div className="sticky top-24">
-                <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-4">
+                <p className="text-xs text-gray-600 uppercase tracking-[0.15em] mb-4">
                   {c.segmentsLabel}
                 </p>
                 <div className="flex flex-row lg:flex-col gap-2">
@@ -148,7 +149,7 @@ export function About() {
                 </div>
 
                 <div className="mt-8 pt-8 border-t border-gray-100">
-                  <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-3">
+                  <p className="text-xs text-gray-600 uppercase tracking-[0.15em] mb-3">
                     {c.originLabel}
                   </p>
                   <p className="text-sm text-gray-900">{c.origin}</p>
@@ -156,7 +157,6 @@ export function About() {
               </div>
             </div>
 
-            {/* Text content */}
             <div className="lg:col-span-9">
               <div className="space-y-8">
                 {c.paragraphs.map((para, i) => (
@@ -173,14 +173,12 @@ export function About() {
                 ))}
               </div>
 
-              {/* Slogan block */}
               <div className="mt-12 border-l-2 border-black pl-6 py-2">
                 <p className="text-lg md:text-xl text-black italic leading-relaxed">
                   {c.slogan}
                 </p>
               </div>
 
-              {/* CTA */}
               <div className="mt-12 flex flex-wrap gap-4">
                 <Link
                   to="/contacts"
@@ -196,20 +194,21 @@ export function About() {
                   {c.catalogLabel}
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
+                <Link to="/turnkey-solutions" className="inline-flex items-center gap-2 px-2 py-3 text-sm text-gray-700 underline underline-offset-4 hover:text-black">
+                  {c.turnkeyLabel}<ArrowRight className="w-3.5 h-3.5" />
+                </Link>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── BENTO BOTTOM ── */}
       <section className="py-12 md:py-16 bg-gray-50 border-t border-gray-100">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-3">
 
-            {/* B2C */}
             <div className="bg-white border border-gray-200 p-6">
-              <div className="text-xs text-gray-400 uppercase tracking-widest mb-3">B2C</div>
+              <div className="text-xs text-gray-600 uppercase tracking-widest mb-3">B2C</div>
               <div className="text-sm text-gray-900 leading-relaxed">
                 {language === 'ro'
                   ? 'Comercializarea echipamentelor sportive direct către consumatorul final.'
@@ -217,9 +216,8 @@ export function About() {
               </div>
             </div>
 
-            {/* B2B */}
             <div className="bg-black text-white p-6">
-              <div className="text-xs text-gray-500 uppercase tracking-widest mb-3">B2B</div>
+              <div className="text-xs text-gray-400 uppercase tracking-widest mb-3">B2B</div>
               <div className="text-sm text-gray-300 leading-relaxed">
                 {language === 'ro'
                   ? 'Soluții wholesale pentru cluburi fitness, magazine sportive și antreprenori.'
@@ -227,9 +225,8 @@ export function About() {
               </div>
             </div>
 
-            {/* B2G */}
             <div className="bg-white border border-gray-200 p-6">
-              <div className="text-xs text-gray-400 uppercase tracking-widest mb-3">B2G</div>
+              <div className="text-xs text-gray-600 uppercase tracking-widest mb-3">B2G</div>
               <div className="text-sm text-gray-900 leading-relaxed">
                 {language === 'ro'
                   ? 'Dotarea instituțiilor publice, școlilor și organizațiilor de stat.'
@@ -246,15 +243,13 @@ export function About() {
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
             <div className="grid lg:grid-cols-12 gap-12">
 
-              {/* Label */}
               <div className="lg:col-span-3">
-                <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-2">FAQ</p>
-                <p className="text-sm text-gray-500 leading-relaxed">
+                <p className="text-xs text-gray-600 uppercase tracking-[0.15em] mb-2">FAQ</p>
+                <p className="text-sm text-gray-600 leading-relaxed">
                   {lang === 'ro' ? 'Întrebări frecvente' : 'Часто задаваемые вопросы'}
                 </p>
               </div>
 
-              {/* Accordion */}
               <div className="lg:col-span-9 divide-y divide-gray-100">
                 {faqItems.map((item, i) => (
                   <div key={i}>
@@ -269,7 +264,7 @@ export function About() {
                     </button>
                     {openFaq === i && (
                       <div className="pb-5">
-                        <p className="text-sm text-gray-500 leading-relaxed">{item.a}</p>
+                        <p className="text-sm text-gray-600 leading-relaxed">{item.a}</p>
                       </div>
                     )}
                   </div>

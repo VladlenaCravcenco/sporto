@@ -2,7 +2,6 @@ import { createClient } from '@supabase/supabase-js';
 import { createBrowserClient } from '@supabase/ssr';
 import { adminTransport } from './admin-transport';
 
-// ─── Переменные окружения (Vite) ──────────────────────────────────────────────
 // Локально: файл .env в корне проекта
 // На Vercel: Settings → Environment Variables
 const SUPABASE_URL =
@@ -45,7 +44,6 @@ export async function fetchAllSupabaseRows<T>(
   return allRows;
 }
 
-// ─── Row shape from Supabase ──────────────────────────────────────────────────
 export interface ProductRow {
   id: string;
   name_ro: string;
@@ -72,7 +70,6 @@ export interface ProductRow {
   active: boolean;
 }
 
-// ─── Banner row ───────────────────────────────────────────────────────────────
 export interface BannerRow {
   id: string;
   title_ro: string | null;
@@ -88,7 +85,6 @@ export interface BannerRow {
   created_at: string;
 }
 
-// ─── Brand row ────────────────────────────────────────────────────────────────
 export interface BrandRow {
   id: string;
   name: string;
@@ -114,7 +110,6 @@ export interface BrandRow {
   created_at: string;
 }
 
-// ─── Category / Subcategory rows ──────────────────────────────────────────────
 export interface CategoryRow {
   id: string;
   slug: string;
@@ -137,7 +132,6 @@ export interface SubcategoryRow {
   created_at: string;
 }
 
-// ─── Client (registered user) row ─────────────────────────────────────────────
 export interface ClientRow {
   id: string;
   auth_user_id: string | null;
@@ -151,7 +145,6 @@ export interface ClientRow {
   created_at: string;
 }
 
-// ─── Order request row ────────────────────────────────────────────────────────
 export interface OrderRequestRow {
   id: string;
   client_id: string | null;

@@ -2,7 +2,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('/fonts/inter/InterLatin.woff2') format('woff2');
+  src: url('/fonts/inter/InterLatinCore.woff2') format('woff2');
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -11,7 +11,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('/fonts/inter/InterCyrillic.woff2') format('woff2');
+  src: url('/fonts/inter/InterCyrillicCore.woff2') format('woff2');
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;
@@ -20,7 +20,7 @@
 
 @font-face {
   font-family: 'Inter';
-  src: url('/fonts/inter/InterExtras.woff2') format('woff2');
+  src: url('/fonts/inter/InterExtrasCore.woff2') format('woff2');
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;

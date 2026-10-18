@@ -7,7 +7,7 @@ export function CookieSettingsButton({ language }: { language: Language }) {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event('sporto:open-cookie-settings'))}
-      className="text-xs text-gray-600 hover:text-white transition-colors"
+      className="text-xs text-gray-400 hover:text-white transition-colors"
     >
       {language === 'ro' ? 'Setări cookie' : 'Настройки cookies'}
     </button>

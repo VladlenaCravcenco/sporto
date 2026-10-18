@@ -1,3 +1,4 @@
+import { missingMergeRelation } from './product-category-links';
 import { cache } from 'react';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
@@ -41,6 +42,7 @@ export interface ProductDetailData {
   product: ProductDetail;
   brand: ProductBrand | null;
   specifications: ProductSpecification[];
+  redirectSource?: { id: string; name_ro: string | null; name_ru: string | null };
 }
 
 function createServerSupabase() {
@@ -63,28 +65,35 @@ export function getProductYoutubeId(product: ProductDetail) {
 
 async function loadProductDetail(identifier: string, sku?: string): Promise<ProductDetailData | null> {
   const supabase = createServerSupabase();
-  if (!supabase) return null;
+  if (!supabase) throw new Error('Product configuration missing');
 
   const fields = 'id,name_ro,name_ru,sku,brand,category,subcategory,price,sale_price,qty,description_ro,description_ru,seo_description_ro,seo_description_ru,seo_keywords_ro,seo_keywords_ru,image_url,images,youtube_url,has_warranty';
   let product: ProductDetail | null = null;
+  let redirectSource: ProductDetailData['redirectSource'];
 
-  if (sku) {
+  const uuid = (value: string) => /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+  // Existing imports use numeric text IDs as well as UUIDs. Resolve the ID
+  // first: a SKU is not unique and can refer to multiple active products.
+  const productId = (value: string) => uuid(value) || /^\d+$/.test(value);
+  if (sku && productId(sku)) {
     const result = await supabase
       .from('products')
       .select(fields)
       .eq('id', sku)
       .eq('active', true)
       .maybeSingle();
+    if (result.error) throw new Error('Product lookup unavailable');
     product = result.data as ProductDetail | null;
   }
 
-  if (!product) {
+  if (!product && productId(identifier) && identifier !== sku) {
     const result = await supabase
       .from('products')
       .select(fields)
       .eq('id', identifier)
       .eq('active', true)
       .maybeSingle();
+    if (result.error) throw new Error('Product lookup unavailable');
     product = result.data as ProductDetail | null;
   }
 
@@ -95,9 +104,20 @@ async function loadProductDetail(identifier: string, sku?: string): Promise<Prod
       .eq('sku', sku || identifier)
       .eq('active', true)
       .maybeSingle();
+    if (result.error) throw new Error('Product lookup unavailable');
     product = result.data as ProductDetail | null;
   }
 
+  if (!product) {
+    const alias = await supabase.from('product_redirects').select('target_id,source_name_ro,source_name_ru').eq('source_id', sku || identifier).maybeSingle();
+    if (alias.error && !missingMergeRelation(alias.error)) throw new Error('Product redirect unavailable');
+    if (alias.data?.target_id) {
+      redirectSource = { id: sku || identifier, name_ro: alias.data.source_name_ro, name_ru: alias.data.source_name_ru };
+      const target = await supabase.from('products').select(fields).eq('id', alias.data.target_id).eq('active', true).maybeSingle();
+      if (target.error) throw new Error('Product lookup unavailable');
+      product = target.data as ProductDetail | null;
+    }
+  }
   if (!product) return null;
 
   const [brandResult, attributesResult] = await Promise.all([
@@ -129,6 +149,7 @@ async function loadProductDetail(identifier: string, sku?: string): Promise<Prod
     product,
     brand: brandResult.data as ProductBrand | null,
     specifications,
+    ...(redirectSource ? { redirectSource } : {}),
   };
 }
 export async function getRelatedProducts(product: ProductDetail): Promise<import('./home-data').FeaturedProduct[]> {

@@ -337,7 +337,6 @@ export function AdminServices() {
   return (
     <AdminEditorWorkspace languages>
 
-      {/* ══ LEFT — EDITOR ══ */}
       <div className="admin-editor-pane">
 
         <div className="sticky top-[88px] z-10 admin-surface border-b admin-border px-4 py-4 sm:px-5 lg:top-0">
@@ -370,7 +369,6 @@ export function AdminServices() {
 
         <div className="min-w-0 px-4 py-5 space-y-6 sm:px-5">
 
-          {/* HERO */}
           <div ref={registerField('hero')} className={activeFieldId === 'hero' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <div className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">Hero</div>
             <div className="space-y-3">
@@ -404,7 +402,6 @@ export function AdminServices() {
             </div>
           </div>
 
-          {/* STATS */}
           <div ref={registerField('stats')} className={activeFieldId === 'stats' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <SectionHeader title={isRu ? 'Статистика' : 'Statistici'} visible={data.show_stats} onToggle={() => set('show_stats', !data.show_stats)} />
             {data.show_stats && (
@@ -421,7 +418,6 @@ export function AdminServices() {
             )}
           </div>
 
-          {/* SERVICES */}
           <div ref={registerField('services')} className={activeFieldId === 'services' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <SectionHeader title={isRu ? 'Услуги' : 'Servicii'} visible={data.show_services} onToggle={() => set('show_services', !data.show_services)} />
             {data.show_services && (
@@ -448,7 +444,6 @@ export function AdminServices() {
             )}
           </div>
 
-          {/* PROCESS */}
           <div ref={registerField('process')} className={activeFieldId === 'process' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <SectionHeader title={isRu ? 'Процесс (шаги)' : 'Proces (etape)'} visible={data.show_process} onToggle={() => set('show_process', !data.show_process)} />
             {data.show_process && (
@@ -475,7 +470,6 @@ export function AdminServices() {
             )}
           </div>
 
-          {/* WHY */}
           <div ref={registerField('why')} className={activeFieldId === 'why' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <SectionHeader title={isRu ? 'Почему мы' : 'De ce noi'} visible={data.show_why} onToggle={() => set('show_why', !data.show_why)} />
             {data.show_why && (
@@ -497,7 +491,6 @@ export function AdminServices() {
             )}
           </div>
 
-          {/* CASES */}
           <div ref={registerField('cases')} className={activeFieldId === 'cases' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <SectionHeader title={isRu ? 'Кейсы / Проекты' : 'Cazuri / Proiecte'} visible={data.show_cases} onToggle={() => set('show_cases', !data.show_cases)} />
             {data.show_cases && (
@@ -575,7 +568,6 @@ export function AdminServices() {
             )}
           </div>
 
-          {/* CTA */}
           <div ref={registerField('cta')} className={activeFieldId === 'cta' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <SectionHeader title={l('Bloc CTA', 'CTA блок')} visible={data.show_cta} onToggle={() => set('show_cta', !data.show_cta)} />
             {data.show_cta && (
@@ -590,7 +582,6 @@ export function AdminServices() {
         </div>
       </div>
 
-      {/* ══ RIGHT — PREVIEW ══ */}
       <div className="admin-preview-pane flex min-w-0 flex-1 flex-col overflow-hidden admin-canvas">
         <div className="shrink-0 admin-solid border-b admin-border px-4 py-2.5 flex flex-wrap items-center gap-2 sm:gap-3 sm:px-5">
           <Monitor className="w-4 h-4 admin-muted" />

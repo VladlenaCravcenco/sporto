@@ -46,12 +46,11 @@ export function OptimizedImage({
       className={`relative overflow-hidden bg-gray-100 ${className}`}
       style={{ aspectRatio: `${width}/${height}` }}
     >
-      {/* Плейсхолдер (размытое изображение) */}
+
       {!isLoaded && !priority && (
         <div className="absolute inset-0 bg-gradient-to-br from-gray-200 to-gray-300 animate-pulse" />
       )}
 
-      {/* Основное изображение */}
       <img
         src={getWebPUrl(src)}
         alt={alt}
@@ -66,7 +65,6 @@ export function OptimizedImage({
         onError={() => setIsLoaded(false)}
       />
 
-      {/* Запасной вариант картинки */}
       <noscript>
         <img
           src={src}

@@ -1,25 +1,58 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { StoreImage } from '../../src/app/components/StoreImage';
+import { observeCarouselVisibility } from './carousel-visibility';
 import type { BrandItem } from '../_lib/home-data';
 import type { Language } from './HeaderPreview';
 
+function BrandLogo({ brand, hovered, enabled }: { brand: BrandItem; hovered: boolean; enabled: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const validSource = !!brand.logo_url && /^(https?:\/\/|\/(?!\/))/.test(brand.logo_url);
+  if (!validSource || failed) return <span className="block transition-colors duration-200 text-sm tracking-widest uppercase select-none whitespace-nowrap" style={{ color: hovered ? '#000' : '#d1d5db', fontWeight: 700 }}>{brand.name}</span>;
+  if (!enabled) return <span aria-hidden="true" className="block h-8 w-[120px]" />;
+  return <StoreImage variant="logo" src={brand.logo_url!} alt={brand.name} width={120} height={32}
+    loading="lazy" fetchPriority="low" draggable={false} onError={() => setFailed(true)}
+    className="h-8 w-[120px] object-contain transition-all duration-300"
+    style={{ opacity: hovered ? 1 : 0.35, filter: hovered ? 'none' : 'grayscale(100%)' }} />;
+}
+
 export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem[]; language: Language }) {
+  const [logosEnabled, setLogosEnabled] = useState(false);
   const [hoveredId, setHoveredId] = useState<string | null>(null);
+  const container = useRef<HTMLDivElement>(null);
   const track = useRef<HTMLDivElement>(null);
   const frame = useRef(0);
   const position = useRef(0);
   const halfWidth = useRef(0);
   const paused = useRef(false);
+  const resumeTimer = useRef<number | null>(null);
+  const clickTimer = useRef<number | null>(null);
   const suppressClick = useRef(false);
   const drag = useRef({ active: false, dragged: false, startX: 0, startPosition: 0 });
+
+  useEffect(() => {
+    if (!container.current || brands.length === 0) return;
+    if (!('IntersectionObserver' in window)) { setLogosEnabled(true); return; }
+    const observer = new IntersectionObserver(entries => {
+      if (entries.some(entry => entry.isIntersecting)) {
+        setLogosEnabled(true);
+        observer.disconnect();
+      }
+    }, { rootMargin: '300px 0px' });
+    observer.observe(container.current);
+    return () => observer.disconnect();
+  }, [brands.length]);
 
   useEffect(() => {
     if (track.current) halfWidth.current = track.current.scrollWidth / 2;
   });
 
   useEffect(() => {
+    if (!container.current || brands.length === 0) return;
+    let running = false;
     function tick() {
+      if (!running) return;
       if (!paused.current && halfWidth.current > 0) {
         position.current -= 0.6;
         if (position.current <= -halfWidth.current) position.current += halfWidth.current;
@@ -28,12 +61,30 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
       frame.current = requestAnimationFrame(tick);
     }
 
-    frame.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(frame.current);
+    return observeCarouselVisibility(container.current, active => {
+      running = active;
+      if (active) frame.current = requestAnimationFrame(tick);
+      else cancelAnimationFrame(frame.current);
+    });
   }, [brands]);
 
+  useEffect(() => () => {
+    if (resumeTimer.current !== null) window.clearTimeout(resumeTimer.current);
+    if (clickTimer.current !== null) window.clearTimeout(clickTimer.current);
+  }, []);
+
+  function pause() {
+    if (resumeTimer.current !== null) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = null;
+    paused.current = true;
+  }
+
   function resume(delay: number) {
-    window.setTimeout(() => { paused.current = false; }, delay);
+    if (resumeTimer.current !== null) window.clearTimeout(resumeTimer.current);
+    resumeTimer.current = window.setTimeout(() => {
+      resumeTimer.current = null;
+      paused.current = false;
+    }, delay);
   }
 
   function setPosition(next: number) {
@@ -47,7 +98,7 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
 
   function pointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.pointerType === 'mouse' && event.button !== 0) return;
-    paused.current = true;
+    pause();
     drag.current = { active: true, dragged: false, startX: event.clientX, startPosition: position.current };
   }
 
@@ -69,7 +120,8 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
     event.currentTarget.classList.remove('cursor-grabbing', 'select-none');
     if (wasDragged) {
       suppressClick.current = true;
-      window.setTimeout(() => { suppressClick.current = false; }, 0);
+      if (clickTimer.current !== null) window.clearTimeout(clickTimer.current);
+      clickTimer.current = window.setTimeout(() => { clickTimer.current = null; suppressClick.current = false; }, 0);
     }
     resume(800);
   }
@@ -81,7 +133,7 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
   const items = [...half, ...half];
 
   return (
-    <div className="bg-[#f5f6f7] border-y border-gray-100 py-5">
+    <div ref={container} className="bg-[#f5f6f7] border-y border-gray-100 py-5">
       <div
         className="relative overflow-hidden cursor-grab"
         onPointerDown={pointerDown}
@@ -94,7 +146,7 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
           event.stopPropagation();
           suppressClick.current = false;
         }}
-        onMouseEnter={() => { paused.current = true; }}
+        onMouseEnter={pause}
         onMouseLeave={() => resume(150)}
         style={{ touchAction: 'pan-y' }}
       >
@@ -107,16 +159,15 @@ export function PartnersMarqueePreview({ brands, language }: { brands: BrandItem
             return (
               <a
                 key={itemId}
+                aria-label={brand.name}
                 href={`/${language}/brands/${brand.slug}`}
                 onMouseEnter={() => setHoveredId(itemId)}
                 onMouseLeave={() => setHoveredId(null)}
-                className="relative flex-shrink-0 select-none focus:outline-none w-[180px] h-12 flex items-center justify-center"
+                className="relative flex-shrink-0 select-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 w-[180px] h-12 flex items-center justify-center"
               >
-                {brand.logo_url ? (
-                  <img src={brand.logo_url} alt={brand.name} draggable={false} className="max-h-8 max-w-[120px] object-contain transition-all duration-300" style={{ opacity: hovered ? 1 : 0.35, filter: hovered ? 'none' : 'grayscale(100%)' }} />
-                ) : (
-                  <span className="block transition-colors duration-200 text-sm tracking-widest uppercase select-none whitespace-nowrap" style={{ color: hovered ? '#000' : '#d1d5db', fontWeight: 700 }}>{brand.name}</span>
-                )}
+                <span className="flex h-8 w-[120px] items-center justify-center" aria-label={brand.name}>
+                  <BrandLogo key={brand.logo_url || brand.name} brand={brand} hovered={hovered} enabled={logosEnabled} />
+                </span>
                 <span className="absolute bottom-0 left-8 h-px bg-black transition-all duration-300 ease-out" style={{ width: hovered ? 'calc(100% - 4rem)' : '0%' }} />
               </a>
             );

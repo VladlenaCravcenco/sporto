@@ -1024,7 +1024,6 @@ const _baseProducts: Product[] = [
     },
   },
 
-  // ── Sporturi Individuale
   {
     id: '25',
     name: {

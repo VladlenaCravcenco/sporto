@@ -27,7 +27,13 @@ function localizedText(language: Language, ro: string | null, ru: string | null)
 }
 
 function getDescription(data: ProductDetailData, language: Language) {
-  return localizedText(language, data.product.seo_description_ro || data.product.description_ro, data.product.seo_description_ru || data.product.description_ru);
+  const description = localizedText(language, data.product.seo_description_ro?.trim() || data.product.description_ro?.trim() || null,
+    data.product.seo_description_ru?.trim() || data.product.description_ru?.trim() || null).trim();
+  if (description) return description;
+  const name = localizedText(language, data.product.name_ro, data.product.name_ru);
+  return language === 'ro'
+    ? `${name} în catalogul SPORTO. Consultă prețul și disponibilitatea și trimite o cerere pentru acest produs.`
+    : `${name} в каталоге SPORTO. Посмотрите цену и доступность и отправьте заявку на этот товар.`;
 }
 
 function getImages(data: ProductDetailData) {
@@ -67,7 +73,17 @@ function ProductJsonLd({ data, language, canonical }: { data: ProductDetailData;
     <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify({
       '@context': 'https://schema.org', '@type': 'Product', name, description, sku: product.sku || product.id,
       url: canonical, image: getImages(data), brand: product.brand ? { '@type': 'Brand', name: product.brand } : undefined,
-      offers: { '@type': 'Offer', url: canonical, priceCurrency: 'MDL', price: onSale ? product.sale_price : product.price, availability: product.qty && product.qty > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder' },
+      offers: { '@type': 'Offer', url: canonical, priceCurrency: 'MDL', price: onSale ? product.sale_price : product.price, availability: product.qty && product.qty > 0 ? 'https://schema.org/InStock' : 'https://schema.org/PreOrder',
+        shippingDetails: {
+          '@type': 'OfferShippingDetails',
+          shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'MD' },
+          // The threshold applies to the whole order, including other items.
+          shippingRate: (onSale ? product.sale_price! : product.price) >= 500
+            ? { '@type': 'MonetaryAmount', value: 0, currency: 'MDL' }
+            : { '@type': 'MonetaryAmount', maxValue: 100, currency: 'MDL' },
+          shippingSettingsLink: `${siteUrl}/${language}/delivery-terms`,
+        },
+      },
     }).replace(/</g, '\\u003c') }} />
   );
 }
@@ -106,10 +122,10 @@ export default async function ProductPage({ params }: ProductPageProps) {
   ];
 
   return (
-    <main className="min-h-[70vh] bg-[#f5f6f7] py-8 md:py-12">
+    <div className="min-h-[70vh] bg-[#f5f6f7] py-8 md:py-12">
       <ProductJsonLd data={data} language={language} canonical={canonical} />
       <div className="mx-auto max-w-[1300px] px-4 sm:px-6 lg:px-8">
-        <Link href={`/${language}/catalog`} className="mb-8 inline-flex items-center gap-2 text-sm text-gray-500 hover:text-gray-900">
+        <Link href={`/${language}/catalog`} className="mb-8 inline-flex items-center gap-2 text-sm text-gray-600 hover:text-gray-900">
           <ArrowLeft className="h-4 w-4" aria-hidden="true" />
           {language === 'ro' ? 'Înapoi la catalog' : 'Вернуться в каталог'}
         </Link>
@@ -135,29 +151,30 @@ export default async function ProductPage({ params }: ProductPageProps) {
             )}
             <div>
               <h1 className="text-3xl font-semibold text-gray-950 md:text-4xl">{name}</h1>
-              {product.sku && <p className="mt-3 text-sm text-gray-500">{language === 'ro' ? 'SKU' : 'Артикул'}: {product.sku}</p>}
+              {product.sku && <p className="mt-3 text-sm text-gray-600">{language === 'ro' ? 'SKU' : 'Артикул'}: {product.sku}</p>}
             </div>
             <p className="whitespace-pre-wrap text-base leading-7 text-gray-600">{summary || (language === 'ro' ? 'Informații despre produs la cerere.' : 'Информация о товаре предоставляется по запросу.')}</p>
             <div className="border-y border-gray-200 py-5">
-              {onSale && <p className="text-sm text-gray-400 line-through">{formatPrice(product.price, language)} MDL</p>}
+              {onSale && <p className="text-sm text-gray-600 line-through">{formatPrice(product.price, language)} MDL</p>}
               <p className={`text-3xl font-semibold ${onSale ? 'text-red-600' : 'text-gray-950'}`}>{formatPrice(currentPrice, language)} <span className="text-base font-normal">MDL</span></p>
-              <div className="mt-3 flex flex-wrap gap-3 text-sm"><span className={inStock ? 'text-green-700' : 'text-gray-500'}>{inStock ? (language === 'ro' ? 'Disponibil' : 'В наличии') : (language === 'ro' ? 'Nu este în stoc' : 'Нет в наличии')}</span>{product.has_warranty && <span className="inline-flex items-center gap-1 text-gray-600"><ShieldCheck className="h-4 w-4 text-red-600" />{language === 'ro' ? 'Garanție' : 'Гарантия'}</span>}{onSale && <span className="inline-flex items-center gap-1 text-red-600"><Tag className="h-4 w-4" />{language === 'ro' ? 'Promoție' : 'Акция'}</span>}</div>
+              <div className="mt-3 flex flex-wrap gap-3 text-sm"><span className={inStock ? 'text-green-700' : 'text-gray-600'}>{inStock ? (language === 'ro' ? 'Disponibil' : 'В наличии') : (language === 'ro' ? 'Nu este în stoc' : 'Нет в наличии')}</span>{product.has_warranty && <span className="inline-flex items-center gap-1 text-gray-600"><ShieldCheck className="h-4 w-4 text-red-600" />{language === 'ro' ? 'Garanție' : 'Гарантия'}</span>}{onSale && <span className="inline-flex items-center gap-1 text-red-600"><Tag className="h-4 w-4" />{language === 'ro' ? 'Promoție' : 'Акция'}</span>}</div>
+              <p className="mt-3 text-sm text-gray-600">{language === 'ro' ? 'Livrare în toată Moldova: 100 MDL pentru comenzi sub 500 MDL; gratuit de la 500 MDL.' : 'Доставка по всей Молдове: 100 MDL при заказе менее 500 MDL; от 500 MDL — бесплатно.'} <Link href={`/${language}/delivery-terms`} className="underline">{language === 'ro' ? 'Condiții de livrare' : 'Условия доставки'}</Link></p>
               <ProductPurchase inStock={inStock} language={language} item={{
                 id: product.id, name: { ro: product.name_ro, ru: product.name_ru || product.name_ro },
                 price: currentPrice, image: images[0] || '', category: product.category, sku: product.sku || undefined,
               }} />
             </div>
             {details && <section>
-              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">{language === 'ro' ? 'Detalii despre produs' : 'Подробнее о товаре'}</h2>
+              <h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-600">{language === 'ro' ? 'Detalii despre produs' : 'Подробнее о товаре'}</h2>
               <p className="whitespace-pre-wrap text-base leading-7 text-gray-600">{details}</p>
             </section>}
-            {data.specifications.length > 0 && <section><h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-500">{language === 'ro' ? 'Specificații' : 'Характеристики'}</h2><dl className="divide-y divide-gray-200 border border-gray-100 bg-gray-50 px-5">{data.specifications.map(item => <div key={item.name} className="flex justify-between gap-4 py-3 text-sm"><dt className="text-gray-500">{item.name}</dt><dd className="text-right text-gray-900">{item.value}</dd></div>)}</dl></section>}
+            {data.specifications.length > 0 && <section><h2 className="mb-4 text-sm font-semibold uppercase tracking-wider text-gray-600">{language === 'ro' ? 'Specificații' : 'Характеристики'}</h2><dl className="divide-y divide-gray-200 border border-gray-100 bg-gray-50 px-5">{data.specifications.map(item => <div key={item.name} className="flex justify-between gap-4 py-3 text-sm"><dt className="text-gray-600">{item.name}</dt><dd className="text-right text-gray-900">{item.value}</dd></div>)}</dl></section>}
             {data.brand?.catalog_pdf && <a href={data.brand.catalog_pdf} target="_blank" rel="noreferrer" className="text-sm font-medium text-red-600 hover:underline">{language === 'ro' ? 'Descarcă catalogul brandului' : 'Скачать каталог бренда'}</a>}
           </div>
         </div>
         {getProductYoutubeId(product) && <div className="mt-12 border-t border-gray-100 pt-8"><h2 className="mb-4 text-xl font-semibold">{language === 'ro' ? 'Video' : 'Видео'}</h2><div className="aspect-video max-w-3xl"><iframe className="h-full w-full" src={`https://www.youtube.com/embed/${getProductYoutubeId(product)}`} title={name} loading="lazy" allowFullScreen /></div></div>}
         <FeaturedProductsSlider products={relatedProducts} language={language} title={language === 'ro' ? 'Produse similare' : 'Похожие товары'} compact />
       </div>
-    </main>
+    </div>
   );
 }

@@ -1,5 +1,6 @@
-export type ImageVariant = 'card' | 'menu' | 'hero' | 'detail' | 'thumbnail';
+export type ImageVariant = 'card' | 'menu' | 'hero' | 'detail' | 'thumbnail' | 'logo';
 const profiles: Record<ImageVariant, { widths: number[]; sizes: string; fallback: number }> = {
+  logo: { widths: [120, 240, 360], sizes: '120px', fallback: 240 },
   card: { widths: [240, 400, 640, 800], sizes: '(max-width: 639px) 50vw, (max-width: 1023px) 33vw, 25vw', fallback: 400 },
   menu: { widths: [160, 320, 480], sizes: '(max-width: 1279px) 25vw, 14vw', fallback: 320 },
   hero: { widths: [480, 800, 1200, 1600, 2000], sizes: '(max-width: 1023px) 100vw, 67vw', fallback: 1200 },
@@ -36,12 +37,12 @@ export function responsiveImage(source: string, variant: ImageVariant): { src: s
   const transformed = (width: number) => {
     const result = new URL(url);
     result.pathname = result.pathname.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
-    result.search = new URLSearchParams({ width: String(width), quality: '80', resize: 'contain' }).toString();
+    result.search = new URLSearchParams({ width: String(width), ...(variant === 'logo' ? { height: String(Math.round(width * 32 / 120)) } : {}), quality: '80', resize: 'contain' }).toString();
     return result.href;
   };
   return {
     src: transformed(profile.fallback),
-    srcSet: profile.widths.map(width => `${transformed(width)} ${width}w`).join(', '),
-    sizes: profile.sizes,
+    srcSet: profile.widths.map(width => `${transformed(width)} ${variant === 'logo' ? `${width / 120}x` : `${width}w`}`).join(', '),
+    ...(variant === 'logo' ? {} : { sizes: profile.sizes }),
   };
 }

@@ -5,13 +5,13 @@ export function SiteBreadcrumbs({ items, language, className = '', siteUrl = 'ht
 }) {
   if (!items.length) return null;
   return <div className={className}>
-    <nav aria-label={language === 'ro' ? 'Navigare ierarhică' : 'Хлебные крошки'} className="text-sm text-gray-400">
+    <nav aria-label={language === 'ro' ? 'Navigare ierarhică' : 'Хлебные крошки'} className="text-sm text-gray-600">
       <ol className="flex flex-wrap items-center gap-x-2 gap-y-1">
         {items.map((item, index) => <li key={item.href} className="flex min-w-0 items-center gap-2">
           {index > 0 && <span aria-hidden="true">/</span>}
           {index === items.length - 1
             ? <span aria-current="page" className="text-gray-700">{item.label}</span>
-            : <a href={item.href} className="transition-colors hover:text-gray-900">{item.label}</a>}
+            : <a href={item.href} className="inline-flex min-h-6 items-center transition-colors hover:text-gray-900">{item.label}</a>}
         </li>)}
       </ol>
     </nav>

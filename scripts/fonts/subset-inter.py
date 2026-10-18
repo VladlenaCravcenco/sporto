@@ -36,13 +36,16 @@ for name, ranges in sets.items():
     assert not coverage.intersection(codepoints)
     options = subset.Options()
     options.flavor = 'woff2'
-    options.layout_features = ['*']
+    # Keep browser shaping and the tabular numerals used by prices/counters.
+    # Unused stylistic alternates remain available in the original source font.
+    options.layout_features = ['calt', 'ccmp', 'kern', 'locl', 'mark', 'mkmk',
+                               'tnum', 'liga', 'clig', 'rlig', 'rvrn']
     subsetter = subset.Subsetter(options=options)
     subsetter.populate(unicodes=codepoints)
     subsetter.subset(font)
     font = instantiateVariableFont(font, {'opsz': 14}, inplace=True)
     font.flavor = 'woff2'
-    target = folder / f'Inter{name}.woff2'
+    target = folder / f'Inter{name}Core.woff2'
     font.save(target)
     result = TTFont(target)
     assert (set(original) & codepoints) <= set(result.getBestCmap())
@@ -51,7 +54,7 @@ for name, ranges in sets.items():
     unicode_range = ', '.join(f'U+{a:04X}-{b:04X}' if a != b else f'U+{a:04X}' for a, b in ranges)
     css.append(f'''@font-face {{
   font-family: 'Inter';
-  src: url('/fonts/inter/Inter{name}.woff2') format('woff2');
+  src: url('/fonts/inter/Inter{name}Core.woff2') format('woff2');
   font-style: normal;
   font-weight: 100 900;
   font-display: swap;

@@ -116,7 +116,6 @@ export function AdminFeatured() {
   return (
     <div className="min-h-screen admin-canvas">
 
-      {/* ── Toast ── */}
       {toast && (
         <div className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 sm:w-80 z-50 px-4 py-3 text-xs flex items-center gap-2 shadow-lg ${toast.ok ? 'admin-solid admin-on-solid' : 'bg-red-600 admin-on-solid'}`}>
           {toast.ok ? <Check className="w-3.5 h-3.5 flex-shrink-0" /> : <Star className="w-3.5 h-3.5 flex-shrink-0" />}
@@ -124,13 +123,9 @@ export function AdminFeatured() {
         </div>
       )}
 
-      {/* ══════════════════════════════════
-          TOP BAR
-          ══════════════════════════════════ */}
       <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-12 z-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Row 1: title + counters + refresh */}
           <div className="flex items-center h-11 gap-2">
             <Star className="w-4 h-4 admin-muted flex-shrink-0" />
             <span className="text-sm admin-ink flex-shrink-0">{t.featured.title}</span>
@@ -142,7 +137,6 @@ export function AdminFeatured() {
             </span>
             <div className="flex-1" />
 
-            {/* Category filter btn (mobile) */}
             <button
               onClick={() => setFilterOpen(v => !v)}
               className={`sm:hidden flex items-center gap-1.5 h-8 px-3 text-xs border transition-colors ${
@@ -155,7 +149,6 @@ export function AdminFeatured() {
               {categoryFilter ? CATEGORY_LABELS[categoryFilter]?.slice(0, 10) + (CATEGORY_LABELS[categoryFilter]?.length > 10 ? '…' : '') : t.featured.allCategories}
             </button>
 
-            {/* Category filter select (desktop) */}
             <select
               value={categoryFilter}
               onChange={e => setCategoryFilter(e.target.value)}
@@ -176,7 +169,6 @@ export function AdminFeatured() {
             </button>
           </div>
 
-          {/* Row 2: search full-width */}
           <div className="pb-2.5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted pointer-events-none" />
@@ -198,7 +190,6 @@ export function AdminFeatured() {
             </div>
           </div>
 
-          {/* Mobile category dropdown */}
           {filterOpen && (
             <div className="sm:hidden pb-2.5">
               <div className="grid grid-cols-2 gap-1">
@@ -227,12 +218,8 @@ export function AdminFeatured() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════
-          CONTENT
-          ══════════════════════════════════ */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-4">
 
-        {/* Tabs — full width on mobile */}
         <div className="flex mb-4 border admin-border overflow-hidden">
           {(['featured', 'all'] as const).map(tab => (
             <button
@@ -253,7 +240,6 @@ export function AdminFeatured() {
           ))}
         </div>
 
-        {/* Active category chip (when filtered) */}
         {categoryFilter && (
           <div className="flex items-center gap-2 mb-3">
             <span className="text-xs admin-muted  ">
@@ -269,7 +255,6 @@ export function AdminFeatured() {
           </div>
         )}
 
-        {/* ── Grid ── */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3">
             {Array.from({ length: 8 }).map((_, i) => (
@@ -299,7 +284,7 @@ export function AdminFeatured() {
   isFeatured ? 'admin-border-strong' : 'admin-border hover:border-gray-300'
 }`}
 >
-  {/* Image */}
+
   <div className="relative">
     <div className="aspect-square admin-canvas overflow-hidden">
       {product.image_url ? (
@@ -314,7 +299,7 @@ export function AdminFeatured() {
         </div>
       )}
     </div>
-                    {/* Featured star badge */}
+
                     {isFeatured && (
                       <div className="absolute top-1.5 left-1.5 admin-solid admin-on-solid w-5 h-5 flex items-center justify-center">
                         <Star className="w-3 h-3 fill-white" />
@@ -322,7 +307,6 @@ export function AdminFeatured() {
                     )}
                   </div>
 
-                  {/* Info */}
                   <div className="flex-1 px-2.5 pt-2 pb-1.5 min-w-0">
                     <p className="text-[11px] admin-ink line-clamp-2 leading-snug mb-1">
                       {name}
@@ -338,7 +322,6 @@ export function AdminFeatured() {
                     </p>
                   </div>
 
-                  {/* Footer actions */}
                   <div className="border-t admin-border flex mt-auto">
                     <button
                       onClick={() => toggle(product)}

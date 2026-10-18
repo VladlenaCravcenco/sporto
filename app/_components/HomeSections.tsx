@@ -36,10 +36,10 @@ export function HomeBenefits({ language }: { language: 'ro' | 'ru' }) {
           return <div key={title} className="flex min-w-0 flex-col gap-4 rounded-[5px] border border-gray-100 bg-white p-5 md:p-6">
             <div className="flex items-start justify-between">
               <div className="flex h-9 w-9 items-center justify-center bg-black text-white"><Icon className="h-5 w-5" aria-hidden="true" /></div>
-              <span className="text-xs tabular-nums text-gray-400">0{index + 1}</span>
+              <span className="text-xs tabular-nums text-gray-600">0{index + 1}</span>
             </div>
             <h3 className="font-semibold text-gray-900">{title}</h3>
-            <p className="text-sm leading-relaxed text-gray-500">{description}</p>
+            <p className="text-sm leading-relaxed text-gray-600">{description}</p>
           </div>;
         })}
       </div>

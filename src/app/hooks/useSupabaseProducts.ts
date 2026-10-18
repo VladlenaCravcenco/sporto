@@ -76,7 +76,6 @@ interface CatalogSearchRpcRow extends ProductRow {
   total_count: number;
 }
 
-// ─── Retry helper ─────────────────────────────────────────────────────────────
 // Retries a Supabase query up to `maxAttempts` times with exponential backoff.
 async function withRetry<T>(
   fn: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
@@ -124,7 +123,6 @@ export function useSupabaseProducts(enabled = true): UseSupabaseProductsResult {
 
     const CACHE_KEY = 'products:all';
 
-    // ── 1. Serve from cache immediately (no spinner for repeat visits) ──
     const cached = cacheGet<Product[]>(CACHE_KEY);
     if (cached) {
       setProducts(cached);
@@ -133,7 +131,6 @@ export function useSupabaseProducts(enabled = true): UseSupabaseProductsResult {
       return;
     }
 
-    // ── 2. Fresh fetch with retry ────────────────────────────────────────
     setLoading(true);
     setError(null);
 
@@ -402,7 +399,6 @@ export function usePaginatedCatalogProducts(params: CatalogProductsParams): UseP
   return { products, total, loading, error, connected };
 }
 
-// ─── Single product by ID ─────────────────────────────────────────────────────
 export function useSupabaseProduct(id: string | undefined) {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
@@ -474,7 +470,6 @@ export function useSupabaseProduct(id: string | undefined) {
   return { product, loading, error };
 }
 
-// ─── Featured products ────────────────────────────────────────────────────────
 export function useSupabaseFeatured() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
@@ -536,7 +531,6 @@ export function useSupabaseFeatured() {
   return { products, loading };
 }
 
-// ─── Products by brand (for product page carousel) ────────────────────────────
 export function useBrandProducts(brand: string | undefined, excludeId: string | undefined) {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(false);
@@ -575,7 +569,6 @@ export function useBrandProducts(brand: string | undefined, excludeId: string | 
   return { products, loading };
 }
 
-// ─── Toggle featured flag ─────────────────────────────────────────────────────
 export async function setProductFeatured(id: string, featured: boolean) {
   const { error } = await supabase
     .from('products')
@@ -588,7 +581,6 @@ export async function setProductFeatured(id: string, featured: boolean) {
   return error;
 }
 
-// ─── Product count (for hero stats) ───────────────────────────────────────────
 function roundFloor50(n: number): string {
   const rounded = Math.floor(n / 50) * 50;
   return `${rounded}+`;
@@ -618,13 +610,11 @@ export function useProductCount() {
   return display;
 }
 
-// ─── Category count (from live categories context) ────────────────────────────
 export function useCategoryCount(): string {
   const categories = useCategories();
   return String(categories.length);
 }
 
-// ─── Promo count (товары с акциями - sale_price задан) ─────────────────────────
 function roundFloor5(n: number): string {
   if (n === 0) return '0';
   const rounded = Math.floor(n / 5) * 5;

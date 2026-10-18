@@ -7,7 +7,6 @@
 import type { Product } from '../app/data/products';
 import type { Language } from '../app/contexts/LanguageContext';
 
-// ─── Нормализация ──────────────────────────────────────────────────────────────
 export function norm(s: string): string {
   return s
     .toLowerCase()
@@ -20,7 +19,6 @@ export function norm(s: string): string {
     .trim();
 }
 
-// ─── Расстояние Левенштейна (оптимизировано TypedArray) ────────────────────────
 export function levenshtein(a: string, b: string): number {
   if (a === b) return 0;
   if (!a.length) return b.length;
@@ -67,9 +65,8 @@ export function fuzzyFieldScore(token: string, field: string): number {
   return best;
 }
 
-// ─── Таблица синонимов ─────────────────────────────────────────────────────────
 const SYNONYM_MAP: Record<string, string[]> = {
-  // ── Кардио ──
+
   'беговая':       ['banda', 'treadmill', 'alergare', 'cardio', 'alergator'],
   'дорожка':       ['banda', 'treadmill', 'alergare'],
   'беговая дорожка':['banda alergare', 'treadmill'],
@@ -85,7 +82,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'гребной':       ['vaslit', 'rowing', 'canotaj', 'veslire', 'aparat vaslit'],
   'прогулочный':   ['cross trainer', 'eliptic', 'cardio'],
 
-  // ── Силовые ──
   'гантели':       ['gantere', 'dumbbell', 'greutati', 'halter'],
   'гантель':       ['gantera', 'dumbbell', 'greutate'],
   'штанга':        ['bara', 'haltera', 'barbell', 'disc'],
@@ -110,7 +106,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'пресс':         ['abdominal', 'ab', 'roman chair', 'crunch', 'bara abdominal'],
   'гиперэкстензия':['hiperextensie', 'spate', 'lombar'],
 
-  // ── Бокс и единоборства ──
   'бокс':          ['box', 'boxing', 'arte martiale', 'lupta'],
   'боксерский':    ['box', 'sac', 'manusi', 'ring'],
   'карате':        ['karate', 'arte martiale', 'kick', 'kimono'],
@@ -131,7 +126,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'капа':          ['protector dentar', 'gum shield', 'box'],
   'бинты':         ['fasa', 'bandaj', 'box', 'maini'],
 
-  // ── Мячи и командные ──
   'мяч':           ['minge', 'ball'],
   'футбол':        ['fotbal', 'football', 'soccer', 'minge'],
   'футбольный':    ['fotbal', 'football', 'soccer'],
@@ -154,7 +148,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'мяч баскетбольный':['minge baschet', 'basketball'],
   'мяч футбольный':['minge fotbal', 'football'],
 
-  // ── Фитнес и йога ──
   'коврик':        ['saltea', 'mat', 'saltea fitness', 'yoga mat'],
   'йога':          ['yoga', 'fitness', 'saltea', 'pilates', 'meditatie'],
   'пилатес':       ['pilates', 'yoga', 'fitness', 'reformer'],
@@ -176,7 +169,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'медбол':        ['minge medicinala', 'medicinala', 'greutate'],
   'утяжелитель':   ['greutate', 'gantere', 'lastare', 'вес'],
 
-  // ── Плавание ──
   'плавание':      ['inot', 'swimming', 'piscina', 'aqua'],
   'бассейн':       ['piscina', 'inot', 'swimming'],
   'ласты':         ['aripioare', 'fins', 'inot'],
@@ -186,12 +178,10 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'доска для плавания':['placa inot', 'kick board'],
   'аквааэробика':  ['aqua aerobic', 'inot', 'piscina'],
 
-  // ── Зимние ──
   'лыжи':          ['schi', 'ski', 'iarna', 'winter'],
   'сноуборд':      ['snowboard', 'tabla', 'iarna'],
   'коньки':        ['patine', 'ice skate', 'gheata', 'ice'],
 
-  // ─��� Защита ──
   'шлем':          ['casca', 'helmet', 'protectie', 'cap'],
   'защита':        ['protectie', 'protection', 'echipament', 'pad'],
   'наколенники':   ['genunchiere', 'knee pads', 'genunchi'],
@@ -200,7 +190,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'суппорт':       ['suport', 'bandaj', 'protectie articulatie'],
   'жилет':         ['vesta', 'vest', 'greutate', 'zbroia'],
 
-  // ── Спортзалы и учреждения ──
   'школьный':      ['scoala', 'school', 'inventar', 'educatie fizica'],
   'школа':         ['scoala', 'school', 'educatie', 'copii'],
   'детский':       ['copii', 'junior', 'kids', 'school', 'scoala'],
@@ -208,7 +197,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'стадион':       ['stadion', 'teren', 'outdoor', 'sport'],
   'детская площадка':['loc de joaca', 'copii', 'exterior'],
 
-  // ── RO → RU/EN ──
   'banda':         ['беговая', 'treadmill', 'alergare', 'cardio'],
   'bicicleta':     ['велосипед', 'bike', 'cycling', 'spinning'],
   'gantere':       ['гантели', 'dumbbell', 'halter'],
@@ -246,7 +234,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'stepper':       ['степпер', 'trepte', 'cardio'],
   'orbitrek':      ['орбитрек', 'eliptic', 'elliptical'],
 
-  // ── Частые опечатки / транслит ──
   'ганттели':      ['gantere', 'dumbbell', 'гантели'],
   'ганделя':       ['gantere', 'dumbbell', 'гантели'],
   'штанги':        ['bara', 'haltera', 'barbell'],
@@ -266,7 +253,6 @@ const SYNONYM_MAP: Record<string, string[]> = {
   'gym':           ['спортзал', 'sala', 'fitness', 'sport'],
 };
 
-// ─── Концепт-карта (семантика / намерение) ────────────────────────────────────
 const CONCEPT_MAP: Array<[RegExp, string[]]> = {
   // Цели
   [Symbol()]: [/\b()/i, []],
@@ -345,16 +331,13 @@ const CONCEPTS: Array<{ pattern: RegExp; keywords: string[] }> = [
     keywords: ['minge fotbal', 'poarta', 'fotbal', 'marci', 'con'] },
 ];
 
-// ─── Популярные запросы ────────────────────────────────────────────────────────
 export const POPULAR_QUERIES: Record<'ro' | 'ru', string[]> = {
   ro: ['Bandă de alergare', 'Gantere', 'Bicicletă fitness', 'Sac de box', 'Saltea yoga', 'HMS', 'Minge fotbal', 'Aparat multifuncțional', 'Stepper', 'Coarda'],
   ru: ['Беговая дорожка', 'Гантели', 'Велотренажёр', 'Боксёрский мешок', 'Коврик для йоги', 'HMS', 'Футбольный мяч', 'Многофункциональный тренажёр', 'Скакалка', 'Степпер'],
 };
 
-// ─── История поиска (localStorage) ────────────────────────────────────────────
 export { getSearchHistory, addToHistory, removeFromHistory, clearHistory } from './search-history';
 
-// ─── Парсинг цены из строки поиска ────────────────────────────────────────────
 export interface PriceRange { min?: number; max?: number }
 
 export function parsePrice(query: string): { price: PriceRange; cleanQuery: string } {
@@ -388,7 +371,6 @@ export function parsePrice(query: string): { price: PriceRange; cleanQuery: stri
   return { price: { min, max }, cleanQuery: clean.replace(/\s+/g, ' ').trim() };
 }
 
-// ─── Раскрытие токенов ─────────────────────────────────────────────────────────
 export interface ExpandedTokens {
   raw: string[];
   withSynonyms: string[];
@@ -428,7 +410,6 @@ export function expandTokens(rawTokens: string[], originalQuery: string): Expand
   };
 }
 
-// ─── Тип результата ────────────────────────────────────────────────────────────
 export type MatchType = 'exact' | 'fuzzy' | 'synonym' | 'concept';
 
 export interface ScoredProduct {
@@ -456,7 +437,6 @@ function prepareSearchText(product: Product) {
   return value;
 }
 
-// ─── Основная функция скоринга ─────────────────────────────────────────────────
 export function scoreProduct(
   product: Product,
   rawTokens: string[],
@@ -487,29 +467,23 @@ export function scoreProduct(
     let tokenMatched = false;
     const isNumericToken = /^\d+$/.test(token);
 
-    // ── 1. SKU / артикул — наивысший приоритет ──
     if (sku === token || cod === token)          { return { product, score: 1000, matchType: 'exact' }; }
     if (sku.includes(token))                     { score += 80; tokenMatched = true; }
     else if (cod.includes(token))               { score += 70; tokenMatched = true; }
 
-    // ── 2. Бренд ──
     else if (brand === token)                    { score += 60; tokenMatched = true; }
     else if (brand.startsWith(token))            { score += 45; tokenMatched = true; }
     else if (brand.includes(token))              { score += 30; tokenMatched = true; }
 
-    // ── 3. Название (активный язык) ──
     else if (name.startsWith(token))             { score += 20; tokenMatched = true; }
     else if (name.includes(token))               { score += 12; tokenMatched = true; }
 
-    // ── 4. Название (другой язык) ──
     else if (nameOther.startsWith(token))        { score += 16; tokenMatched = true; }
     else if (nameOther.includes(token))          { score += 8;  tokenMatched = true; }
 
-    // ── 5. Описание / категория ──
     else if (desc.includes(token) || descOther.includes(token)) { score += 4; tokenMatched = true; }
     else if (cat.includes(token) || sub.includes(token))        { score += 6; tokenMatched = true; }
 
-    // ── 6. Нечёткий матч (опечатки) ──
     else if (!isNumericToken) {
       const fName = fuzzyFieldScore(token, name);
       if (fName > 0) { score += fName + 2; matchType = 'fuzzy'; tokenMatched = true; }
@@ -525,7 +499,6 @@ export function scoreProduct(
 
     if (tokenMatched) continue;
 
-    // ── 7. Синонимы ──
     let synMatched = false;
     for (const syn of expanded.withSynonyms) {
       if (syn === token) continue;
@@ -538,7 +511,6 @@ export function scoreProduct(
     }
     if (synMatched) continue;
 
-    // ── 8. Концептуальный / семантический ──
     let conceptMatched = false;
     for (const concept of expanded.conceptKeywords) {
       if (combined.includes(concept)) {
@@ -559,7 +531,6 @@ export function scoreProduct(
   return { product, score, matchType };
 }
 
-// ─── Результат поиска ──────────────────────────────────────────────────────────
 export interface SearchResult {
   hits: ScoredProduct[];
   total: number;
@@ -573,7 +544,6 @@ export interface SearchResult {
   expandedTokens: ExpandedTokens;
 }
 
-// ─── Главная функция поиска ────────────────────────────────────────────────────
 export function searchProducts(
   products: Product[],
   query: string,
@@ -618,7 +588,6 @@ export function searchProducts(
   };
 }
 
-// ─── Умные подсказки при нулевых результатах ──────────────────────────────────
 export function getSuggestions(products: Product[], rawTokens: string[], lang: Language): string[] {
   if (rawTokens.length <= 1) return [];
   const suggestions: string[] = [];

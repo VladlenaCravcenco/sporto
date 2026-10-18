@@ -2,7 +2,6 @@
 
 import { usePathname, useSearchParams } from 'next/navigation';
 import { SiteBreadcrumbs } from '../../src/app/components/SiteBreadcrumbs';
-import { brands } from '../../src/app/data/brands';
 import type { CatalogNavigationCategory } from '../_lib/catalog-data';
 
 const labels: Record<string, [string, string]> = {
@@ -26,9 +25,9 @@ export function PageBreadcrumbs({ categories }: { categories: CatalogNavigationC
   const language = (localized ? parts.shift() : query.get('lang')) === 'ru' ? 'ru' : 'ro';
   const route = parts[0];
   // Product pages supply the product and its database category hierarchy.
-  if (route === 'product') return null;
+  if (route === 'product' || route === 'brands') return null;
   const items = [{ label: language === 'ro' ? 'Acasă' : 'Главная', href: '/' + language }];
-  if (route === 'catalog' || route === 'brands') {
+  if (route === 'catalog') {
     items.push({ label: language === 'ro' ? 'Catalog' : 'Каталог', href: '/' + language + '/catalog' });
     if (route === 'catalog') {
       const selected = query.getAll('category');
@@ -39,9 +38,6 @@ export function PageBreadcrumbs({ categories }: { categories: CatalogNavigationC
         const child = sub.length === 1 ? category.subcategories.find(s => s.id === sub[0]) : undefined;
         if (child) items.push({ label: child.name[language], href: '/' + language + '/catalog?' + new URLSearchParams({ category: category.id, subcategory: child.id }) });
       }
-    } else {
-      const brand = brands.find(b => b.id === parts[1]);
-      items.push({ label: brand?.name || decodeURIComponent(parts[1] || ''), href: pathname });
     }
   } else if (route && labels[route]) {
     items.push({ label: labels[route][language === 'ru' ? 1 : 0], href: pathname });

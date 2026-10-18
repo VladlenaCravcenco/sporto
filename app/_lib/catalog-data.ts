@@ -1,7 +1,9 @@
+import { readProductCategoryLinks } from './product-category-links';
 import { publicSnapshot } from './public-cache';
 import { createClient } from '@supabase/supabase-js';
 import { categories as fallbackCategories } from '../../src/app/data/products';
 import { getSupabasePublicConfig } from './supabase-env';
+import { readPublicRows } from './public-rows';
 
 export interface CatalogNavigationSubcategory {
   id: string;
@@ -73,26 +75,36 @@ function navigationFallback(): CatalogNavigationCategory[] {
   }));
 }
 
-async function loadgetCatalogNavigation(): Promise<CatalogNavigationCategory[]> {
+class CatalogNavigationUnavailable extends Error {
+  constructor(message: string, readonly menuNavigation: CatalogNavigationCategory[]) {
+    super(message);
+  }
+}
+
+async function loadCatalogNavigation(): Promise<CatalogNavigationCategory[]> {
   const supabase = createServerSupabase();
-  if (!supabase) return navigationFallback();
+  if (!supabase) {
+    throw new CatalogNavigationUnavailable('Categories configuration unavailable', navigationFallback());
+  }
 
   const [categoriesResult, subcategoriesResult] = await Promise.all([
-    supabase
+    readPublicRows(supabase
       .from('categories')
       .select('slug,active,name_ro,name_ru,description_ro,description_ru,icon,sort_order')
       .eq('active', true)
-      .order('sort_order', { ascending: true }),
-    supabase
+      .order('sort_order', { ascending: true }).order('slug'))
+      .then(data => ({ data, error: null })).catch(error => ({ data: null, error })),
+    readPublicRows(supabase
       .from('subcategories')
       .select('category_slug,slug,name_ro,name_ru,sort_order')
-      .order('sort_order', { ascending: true }),
+      .order('sort_order', { ascending: true }).order('category_slug').order('slug'))
+      .then(data => ({ data, error: null })).catch(error => ({ data: null, error })),
   ]);
 
-  if (categoriesResult.error || !categoriesResult.data?.length) return navigationFallback();
+  if (categoriesResult.error) throw new CatalogNavigationUnavailable('Categories unavailable', navigationFallback());
 
   const subcategories = subcategoriesResult.error ? [] : (subcategoriesResult.data ?? []);
-  return categoriesResult.data.map(category => ({
+  const navigation = (categoriesResult.data ?? []).map(category => ({
     id: category.slug,
     icon: category.icon || undefined,
     name: { ro: category.name_ro, ru: category.name_ru || category.name_ro },
@@ -107,6 +119,10 @@ async function loadgetCatalogNavigation(): Promise<CatalogNavigationCategory[]> 
         name: { ro: subcategory.name_ro, ru: subcategory.name_ru || subcategory.name_ro },
       })),
   }));
+  if (subcategoriesResult.error) {
+    throw new CatalogNavigationUnavailable('Subcategories unavailable', navigation.length ? navigation : navigationFallback());
+  }
+  return navigation;
 }
 
 export async function getCatalogMenuProducts(
@@ -128,7 +144,14 @@ export async function getCatalogMenuProducts(
     .order('id', { ascending: true })
     .limit(safeLimit);
 
-  return error ? [] : (data as CatalogMenuProduct[]);
+  if (error) return [];
+  const links = await readProductCategoryLinks(supabase, category, subcategory);
+  if (!links.length) return data as CatalogMenuProduct[];
+  const extra = await supabase.from('products').select('id,name_ro,name_ru,sku,image_url')
+    .eq('active', true).in('id', [...new Set(links.map(row => row.product_id))])
+    .order('featured', { ascending: false }).order('id').limit(safeLimit);
+  if (extra.error) throw new Error('Catalog menu placements unavailable');
+  return [...new Map([...(data || []), ...(extra.data || [])].map(row => [row.id, row])).values()].slice(0, safeLimit) as CatalogMenuProduct[];
 }
 
 export async function getCatalogPageData(
@@ -297,4 +320,18 @@ export async function getCatalogPageData(
   };
 }
 
-export const getCatalogNavigation = publicSnapshot(loadgetCatalogNavigation);
+// Menu and SEO share both the cached result and an in-flight database read.
+// Only successful database snapshots are cached; fallback data never reaches SEO.
+const catalogNavigationSnapshot = publicSnapshot(loadCatalogNavigation);
+
+export async function getCatalogNavigation(): Promise<CatalogNavigationCategory[]> {
+  try {
+    const navigation = await catalogNavigationSnapshot();
+    return navigation.length ? navigation : navigationFallback();
+  } catch (error) {
+    if (error instanceof CatalogNavigationUnavailable) return error.menuNavigation;
+    return navigationFallback();
+  }
+}
+
+export const getCatalogNavigationForSeo = catalogNavigationSnapshot;

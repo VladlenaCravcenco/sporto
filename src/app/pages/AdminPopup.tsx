@@ -16,7 +16,6 @@ const DEFAULT: PopupData = {
   ...DEFAULT_POPUP,
 };
 
-// ── Toggle component ───────────────────────────────────────────────────────────
 function Toggle({ value, onChange }: {
   value: boolean;
   onChange: (v: boolean) => void;
@@ -42,7 +41,6 @@ function Toggle({ value, onChange }: {
   );
 }
 
-// ── Popup card preview (reusable) ──────────────────────────────────────────────
 function PopupCard({ data, lang, onClose }: {
   data: PopupData;
   lang: 'ro' | 'ru';
@@ -55,10 +53,9 @@ function PopupCard({ data, lang, onClose }: {
 
   return (
     <div className="relative admin-surface border admin-border max-w-md w-full shadow-2xl">
-      {/* accent line */}
+
       <div className="absolute top-0 left-8 w-14 h-0.5 admin-solid" />
 
-      {/* close (decorative) */}
       <button
         onClick={onClose}
         className="absolute top-4 right-4 w-7 h-7 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
@@ -106,7 +103,6 @@ function PopupCard({ data, lang, onClose }: {
   );
 }
 
-// ── Main component ─────────────────────────────────────────────────────────────
 export function AdminPopup() {
   const { lang } = useAdminLang();
   const [data, setData] = useState<PopupData>({ ...DEFAULT });
@@ -155,12 +151,8 @@ export function AdminPopup() {
   return (
     <AdminEditorWorkspace>
 
-      {/* ══════════════════════════════════════
-          LEFT — EDITOR
-      ══════════════════════════════════════ */}
       <div className="admin-editor-pane">
 
-        {/* Sticky header */}
         <div className="sticky top-0 z-10 admin-surface border-b admin-border px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
@@ -178,10 +170,8 @@ export function AdminPopup() {
           </div>
         </div>
 
-        {/* Fields */}
         <div className="px-5 py-5 space-y-6">
 
-          {/* Active */}
           <div>
             <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Статус' : 'Status'}
@@ -200,7 +190,6 @@ export function AdminPopup() {
             </div>
           </div>
 
-          {/* Title */}
           <div>
             <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Заголовок' : 'Titlu'}
@@ -229,7 +218,6 @@ export function AdminPopup() {
             </div>
           </div>
 
-          {/* Body */}
           <div>
             <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Описание' : 'Descriere'}
@@ -258,7 +246,6 @@ export function AdminPopup() {
             </div>
           </div>
 
-          {/* CTA */}
           <div>
             <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Кнопка' : 'Buton'}
@@ -296,14 +283,12 @@ export function AdminPopup() {
             </div>
           </div>
 
-          {/* Settings */}
           <div>
             <p className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">
               {isRu ? 'Настройки показа' : 'Setări afișare'}
             </p>
             <div className="space-y-4">
 
-              {/* Delay */}
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs admin-ink">{isRu ? 'Задержка появления' : 'Întârziere apariție'}</p>
@@ -320,7 +305,6 @@ export function AdminPopup() {
                 </div>
               </div>
 
-              {/* Show once */}
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs admin-ink">{isRu ? 'Показывать один раз' : 'Afișează o singură dată'}</p>
@@ -332,7 +316,6 @@ export function AdminPopup() {
                 />
               </div>
 
-              {/* Reset seen */}
               <button
                 onClick={handleResetSeen}
                 className="w-full border admin-border admin-muted hover:text-gray-300 admin-hover-border py-2 text-xs transition-colors"
@@ -345,19 +328,14 @@ export function AdminPopup() {
         </div>
       </div>
 
-      {/* ══════════════════════════════════════
-          RIGHT — PREVIEW
-      ══════════════════════════════════════ */}
       <div className="admin-preview-pane flex-1 flex flex-col overflow-hidden">
 
-        {/* Preview toolbar */}
         <div className="shrink-0 admin-surface border-b admin-border px-5 py-2.5 flex items-center gap-3">
           <Monitor className="w-4 h-4 admin-muted" />
           <span className="text-xs admin-muted flex-1  ">
             {isRu ? 'Живое превью попапа' : 'Preview live al popup-ului'}
           </span>
 
-          {/* Lang toggle */}
           <div className="flex items-center gap-1 border admin-border">
             <button
               onClick={() => setPreviewLang('ro')}
@@ -374,12 +352,10 @@ export function AdminPopup() {
           </div>
         </div>
 
-        {/* Simulated site background */}
         <div data-admin-preview className="flex-1 overflow-hidden relative">
 
-          {/* Blurred site mockup behind */}
           <div className="absolute inset-0 bg-white">
-            {/* fake nav */}
+
             <div className="h-12 bg-black border-b border-white/5 flex items-center px-8 gap-6">
               <div className="text-white text-xs tracking-widest">SPORTO</div>
               <div className="flex gap-4 ml-8">
@@ -388,7 +364,7 @@ export function AdminPopup() {
                 ))}
               </div>
             </div>
-            {/* fake hero */}
+
             <div className="px-8 pt-12">
               <div className="h-3 bg-gray-100 w-1/3 mb-3 rounded" />
               <div className="h-8 bg-gray-100 w-2/3 mb-2 rounded" />
@@ -399,10 +375,8 @@ export function AdminPopup() {
             </div>
           </div>
 
-          {/* Overlay + popup */}
           <div className="absolute inset-0 bg-black/65 flex items-center justify-center p-6">
 
-            {/* Status badge */}
             <div className="absolute top-4 left-1/2 -translate-x-1/2">
               <div className={`flex items-center gap-2 px-3 py-1.5 text-[10px] uppercase tracking-widest border ${
                 data.active
@@ -416,7 +390,6 @@ export function AdminPopup() {
               </div>
             </div>
 
-            {/* The actual popup card */}
             <div className={`transition-opacity duration-300 ${data.active ? 'opacity-100' : 'opacity-40'}`}>
               <PopupCard
                 data={data}
@@ -425,7 +398,6 @@ export function AdminPopup() {
             </div>
           </div>
 
-          {/* Disabled overlay when inactive */}
           {!data.active && (
             <div className="absolute inset-0 flex items-end justify-center pb-8 pointer-events-none">
               <p className="text-xs text-gray-600 uppercase tracking-widest">

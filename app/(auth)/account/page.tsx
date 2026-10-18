@@ -135,7 +135,6 @@ export default function AccountPage() {
     <div className="max-w-2xl">
       <h1 className="text-3xl font-bold mb-8">{t.title}</h1>
 
-      {/* User Info Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">User Information</h2>
         <div>
@@ -144,7 +143,6 @@ export default function AccountPage() {
         </div>
       </div>
 
-      {/* Change Password Section */}
       <div className="bg-white rounded-lg border border-gray-200 p-6 mb-8">
         <h2 className="text-xl font-semibold mb-4">{t.changePassword}</h2>
 
@@ -204,7 +202,6 @@ export default function AccountPage() {
         </form>
       </div>
 
-      {/* Sign Out Section */}
       <div className="flex justify-end">
         <button
           onClick={handleSignOut}

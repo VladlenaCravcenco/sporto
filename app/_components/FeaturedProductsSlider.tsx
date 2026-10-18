@@ -1,5 +1,6 @@
 'use client';
 
+import { observeCarouselVisibility } from './carousel-visibility';
 import { CatalogLink } from './CatalogLink';
 import { productPath } from '../_lib/product-url';
 import { ProductCardView } from '../../src/app/components/ProductCardView';
@@ -33,10 +34,14 @@ export function FeaturedProductsSlider({ products: suppliedProducts, language, t
 
   useEffect(() => {
     if (products.length < 2) return;
-    const timer = window.setInterval(() => {
-      if (!paused.current) move(1);
-    }, 4500);
-    return () => window.clearInterval(timer);
+    if (!viewport.current) return;
+    let timer: number | undefined;
+    return observeCarouselVisibility(viewport.current, active => {
+      if (timer !== undefined) window.clearInterval(timer);
+      timer = active ? window.setInterval(() => {
+        if (!paused.current) move(1);
+      }, 4500) : undefined;
+    });
   }, [move, products.length]);
 
   if (products.length === 0) return null;
@@ -47,11 +52,11 @@ export function FeaturedProductsSlider({ products: suppliedProducts, language, t
         <div className="flex items-end justify-between mb-6">
           <h2 className="text-xl text-gray-900">{title || (language === 'ro' ? 'Produse recomandate' : 'Рекомендуемые товары')}</h2>
           <div className="flex items-center gap-2">
-            <a href={`/${language}/catalog`} className="hidden sm:flex text-xs text-gray-400 hover:text-black items-center gap-1.5 transition-colors uppercase tracking-wider">
+            <a href={`/${language}/catalog`} className="hidden sm:flex text-xs text-gray-600 hover:text-black items-center gap-1.5 transition-colors uppercase tracking-wider">
               {language === 'ro' ? 'Toate Produsele' : 'Все Продукты'}<ArrowRight className="w-3.5 h-3.5" />
             </a>
-            <button type="button" aria-label="Previous products" onClick={() => move(-1)} className="w-9 h-9 border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors"><ChevronLeft className="w-4 h-4" /></button>
-            <button type="button" aria-label="Next products" onClick={() => move(1)} className="w-9 h-9 border border-gray-200 flex items-center justify-center text-gray-400 hover:border-black hover:text-black transition-colors"><ChevronRight className="w-4 h-4" /></button>
+            <button type="button" aria-label="Previous products" onClick={() => move(-1)} className="w-11 h-11 border border-gray-200 flex items-center justify-center text-gray-600 hover:border-black hover:text-black transition-colors"><ChevronLeft className="w-4 h-4" /></button>
+            <button type="button" aria-label="Next products" onClick={() => move(1)} className="w-11 h-11 border border-gray-200 flex items-center justify-center text-gray-600 hover:border-black hover:text-black transition-colors"><ChevronRight className="w-4 h-4" /></button>
           </div>
         </div>
 

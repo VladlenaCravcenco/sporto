@@ -10,7 +10,6 @@ import {
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { categoryIconOptions, getCategoryIcon } from '../lib/category-icons';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 interface CatRow {
   id: string;
   slug: string;
@@ -56,7 +55,6 @@ const SQL_SETUP = `ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS active
 ALTER TABLE public.categories ADD COLUMN IF NOT EXISTS icon text;
 NOTIFY pgrst, 'reload schema';`;
 
-// ─── useIsMobile ──────────────────────────────────────────────────────────────
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.innerWidth < 768);
   useEffect(() => {
@@ -67,7 +65,6 @@ function useIsMobile() {
   return isMobile;
 }
 
-// ─── IconPicker ───────────────────────────────────────────────────────────────
 function IconPicker({ value, onChange }: { value: string; onChange: (key: string) => void }) {
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
@@ -177,7 +174,6 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
         <ChevronDown className={`w-3.5 h-3.5 admin-muted transition-transform flex-shrink-0 ${open ? 'rotate-180' : ''}`} />
       </button>
 
-      {/* Mobile fullscreen */}
       {isMobile && open && (
         <div className="fixed inset-0 z-[600] flex flex-col admin-surface">
           <div className="flex items-center justify-between px-4 py-3 border-b admin-border flex-shrink-0">
@@ -194,7 +190,6 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
         </div>
       )}
 
-      {/* Desktop dropdown */}
       {!isMobile && open && (
         <div className="absolute left-0 top-full mt-1 z-[200] w-80 admin-surface border admin-border-strong shadow-xl flex flex-col" style={{ maxHeight: '320px' }}>
           <div className="p-2 border-b admin-border flex-shrink-0">
@@ -208,7 +203,6 @@ function IconPicker({ value, onChange }: { value: string; onChange: (key: string
   );
 }
 
-// ─── EditForm ─────────────────────────────────────────────────────────────────
 function EditForm({
   mode, isCat, onSave, onCancel, saving, saveErr,
 }: {
@@ -314,7 +308,6 @@ function EditForm({
   );
 }
 
-// ─── BottomSheet ──────────────────────────────────────────────────────────────
 function BottomSheet({ title, onClose, children }: { title: string; onClose: () => void; children: React.ReactNode }) {
   useEffect(() => {
     document.body.style.overflow = 'hidden';
@@ -340,7 +333,6 @@ function BottomSheet({ title, onClose, children }: { title: string; onClose: () 
   );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
 export function AdminCategories() {
   const { refetchCategories } = useCategoriesContext();
   const { t } = useAdminLang();
@@ -484,7 +476,6 @@ export function AdminCategories() {
   return (
     <div className="admin-section">
 
-      {/* Header */}
       <div className="admin-section-heading">
         <div>
           <h1 className="text-base sm:text-xl admin-ink">Categorii & Subcategorii</h1>
@@ -504,7 +495,6 @@ export function AdminCategories() {
         </div>
       </div>
 
-      {/* DB error */}
       {dbError && (
         <div className="mb-5 border border-orange-200 bg-orange-50 p-4">
           <div className="flex gap-3">
@@ -527,7 +517,7 @@ export function AdminCategories() {
 
       {!dbError && (
         <>
-          {/* Filters */}
+
           <div className="flex border admin-border w-fit mb-3">
             {(['all', 'active', 'inactive'] as const).map(s => (
               <button key={s} onClick={() => setStatusFilter(s)} className={`px-3 h-8 text-xs transition-colors border-r last:border-0 admin-border ${statusFilter === s ? 'admin-solid admin-on-solid' : 'admin-muted admin-hover-ink'}`}>
@@ -536,7 +526,6 @@ export function AdminCategories() {
             ))}
           </div>
 
-          {/* Desktop: new cat form */}
           {!isMobile && editMode?.type === 'new-cat' && (
             <div className="mb-3 border admin-border-strong">
               <div className="px-4 py-2 admin-solid">
@@ -548,7 +537,6 @@ export function AdminCategories() {
             </div>
           )}
 
-          {/* Empty state */}
           {!loading && cats.length === 0 && (
             <div className="border border-dashed admin-border p-10 text-center">
               <FolderOpen className="w-8 h-8 text-gray-200 mx-auto mb-3" />
@@ -577,7 +565,7 @@ export function AdminCategories() {
 
                 return (
                   <div key={cat.id}>
-                    {/* Category row */}
+
                     <div className={`flex items-center gap-2 px-2 sm:px-3 py-3 transition-colors ${isEditingCat ? 'admin-canvas' : 'hover:bg-gray-50/50'}`}>
                       <button onClick={() => setExpandedCat(isExpanded ? null : cat.id)} className="w-6 h-6 flex items-center justify-center admin-muted admin-hover-ink flex-shrink-0">
                         {isExpanded ? <ChevronDown className="w-3.5 h-3.5" /> : <ChevronRight className="w-3.5 h-3.5" />}
@@ -596,13 +584,11 @@ export function AdminCategories() {
                         </div>
                       </div>
 
-                      {/* Count - desktop only */}
                       <div className="flex-shrink-0 text-center hidden sm:block">
                         <div className={`text-xs tabular-nums px-2 py-0.5 ${prodCount > 0 ? 'admin-solid admin-on-solid' : 'admin-muted-surface admin-muted'}`}>{prodCount}</div>
                         <div className="text-xs admin-muted mt-0.5">prod.</div>
                       </div>
 
-                      {/* Actions */}
                       <div className="flex items-center gap-0.5 sm:gap-1 flex-shrink-0">
                         <button onClick={() => toggleActive(cat)} className={`w-8 h-5 rounded-full items-center flex-shrink-0 transition-colors hidden sm:flex ${(cat.active ?? true) ? 'admin-solid' : 'admin-muted-surface'}`}>
                           <span className={`w-3.5 h-3.5 admin-surface rounded-full shadow transition-transform mx-0.5 ${(cat.active ?? true) ? 'translate-x-3' : 'translate-x-0'}`} />
@@ -619,14 +605,12 @@ export function AdminCategories() {
                       </div>
                     </div>
 
-                    {/* Desktop inline edit for category */}
                     {isEditingCat && (
                       <div className="border-t admin-border admin-canvas px-4 py-4">
                         <EditForm mode={editMode} isCat={true} onSave={handleSave} onCancel={closeEdit} saving={saving} saveErr={saveErr} />
                       </div>
                     )}
 
-                    {/* Subcategories */}
                     {isExpanded && (
                       <div className="border-t admin-border">
                         {catSubs.length === 0 && !isAddingSub && (
@@ -692,14 +676,12 @@ export function AdminCategories() {
         </>
       )}
 
-      {/* Mobile bottom sheet */}
       {isMobile && editMode && (
         <BottomSheet title={sheetTitle()} onClose={closeEdit}>
           <EditForm mode={editMode} isCat={isCatEdit} onSave={handleSave} onCancel={closeEdit} saving={saving} saveErr={saveErr} />
         </BottomSheet>
       )}
 
-      {/* Delete modal */}
       {deleteTarget && (
         <div className="fixed inset-0 z-[300] flex items-center justify-center px-4">
           <div className="absolute inset-0 bg-black/60" onClick={() => setDeleteTarget(null)} />

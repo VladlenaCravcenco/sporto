@@ -1,3 +1,4 @@
+import { getCategoryIconData } from '../_lib/category-icon-data';
 import { getCatalogNavigation } from '../_lib/catalog-data';
 import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
@@ -23,11 +24,11 @@ export async function generateMetadata({ params }: LocalePageProps): Promise<Met
 
   return {
     title: isRo
-      ? 'SPORTO — echipamente sportive profesionale'
-      : 'SPORTO — профессиональное спортивное оборудование',
+      ? 'Echipamente sportive și aparate fitness în Moldova'
+      : 'Спортивное оборудование и тренажёры в Молдове',
     description: isRo
-      ? 'Echipamente sportive profesionale, soluții la cheie, livrare și mentenanță în Moldova.'
-      : 'Профессиональное спортивное оборудование, решения под ключ, доставка и обслуживание в Молдове.',
+      ? 'Aparate cardio, echipamente de forță și accesorii sportive pentru acasă, săli și instituții. Catalog SPORTO, livrare și servicii în Moldova.'
+      : 'Кардиотренажёры, силовое оборудование и спортивный инвентарь для дома, залов и учреждений. Каталог SPORTO, доставка и обслуживание в Молдове.',
     alternates: {
       canonical,
       languages: {
@@ -43,8 +44,8 @@ export async function generateMetadata({ params }: LocalePageProps): Promise<Met
       alternateLocale: isRo ? ['ru_MD'] : ['ro_MD'],
       siteName: 'SPORTO',
       title: isRo
-        ? 'SPORTO — echipamente sportive profesionale'
-        : 'SPORTO — профессиональное спортивное оборудование',
+        ? 'Echipamente sportive și aparate fitness în Moldova'
+        : 'Спортивное оборудование и тренажёры в Молдове',
       description: isRo
         ? 'Echipamente sportive profesionale și soluții la cheie în Moldova.'
         : 'Профессиональное спортивное оборудование и решения под ключ в Молдове.',
@@ -57,5 +58,5 @@ export default async function LocalizedHomePage({ params }: LocalePageProps) {
   if (!languages.has(lang as Language)) notFound();
 
   const [data, categories] = await Promise.all([getHomeHeroData(), getCatalogNavigation()]);
-  return <HomeMigrationPreview language={lang as Language} {...data} categories={categories} />;
+  return <HomeMigrationPreview language={lang as Language} {...data} categories={categories} categoryIcons={getCategoryIconData(categories)} />;
 }

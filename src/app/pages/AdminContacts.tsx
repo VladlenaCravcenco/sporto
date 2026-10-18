@@ -11,7 +11,6 @@ import { CONTACTS } from '../../lib/contacts';
 import { saveContacts } from '../hooks/useContacts';
 import { usePreviewFieldFocus } from '../hooks/usePreviewFieldFocus';
 
-// ── Типы ────────────────────────────────────────────────────────────────────
 interface SocialEntry {
   id: string;
   type: SocialType;
@@ -33,7 +32,6 @@ interface ContactsData {
   socials: SocialEntry[];
 }
 
-// ── Соцсети — конфиг ────────────────────────────────────────────────────────
 const SOCIAL_CONFIG: Record<SocialType, { label: string; color: string; placeholder: string; icon: string }> = {
   instagram: { label: 'Instagram', color: '#E1306C', placeholder: 'https://instagram.com/sporto.md',     icon: '📸' },
   facebook:  { label: 'Facebook',  color: '#1877F2', placeholder: 'https://facebook.com/sporto.md',      icon: '👥' },
@@ -47,7 +45,6 @@ const SOCIAL_CONFIG: Record<SocialType, { label: string; color: string; placehol
 
 const ALL_SOCIAL_TYPES = Object.keys(SOCIAL_CONFIG) as SocialType[];
 
-// ── Дефолты ─────────────────────────────────────────────────────────────────
 const DEFAULTS: ContactsData = {
   phone:      CONTACTS.phoneDisplay,
   phone_2:    '',
@@ -65,7 +62,6 @@ const DEFAULTS: ContactsData = {
   ],
 };
 
-// ── Supabase helpers ─────────────────────────────────────────────────────────
 function fromSupabase(rows: { key: string; value: string }[]): Partial<ContactsData> {
   const obj = Object.fromEntries(rows.map(r => [r.key, r.value]));
   const result: Partial<ContactsData> = {};
@@ -100,7 +96,6 @@ function toSupabase(data: ContactsData): Record<string, string> {
 // Телефон → raw для ссылки
 function toRaw(phone: string) { return phone.replace(/[^\d+]/g, ''); }
 
-// ── Поля ────────────────────────────────────────────────────────────────────
 function Field({ label, value, onChange, type = 'text', placeholder, hint }: {
   label: string; value: string; onChange: (v: string) => void;
   type?: string; placeholder?: string; hint?: string;
@@ -146,7 +141,6 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   );
 }
 
-// ── SVG иконки соцсетей (те же что на сайте) ────────────────────────────────
 const SOCIAL_SVGS: Record<SocialType, React.ReactNode> = {
   whatsapp:  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.555 4.104 1.523 5.826L.044 23.428a.5.5 0 0 0 .612.612l5.602-1.479A11.946 11.946 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.868 9.868 0 0 1-5.034-1.376l-.36-.214-3.733.985.999-3.642-.235-.374A9.869 9.869 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118c5.467 0 9.882 4.415 9.882 9.882 0 5.467-4.415 9.882-9.882 9.882z"/></svg>,
   telegram:  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.17 13.5l-2.95-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.537-.194 1.006.131.973.057z"/></svg>,
@@ -158,7 +152,6 @@ const SOCIAL_SVGS: Record<SocialType, React.ReactNode> = {
   linkedin:  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
 };
 
-// ── Превью ───────────────────────────────────────────────────────────────────
 function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; activeFieldId: string | null; focusField: (id: string) => void }) {
   const phone = d.phone || DEFAULTS.phone;
   const email = d.email || DEFAULTS.email;
@@ -175,7 +168,7 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
 
   return (
     <div className="bg-white min-h-full">
-      {/* Hero mock */}
+
       <div className="bg-black text-white px-8 py-8 border-b border-white/5">
         <div className="text-[9px] uppercase tracking-[0.2em] text-gray-600 mb-3 flex items-center gap-2">
           <div className="w-px h-3 bg-gray-700" /> Colaborare
@@ -189,14 +182,13 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
       </div>
 
       <div className="px-8 py-8 space-y-4">
-        {/* Section label */}
+
         <div className="text-[9px] uppercase tracking-widest text-gray-400 flex items-center gap-3">
           <span>Date Juridice & Contact</span>
           <div className="flex-1 h-px bg-gray-100" />
           <span className="text-gray-300">preview · RO</span>
         </div>
 
-        {/* Contact cards */}
         <div className="grid grid-cols-2 gap-3">
           <button type="button" onClick={() => focusField('email')} className={`group border p-4 flex items-start gap-3 transition-colors text-left ${activeFieldId === 'email' ? 'border-black' : 'border-gray-100 hover:border-gray-300'}`}>
             <div className="w-8 h-8 bg-gray-50 group-hover:bg-black flex items-center justify-center flex-shrink-0 transition-colors">
@@ -219,7 +211,6 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
           </button>
         </div>
 
-        {/* Legal card — точная копия стиля сайта */}
         <div className="border border-gray-100">
           <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center gap-3">
             <div className="w-7 h-7 bg-black flex items-center justify-center">
@@ -259,7 +250,6 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
           </div>
         </div>
 
-        {/* Messengers — квадратные кнопки с SVG как на сайте */}
         {d.socials.filter(s => s.url).length > 0 && (
           <div
             role="button"
@@ -296,9 +286,6 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
   );
 }
 
-
-
-// ── Главный компонент ────────────────────────────────────────────────────────
 export function AdminContacts() {
   const { lang } = useAdminLang();
   const isRu = lang === 'ru';
@@ -379,7 +366,6 @@ export function AdminContacts() {
   return (
     <AdminEditorWorkspace>
 
-      {/* ══ LEFT — EDITOR ══ */}
       <div className="admin-editor-pane">
 
         <div className="sticky top-0 z-10 admin-surface border-b admin-border px-5 py-4">
@@ -460,7 +446,6 @@ export function AdminContacts() {
             </div>
           </Section>
 
-          {/* ── Соцсети ── */}
           <Section title={isRu ? 'Соцсети и мессенджеры' : 'Rețele sociale & mesagerie'}>
             <div ref={registerField('socials')} className={activeFieldId === 'socials' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             {data.socials.length > 0 && (
@@ -524,7 +509,6 @@ export function AdminContacts() {
         </div>
       </div>
 
-      {/* ══ RIGHT — PREVIEW ══ */}
       <div className="admin-preview-pane flex-1 flex flex-col overflow-hidden admin-canvas">
         <div className="shrink-0 admin-solid border-b admin-border px-5 py-2.5 flex items-center gap-3">
           <Monitor className="w-4 h-4 admin-muted" />

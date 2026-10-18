@@ -1,5 +1,8 @@
+import { useSimilarProducts } from '../hooks/useSimilarProducts';
+import { useProductSkuStatus } from '../hooks/useProductSkuStatus';
+import { checkProductSkus, productSkuError } from '../../lib/product-sku';
 import { useState, useRef, useEffect, useMemo, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Link, useNavigate, useLocation } from 'react-router';
 import { supabase, fetchAllSupabaseRows, type ProductRow } from '../../lib/supabase';
 import { useSupabaseBrands } from '../hooks/useSupabaseBrands';
 import { useCategories, useCategoriesContext } from '../contexts/CategoriesContext';
@@ -14,8 +17,6 @@ import { useAdminLang } from '../contexts/AdminLangContext';
 import { buildProductPath } from '../lib/product-url';
 import { cacheInvalidate } from '../../lib/queryCache';
 import { getAttributeUnit, useProductAttributeDefinitions, type ProductAttributeValue } from '../hooks/useProductAttributes';
-
-// ─── Brand Combobox ───────────────────────────────────────────────────────────
 
 interface BrandComboboxProps {
   value: string;
@@ -130,7 +131,6 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
       {open && (
         <div className="absolute z-50 top-full left-0 right-0 mt-0.5 admin-surface border admin-border shadow-lg max-h-52 overflow-y-auto">
 
-          {/* "Add new" option */}
           {isNew && (
             <button
               type="button"
@@ -145,7 +145,6 @@ function BrandCombobox({ value, onChange, allProductBrands, supabaseBrandNames, 
             </button>
           )}
 
-          {/* Existing options */}
           {filtered.length > 0 ? (
             filtered.map(opt => {
               return (
@@ -419,8 +418,6 @@ function SubcategoryCombobox({ value, onChange, subcategories, disabled, onCreat
   );
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
 type SortKey = 'name_ro' | 'price' | 'qty' | 'id';
 const PAGE_SIZE = 50;
 
@@ -443,8 +440,6 @@ function toSlug(value: string) {
     .replace(/[^a-z0-9]+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
   return slug;
 }
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function catLabel(categories: ReturnType<typeof useCategories>, id: string) {
   return categories.find(c => c.id === id)?.name.ro ?? id;
@@ -494,8 +489,6 @@ function applyAdminProductFilters(
   return next.order(params.sortKey, { ascending: params.sortAsc });
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
-
 export function AdminProducts() {
   const [filtersExpanded, setFiltersExpanded] = useState(false);
   const { t, lang } = useAdminLang();
@@ -517,7 +510,12 @@ export function AdminProducts() {
   const [panelOpen, setPanelOpen] = useState(false);
   const [editId, setEditId] = useState<string | null>(null);
   const [form, setForm] = useState<Partial<ProductRow>>(EMPTY_FORM);
+  const similarity = useSimilarProducts({ id: editId, sku: form.sku, name_ro: form.name_ro, name_ru: form.name_ru }, panelOpen);
+  const skuStatus = useProductSkuStatus(form.sku || '', editId, panelOpen);
+  const location = useLocation();
+  const linkedProductId = new URLSearchParams(location.search).get('product');
   const [saving, setSaving] = useState(false);
+  const saveInFlight = useRef(false);
   const [deleting, setDeleting] = useState(false);
   const [uploadingSlot, setUploadingSlot] = useState<number | null>(null); // which slot is uploading
   const [gallery, setGallery] = useState<string[]>([]); // up to 4 image URLs
@@ -541,7 +539,6 @@ export function AdminProducts() {
     cacheInvalidate('brands:counts');
   }, []);
 
-  // ─── Load ─────────────────────────────────────────────────────────────────
   const load = useCallback(async () => {
     setLoading(true);
     try {
@@ -594,7 +591,6 @@ export function AdminProducts() {
     return () => { supabase.removeChannel(channel); };
   }, [load]);
 
-  // ─── Export to Excel ──────────────────────────────────────────────────────────
   const [exporting, setExporting] = useState(false);
 
   const handleExportExcel = async () => {
@@ -714,7 +710,7 @@ export function AdminProducts() {
 
         // Style cells
         row.alignment = { vertical: 'middle', horizontal: 'left' };
-        
+
         // Price formatting
         const priceCell = row.getCell('price');
         priceCell.numFmt = '#,##0.00" MDL"';
@@ -806,7 +802,7 @@ export function AdminProducts() {
         if (imageUrl) {
           try {
             const imageBuffer = await getImageBuffer(imageUrl);
-            
+
             if (imageBuffer) {
               const isJpeg = imageUrl.toLowerCase().includes('.jpg') || imageUrl.toLowerCase().includes('.jpeg');
               const extension = isJpeg ? 'jpeg' : 'png';
@@ -842,12 +838,12 @@ export function AdminProducts() {
       const blob = new Blob([buffer], { 
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' 
       });
-      
+
       const categoryName = catFilter 
         ? categories.find(c => c.id === catFilter)?.name.ro.replace(/\s+/g, '-') || 'Selectate' 
         : 'Toate';
       const fileName = `${lang === 'ru' ? 'Каталог_Sporto' : 'Catalog_Sporto'}_${categoryName}_${new Date().toISOString().split('T')[0]}.xlsx`;
-      
+
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -863,10 +859,9 @@ export function AdminProducts() {
     setExporting(false);
   };
 
-  // ─── Open panel ───────────────────────────────────────────────────────────────
   const openNew = () => {
     setEditId(null);
-    setForm(EMPTY_FORM);
+    setForm({ ...EMPTY_FORM, id: generateProductId() });
     setGallery([]);
     setAttributeValues({});
     setAttributeTextValues({});
@@ -907,6 +902,24 @@ export function AdminProducts() {
     setAttributeTextValues(textValues);
     setPanelOpen(true);
   };
+
+  // Links from a conflict open a separate tab, keeping the current draft intact.
+  useEffect(() => {
+    if (!linkedProductId) return;
+    let current = true;
+    void (async () => {
+      const { data, error } = await supabase.from('products').select('*').eq('id', linkedProductId).maybeSingle();
+      if (!current) return;
+      if (error || !data) {
+        showToast(l('Produsul nu a putut fi deschis.', 'Не удалось открыть карточку товара.'), false);
+        return;
+      }
+      await openEdit(data as ProductRow);
+    })().catch(() => {
+      if (current) showToast(l('Produsul nu a putut fi deschis.', 'Не удалось открыть карточку товара.'), false);
+    });
+    return () => { current = false; };
+  }, [linkedProductId]);
 
   const closePanel = () => {
     setPanelOpen(false);
@@ -964,7 +977,6 @@ export function AdminProducts() {
     }
   };
 
-  // ─── Image upload ─────────────────────────────────────────────────────────────
   const handleFileUpload = async (file: File, slot: number) => {
     if (!file.type.startsWith('image/')) { showToast(l('Selectați un fișier imagine', 'Выберите файл изображения'), false); return; }
     if (file.size > 5 * 1024 * 1024) { showToast(l('Imaginea trebuie să fie mai mică de 5 MB', 'Изображение должно быть меньше 5 MB'), false); return; }
@@ -1016,12 +1028,21 @@ export function AdminProducts() {
     if (file) handleFileUpload(file, uploadSlotRef.current);
   };
 
-  // ─── Save ─────────────────────────────────────────────────────────────────
   const handleSave = async () => {
+    if (saveInFlight.current) return;
     if (!form.name_ro?.trim()) { showToast(l('Introduceți numele produsului', 'Введите название товара'), false); return; }
     if (!form.category) { showToast(l('Selectați categoria', 'Выберите категорию'), false); return; }
 
+    saveInFlight.current = true;
     setSaving(true);
+    try {
+    try {
+      await checkProductSkus(supabase, [{ id: editId || undefined, sku: form.sku }]);
+    } catch (error) {
+      showToast(productSkuError(error, l('ro', 'ru') as 'ro' | 'ru'), false);
+      setSaving(false);
+      return;
+    }
     const cleanGallery = gallery.filter(Boolean);
     const payload: Partial<ProductRow> = {
       name_ro: form.name_ro?.trim(),
@@ -1051,7 +1072,7 @@ export function AdminProducts() {
     if (editId) {
       // Update
       const { error } = await supabase.from('products').update(payload).eq('id', editId);
-      if (error) { showToast(error.message, false); }
+      if (error) { showToast(productSkuError(error, l('ro', 'ru') as 'ro' | 'ru'), false); }
       else {
         try {
           await saveAttributeValues(editId);
@@ -1073,7 +1094,7 @@ export function AdminProducts() {
     } else {
       // Insert
       const insertPayload: ProductRow = {
-        id: generateProductId(),
+        id: form.id || generateProductId(),
         name_ro: payload.name_ro || '',
         name_ru: payload.name_ru || null,
         sku: payload.sku || null,
@@ -1098,8 +1119,12 @@ export function AdminProducts() {
         active: payload.active ?? true,
       };
       const { data, error } = await supabase.from('products').insert(insertPayload).select().single();
-      if (error) { showToast(error.message, false); }
+      if (error) { showToast(productSkuError(error, l('ro', 'ru') as 'ro' | 'ru'), false); }
       else {
+        // The product exists even if saving attributes or refreshing the list fails.
+        // A retry must update this ID, never insert another product.
+        setEditId(data.id);
+        setForm(current => ({ ...current, id: data.id }));
         try {
           await saveAttributeValues(data.id);
         } catch (attributeError) {
@@ -1119,16 +1144,20 @@ export function AdminProducts() {
         closePanel();
       }
     }
-    setSaving(false);
+    } catch (error) {
+      showToast(productSkuError(error, lang), false);
+    } finally {
+      saveInFlight.current = false;
+      setSaving(false);
+    }
   };
 
-  // ─── Delete ───────────────────────────────────────────────────────────────
   const handleDelete = async () => {
     if (!editId) return;
     if (!confirm(l('Ești sigur? Produsul va fi șters definitiv.', 'Вы уверены? Товар будет удалён навсегда.'))) return;
     setDeleting(true);
     const { error } = await supabase.from('products').delete().eq('id', editId);
-    if (error) { showToast(error.message, false); }
+    if (error) { showToast(productSkuError(error, l('ro', 'ru') as 'ro' | 'ru'), false); }
     else {
       invalidateProductCaches();
       await load();
@@ -1138,7 +1167,6 @@ export function AdminProducts() {
     setDeleting(false);
   };
 
-  // ─── Quick toggle active ───────────────────────────────────────────────────
   const handleLogout = async () => {
     await logoutAdmin();
     navigate('/admin/login', { replace: true });
@@ -1236,24 +1264,20 @@ export function AdminProducts() {
     return slug;
   };
 
-  // ─── Unique brand list from loaded products ──────────────────────────────
   const allProductBrands = useMemo(() =>
     [...new Set(rows.map(r => r.brand).filter(Boolean) as string[])],
     [rows]
   );
 
-  // ─── Brand names from the brands table ───────────────────────────────────
   const { brands: supabaseBrands } = useSupabaseBrands();
   const supabaseBrandNames = useMemo(
     () => supabaseBrands.map(b => b.name),
     [supabaseBrands]
   );
 
-  // ─── Render ───────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen admin-canvas flex flex-col">
 
-      {/* ── Top bar ── */}
       <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap sm:flex-nowrap items-center min-h-12 py-2 sm:py-0 gap-3 sm:gap-4">
@@ -1300,7 +1324,6 @@ export function AdminProducts() {
 
       <div className="admin-page-body max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-5 flex-1">
 
-        {/* ── Filters ── */}
         <button type="button" className="admin-filter-toggle" aria-expanded={filtersExpanded} aria-controls="admin-product-filters" onClick={() => setFiltersExpanded(value => !value)}>
           {lang === 'ru' ? (filtersExpanded ? 'Скрыть фильтры' : 'Показать фильтры') : (filtersExpanded ? 'Ascunde filtrele' : 'Arată filtrele')}
         </button>
@@ -1392,9 +1415,8 @@ export function AdminProducts() {
           </div>
         </div>
 
-        {/* ── Table ── */}
         <div className="admin-surface border admin-border overflow-hidden">
-          {/* Head */}
+
           <div className="admin-product-table-head hidden lg:grid grid-cols-[44px_minmax(160px,2fr)_minmax(90px,1fr)_80px_55px_50px_50px_24px] gap-3 px-4 py-2.5 border-b admin-border admin-canvas text-xs   admin-muted">
             <div />
             <button onClick={() => toggleSort('name_ro')} className="text-left admin-hover-ink transition-colors flex items-center">{t.products.colProduct} <SortArrow k="name_ro" /></button>
@@ -1433,7 +1455,7 @@ export function AdminProducts() {
                   onClick={() => openEdit(row)}
                   className="grid grid-cols-[48px_minmax(0,1fr)] lg:grid-cols-[44px_minmax(160px,2fr)_minmax(90px,1fr)_80px_55px_50px_50px_24px] gap-x-3 gap-y-2 items-start lg:items-center px-3 sm:px-4 py-2 cursor-pointer hover:bg-gray-50/70 transition-colors group"
                 >
-                  {/* Thumb */}
+
                   <div className="w-12 h-12 lg:w-10 lg:h-10 admin-muted-surface flex-shrink-0 overflow-hidden">
                     {row.image_url
                       ? <img src={row.image_url} alt="" className="w-full h-full object-cover" />
@@ -1441,7 +1463,6 @@ export function AdminProducts() {
                     }
                   </div>
 
-                  {/* Name */}
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 min-w-0">
                       {!row.active && <span className="w-1.5 h-1.5 bg-gray-300 rounded-full flex-shrink-0" />}
@@ -1475,22 +1496,18 @@ export function AdminProducts() {
                     </div>
                   </div>
 
-                  {/* Category — hidden on small */}
                   <div className="hidden lg:block text-xs admin-muted truncate">{catLabel(categories, row.category)}</div>
 
-                  {/* Price */}
                   <div className="hidden lg:block text-xs admin-ink text-right tabular-nums font-mono">
                     {Number(row.price).toLocaleString()}
                   </div>
 
-                  {/* Qty */}
                   <div className={`hidden lg:block text-xs text-center tabular-nums font-mono ${
                     Number(row.qty) === 0 ? 'text-red-400' : Number(row.qty) < 5 ? 'text-amber-500' : 'admin-ink'
                   }`}>
                     {row.qty ?? '—'}
                   </div>
 
-                  {/* Active toggle */}
                   <div className="hidden lg:flex justify-center">
                     <button
                       onClick={e => toggleActive(row, e)}
@@ -1500,12 +1517,10 @@ export function AdminProducts() {
                     </button>
                   </div>
 
-                  {/* Featured */}
                   <div className="hidden lg:flex justify-center">
                     {row.featured && <Star className="w-3.5 h-3.5 admin-muted fill-gray-200" />}
                   </div>
 
-                  {/* Arrow */}
                   <div className="hidden lg:flex justify-center text-gray-200 group-hover:text-gray-500 transition-colors">
                     <ChevronDown className="w-3.5 h-3.5 -rotate-90" />
                   </div>
@@ -1545,8 +1560,6 @@ export function AdminProducts() {
         )}
       </div>
 
-      {/* ══ EDIT PANEL (slide-in from right) ══════════════════════════════════ */}
-      {/* Overlay */}
       {panelOpen && (
         <div
           className="fixed inset-0 bg-black/20 z-40 backdrop-blur-[1px]"
@@ -1554,10 +1567,8 @@ export function AdminProducts() {
         />
       )}
 
-      {/* Panel */}
       <div className={`fixed top-0 right-0 h-full w-full sm:w-[560px] admin-surface shadow-2xl z-50 flex flex-col transition-transform duration-300 ease-in-out ${panelOpen ? 'translate-x-0' : 'translate-x-full'}`}>
 
-        {/* Panel header */}
         <div className="flex items-start sm:items-center justify-between px-4 sm:px-6 py-4 border-b admin-border flex-shrink-0 gap-3">
           <div className="min-w-0">
             <h2 className="text-sm admin-ink">
@@ -1589,11 +1600,9 @@ export function AdminProducts() {
           </div>
         </div>
 
-        {/* Panel body — scrollable */}
         <div className="flex-1 overflow-y-auto">
           <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
 
-            {/* ── Images — 4 slots ── */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-xs   admin-muted">
@@ -1625,17 +1634,17 @@ export function AdminProducts() {
                         // Filled slot
                         <div className="relative w-full h-full border admin-border overflow-hidden group">
                           <img src={url} alt="" className="w-full h-full object-contain admin-canvas" />
-                          {/* Principal badge */}
+
                           {slot === 0 && (
                             <span className="absolute top-1.5 left-1.5 text-xs   admin-solid admin-on-solid px-1.5 py-0.5">
                               {l('Principală', 'Главное')}
                             </span>
                           )}
-                          {/* Paste hint */}
+
                           <span className="absolute bottom-1.5 right-1.5 text-xs bg-black/50 admin-on-solid px-1.5 py-0.5 opacity-0 group-focus:opacity-100 transition-opacity pointer-events-none">
                             Ctrl+V
                           </span>
-                          {/* Overlay actions */}
+
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                             <button
                               type="button"
@@ -1690,7 +1699,6 @@ export function AdminProducts() {
                 })}
               </div>
 
-              {/* Single hidden file input */}
               <input
                 ref={fileInputRef} type="file" accept="image/*" className="hidden"
                 onChange={e => {
@@ -1700,7 +1708,6 @@ export function AdminProducts() {
                 }}
               />
 
-              {/* Storage note */}
               {storageNote && (
                 <div className="mt-3 bg-amber-50 border border-amber-200 p-3 flex gap-2">
                   <AlertCircle className="w-3.5 h-3.5 text-amber-500 flex-shrink-0 mt-0.5" />
@@ -1714,7 +1721,6 @@ export function AdminProducts() {
               )}
             </div>
 
-            {/* ── Names ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="col-span-2">
                 <label className="text-xs   admin-muted mb-1.5 block">
@@ -1738,7 +1744,22 @@ export function AdminProducts() {
               </div>
             </div>
 
-            {/* ── Category ── */}
+            {similarity.matches.length > 0 && <aside aria-label={l('Produse similare', 'Похожие товары')} className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-gray-900">
+              <p className="font-medium">{l('Este posibil ca acest produs să existe deja', 'Возможно, этот товар уже существует')}</p>
+              <p className="mt-1 text-xs text-gray-600">{l('Comparați modelul, culoarea și dimensiunea. Dacă este un produs diferit, puteți continua salvarea.', 'Сравните модель, цвет и размер. Если это другой вариант товара, можно продолжить сохранение.')}</p>
+              <div className="mt-3 space-y-2">
+                {similarity.matches.slice(0, 5).map(product => <a key={product.id} href={`/admin/products?product=${encodeURIComponent(product.id)}`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-3 rounded border border-amber-100 bg-white p-2 hover:border-amber-400">
+                  {product.image_url ? <img src={product.image_url} alt="" loading="lazy" className="h-14 w-14 shrink-0 object-contain" /> : <Package className="h-14 w-14 shrink-0 p-3 text-gray-400" />}
+                  <div className="min-w-0"><p className="text-xs font-medium break-words">{lang === 'ru' ? product.name_ru || product.name_ro : product.name_ro || product.name_ru}</p>
+                    <p className="mt-1 text-xs text-gray-500">{product.sku || '—'}{product.brand ? ` · ${product.brand}` : ''}{!product.active ? l(' · ascuns', ' · скрыт') : ''}</p>
+                    <p className="mt-1 text-xs text-gray-600">{product.reason === 'name' ? l('Denumire identică', 'Совпадает название') : product.reason === 'sku' ? l('SKU similar', 'Похожий артикул') : l('Model sau denumire similară', 'Похожая модель или название')} · {l('Deschide fișa ↗', 'Открыть карточку ↗')}</p>
+                  </div>
+                </a>)}
+              </div>
+              {similarity.matches.length > 5 && <p className="mt-2 text-xs">{l('Alte produse similare:', 'Ещё похожих карточек:')} {similarity.matches.length - 5}</p>}
+            </aside>}
+            {similarity.status === 'error' && <p role="status" className="text-xs admin-muted">{l('Nu s-au putut verifica produsele similare.', 'Не удалось проверить похожие товары.')} <button type="button" onClick={similarity.retry} className="underline">{l('Reîncearcă', 'Повторить')}</button></p>}
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
                 <label className="text-xs   admin-muted mb-1.5 block">
@@ -1847,7 +1868,6 @@ export function AdminProducts() {
               </div>
             )}
 
-            {/* ── Price / unit / qty ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label className="text-xs   admin-muted mb-1.5 block">{t.products.priceMdl}</label>
@@ -1881,7 +1901,6 @@ export function AdminProducts() {
               </div>
             </div>
 
-            {/* ── Sale Price (акционная цена) ── */}
             <div>
               <label className="text-xs   admin-muted mb-1.5 flex items-center gap-2">
                 <Tag className="w-3 h-3" />
@@ -1899,16 +1918,28 @@ export function AdminProducts() {
               </p>
             </div>
 
-            {/* ── SKU / Brand ── */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div>
-                <label className="text-xs   admin-muted mb-1.5 block">{t.products.sku}</label>
+                <label htmlFor="product-sku" className="text-xs   admin-muted mb-1.5 block">{t.products.sku}</label>
                 <input
+                  id="product-sku"
                   type="text" value={form.sku ?? ''}
+                  aria-describedby="product-sku-status"
+                  aria-invalid={skuStatus.status === 'conflict'}
                   onChange={e => setForm(f => ({ ...f, sku: e.target.value }))}
                   placeholder="17-47-121"
                   className="w-full h-9 px-3 text-xs border admin-border admin-surface focus:outline-none admin-focus-border transition-colors font-mono"
                 />
+                <div id="product-sku-status" role="status" aria-live="polite" className={`mt-1.5 text-xs ${skuStatus.status === 'conflict' ? 'text-red-600' : 'admin-muted'}`}>
+                  {skuStatus.status === 'checking' && l('Se verifică SKU…', 'Проверяем артикул…')}
+                  {skuStatus.status === 'available' && l('SKU disponibil.', 'Артикул свободен.')}
+                  {skuStatus.status === 'conflict' && l('Acest SKU este deja atribuit. Introduceți alt SKU; datele completate rămân în formular.', 'Этот артикул уже занят. Укажите другой — заполненные данные останутся в форме.')}
+                  {skuStatus.status === 'legacy' && l('Acest SKU se repetă în catalog. Puteți salva modificările cu SKU existent sau introduceți un SKU liber.', 'Этот артикул уже повторяется в каталоге. Можно сохранить изменения с прежним артикулом или указать свободный.')}
+                  {skuStatus.status === 'error' && l('Nu s-a putut verifica SKU. Va fi verificat din nou la salvare.', 'Не удалось проверить артикул. Повторим проверку при сохранении.')}
+                  {skuStatus.matches.map(match => <a key={match.id} href={`/admin/products?product=${encodeURIComponent(match.id)}`} target="_blank" rel="noopener noreferrer" className="mt-1 block underline">
+                    {lang === 'ru' ? match.name_ru || match.name_ro : match.name_ro}{!match.active && ` (${l('ascuns', 'скрыт')})`}
+                  </a>)}
+                </div>
               </div>
               <div>
                 <label className="text-xs   admin-muted mb-1.5 block">{t.common.brand}</label>
@@ -1922,7 +1953,6 @@ export function AdminProducts() {
               </div>
             </div>
 
-            {/* ── Descriptions ── */}
             <div>
               <label className="text-xs   admin-muted mb-1.5 block">{t.products.descRoLabel}</label>
               <textarea
@@ -1986,7 +2016,6 @@ export function AdminProducts() {
               />
             </div>
 
-            {/* ── Toggles ── */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-6">
               <label className="flex items-center gap-3 cursor-pointer select-none min-w-0">
                 <button
@@ -2032,7 +2061,6 @@ export function AdminProducts() {
               </label>
             </div>
 
-            {/* ── YouTube URL ── */}
             <div>
               <label className="text-xs   admin-muted mb-1.5 block">URL YouTube</label>
               <input
@@ -2043,12 +2071,10 @@ export function AdminProducts() {
               />
             </div>
 
-            {/* Bottom spacer */}
             <div className="h-4" />
           </div>
         </div>
 
-        {/* Panel footer */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 py-4 border-t admin-border admin-surface flex-shrink-0 gap-3">
           {editId ? (
             <button
@@ -2070,7 +2096,7 @@ export function AdminProducts() {
             </button>
             <button
               onClick={handleSave}
-              disabled={saving || uploadingSlot !== null}
+              disabled={saving || uploadingSlot !== null || skuStatus.status === 'conflict'}
               className="flex-1 sm:flex-none flex items-center justify-center gap-2 px-5 py-2 admin-solid admin-on-solid text-xs   admin-hover-solid transition-colors disabled:opacity-50"
             >
               {saving ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
@@ -2080,7 +2106,6 @@ export function AdminProducts() {
         </div>
       </div>
 
-      {/* Toast */}
       {toast && (
         <div className={`fixed bottom-20 sm:bottom-6 left-4 right-4 sm:left-auto sm:right-6 z-[60] flex items-center gap-2 px-4 py-3 text-xs admin-on-solid shadow-xl transition-all ${
           toast.ok ? 'admin-solid' : 'bg-red-600'

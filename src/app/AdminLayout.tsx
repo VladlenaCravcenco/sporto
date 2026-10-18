@@ -25,7 +25,6 @@ function AdminLayoutInner() {
   const menuRef = useRef<HTMLDialogElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
 
-  // ── Navigation groups ───────────────────────────────────────────────────────
   const GROUPS = [
     {
       key: 'clients',

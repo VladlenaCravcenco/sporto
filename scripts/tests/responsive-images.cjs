@@ -22,3 +22,15 @@ for (const variant of ['card','menu','thumbnail']) {
 for (const variant of ['detail','hero']) assert.deepEqual(out.responsiveImage(supplier,variant),{src:supplier});
 assert.deepEqual(out.responsiveImage(supplier+'?token=x','card'),{src:supplier+'?token=x'});
 console.log('Supplier: responsive thumbnails, original detail/hero and signed URLs preserved.');
+
+const logo=out.responsiveImage(original.replace('product-images/products/photo.jpg','brand-logos/logo.png'),'logo');
+assert.equal(new URL(logo.src).searchParams.get('width'),'240');
+assert.equal(new URL(logo.src).searchParams.get('height'),'64');
+assert.equal(new URL(logo.src).searchParams.get('resize'),'contain');
+assert.ok(logo.srcSet.endsWith('3x'));
+assert.ok(logo.srcSet.includes(' 1x, '));
+assert.ok(logo.srcSet.split(', ').every(candidate => / [123]x$/.test(candidate)),'Constrained-height logos require density descriptors');
+for(const url of [original.replace('.jpg','.svg'),original+'?token=private']) {
+ assert.deepEqual(out.responsiveImage(url,'logo'),{src:url});
+}
+console.log('Logos: 120×32 box, 1x/2x/3x variants, no crop, SVG and signed sources preserved.');

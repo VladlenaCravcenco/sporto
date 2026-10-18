@@ -1,4 +1,6 @@
 import { Helmet } from 'react-helmet-async';
+import { CONTACTS } from '../../lib/contacts';
+import { usePublicPageData } from '../contexts/PublicPageData';
 
 interface SeoHeadProps {
   title?: string;
@@ -17,7 +19,6 @@ const LEGAL_NAME   = 'SPORTOSFERA S.R.L.';   // юридическое назв�
 const SITE_URL     = 'https://www.sporto.md';
 const DEFAULT_OG   = `${SITE_URL}/og-site.png`;
 
-// ── Base JSON-LD schemas injected on every page ───────────────────────────────
 const BASE_JSON_LD = [
   {
     '@context': 'https://schema.org',
@@ -109,6 +110,7 @@ export function SeoHead({
   noIndex = false,
   jsonLd,
 }: SeoHeadProps) {
+  const nextData = usePublicPageData();
   const defaults   = DEFAULT_SEO[lang];
   const finalTitle = title       || defaults.title;
   const finalDesc  = description || defaults.description;
@@ -121,13 +123,27 @@ export function SeoHead({
   const alternateRu = buildLocalizedUrl(pagePath, 'ru');
 
   // Combine base schemas with any additional ones
-  const allJsonLd: object[] = [...BASE_JSON_LD];
-  if (jsonLd) {
+  const allJsonLd: object[] = noIndex ? [] : [...BASE_JSON_LD];
+  if (jsonLd && !noIndex) {
     if (Array.isArray(jsonLd)) {
       allJsonLd.push(...jsonLd);
     } else {
       allJsonLd.push(jsonLd);
     }
+  }
+
+  if (nextData) {
+    if (noIndex) return null;
+    const schemas = allJsonLd.map(schema => {
+      if ((schema as { '@type'?: string })['@type'] === 'LocalBusiness') {
+        const contacts = { ...CONTACTS, ...nextData.settings };
+        const { geo, openingHoursSpecification, ...business } = schema as typeof LOCAL_BUSINESS_JSON_LD;
+        return { ...business, name: contacts.legal_name, telephone: contacts.phone, email: contacts.email, address: { '@type': 'PostalAddress', streetAddress: lang === 'ro' ? contacts.address_ro : contacts.address_ru, addressLocality: 'Chișinău', addressCountry: 'MD' } };
+      }
+      return (schema as { '@type'?: string })['@type'] === 'WebSite'
+      ? { ...schema, potentialAction: { '@type': 'SearchAction', target: `${SITE_URL}/${lang}/catalog?search={search_term_string}`, 'query-input': 'required name=search_term_string' } } : schema;
+    });
+    return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(schemas).replace(/</g, '\\u003c') }} />;
   }
 
   return (
@@ -158,7 +174,7 @@ export function SeoHead({
         { rel: 'alternate', href: alternateRo, hrefLang: 'ro' },
         { rel: 'alternate', href: alternateRu, hrefLang: 'ru' },
       ]}
-      script={[
+      script={noIndex ? [] : [
         {
           type: 'application/ld+json',
           innerHTML: JSON.stringify(allJsonLd),
@@ -167,8 +183,6 @@ export function SeoHead({
     />
   );
 }
-
-// ── Page-specific SEO configs ─────────────────────────────────────────────────
 
 export const SEO_PAGES = {
   home: {
@@ -317,7 +331,6 @@ export const SEO_PAGES = {
   },
 };
 
-// ── Product page JSON-LD builder ──────────────────────────────────────────────
 export function buildProductJsonLd(product: {
   id: string;
   name: { ro: string; ru: string };
@@ -441,7 +454,6 @@ export function buildProductJsonLd(product: {
   };
 }
 
-// ── Breadcrumb JSON-LD builder ────────────────────────────────────────────────
 export function buildBreadcrumbJsonLd(items: { name: string; url: string }[]) {
   return {
     '@context': 'https://schema.org',
@@ -470,7 +482,6 @@ export function buildFaqJsonLd(items: { q: string; a: string }[]) {
   };
 }
 
-// ── LocalBusiness JSON-LD (for Contacts page) ─────────────────────────────────
 export const LOCAL_BUSINESS_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',

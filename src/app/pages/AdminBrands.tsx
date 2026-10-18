@@ -8,7 +8,6 @@ import {
 } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
 function toSlug(name: string): string {
   return name.toLowerCase().trim()
     .replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '').replace(/-+/g, '-');
@@ -26,7 +25,6 @@ const EMPTY: BrandForm = {
   catalog_pdf: null,
 };
 
-// ─── Logo upload ──────────────────────────────────────────────────────────────
 function LogoUpload({ value, onChange }: { value: string | null; onChange: (url: string) => void }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -76,7 +74,6 @@ function LogoUpload({ value, onChange }: { value: string | null; onChange: (url:
   );
 }
 
-// ─── Banner upload ────────────────────────────────────────────────────────────
 function BannerUpload({ value, onChange, label, hint }: {
   value: string | null; onChange: (url: string | null) => void; label: string; hint: string;
 }) {
@@ -130,7 +127,6 @@ function BannerUpload({ value, onChange, label, hint }: {
   );
 }
 
-// ─── Field helper ─────────────────────────────────────────────────────────────
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
     <div>
@@ -143,7 +139,6 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inp = "w-full h-9 px-3 text-xs border border-gray-200 focus:outline-none focus:border-black bg-white";
 const ta  = "w-full px-3 py-2 text-xs border border-gray-200 focus:outline-none focus:border-black resize-none bg-white";
 
-// ─── Collapsible section ──────────────────────────────────────────────────────
 function Section({ title, children, defaultOpen = true }: {
   title: string; children: React.ReactNode; defaultOpen?: boolean;
 }) {
@@ -163,7 +158,6 @@ function Section({ title, children, defaultOpen = true }: {
   );
 }
 
-// ─── Main page ────────────────────────────────────────────────────────────────
 export function AdminBrands() {
   const { t } = useAdminLang();
   const { brands, loading, error, refetch } = useSupabaseBrands();
@@ -286,13 +280,9 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
   return (
     <div className="min-h-screen admin-canvas pb-16 lg:pb-0">
 
-      {/* ══════════════════════════════════
-          TOP BAR  (sticky)
-          ══════════════════════════════════ */}
       <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-12 z-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Row 1: title + count + add button */}
           <div className="flex items-center h-11 gap-2">
             <span className="text-sm admin-ink flex-shrink-0">{t.brands.title}</span>
             <span className="text-[11px] admin-muted-surface admin-muted px-2 py-0.5 tabular-nums flex-shrink-0">
@@ -309,7 +299,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
             </button>
           </div>
 
-          {/* Row 2: search */}
           <div className="pb-2.5">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted pointer-events-none" />
@@ -341,12 +330,8 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
         </div>
       </div>
 
-      {/* ══════════════════════════════════
-          CONTENT
-          ══════════════════════════════════ */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-4">
 
-        {/* SQL error notice */}
         {(error || saveErr) && (
           <div className="mb-4 border border-orange-200 bg-orange-50 p-4">
             <div className="flex items-start gap-3">
@@ -378,7 +363,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
 
         <div className="flex flex-col lg:flex-row gap-4">
 
-          {/* ── Brand list ── */}
           <div className="flex-1 min-w-0">
             {loading ? (
               <div className="space-y-1">
@@ -404,7 +388,7 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                         isEditing ? 'admin-border-strong' : 'border-transparent hover:border-gray-200'
                       }`}
                     >
-                      {/* Logo */}
+
                       <div className="w-12 h-8 flex-shrink-0 admin-canvas border admin-border flex items-center justify-center overflow-hidden">
                         {brand.logo_url
                           ? <img src={brand.logo_url} alt={brand.name} className="max-h-6 max-w-[44px] object-contain" />
@@ -414,7 +398,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                         }
                       </div>
 
-                      {/* Name + meta */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
                           <span className="text-xs admin-ink truncate">{brand.name}</span>
@@ -430,7 +413,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                         </div>
                       </div>
 
-                      {/* Count + active badge */}
                       <div className="flex items-center gap-1.5 flex-shrink-0">
                         <div className={`text-[11px] tabular-nums px-2 py-0.5 flex-shrink-0 ${count > 0 ? 'admin-solid admin-on-solid' : 'admin-muted-surface admin-muted'}`}>
                           {count}
@@ -440,7 +422,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                         </span>
                       </div>
 
-                      {/* Actions */}
                       <div className="flex items-center gap-0.5 flex-shrink-0">
                         <button
                           onClick={() => toggleBrandActive(brand)}
@@ -469,13 +450,9 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
             )}
           </div>
 
-          {/* ── Edit / Create panel ──
-              Mobile: fixed drawer from bottom
-              Desktop: sticky side panel
-          ── */}
           {panelOpen && (
             <>
-              {/* Mobile backdrop */}
+
               <div
                 className="lg:hidden fixed inset-0 bg-black/40 z-30"
                 onClick={() => setEditingId(null)}
@@ -494,12 +471,10 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                 lg:flex-shrink-0 lg:self-start lg:sticky lg:top-28
               `}>
 
-                {/* Drag handle (mobile only) */}
                 <div className="lg:hidden flex justify-center pt-3 pb-1">
                   <div className="w-10 h-1 admin-muted-surface rounded-full" />
                 </div>
 
-                {/* Panel header */}
                 <div className="flex items-center justify-between px-4 py-3 border-b admin-border">
                   <span className="text-xs   admin-ink">
                     {editingId === 'new' ? (t.brands.newBrand ?? 'Новый бренд') : (t.brands.editBrand ?? 'Редактировать')}
@@ -509,13 +484,10 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                   </button>
                 </div>
 
-                {/* Form body */}
                 <div className="px-4 py-4 space-y-4">
 
-                  {/* Logo */}
                   <LogoUpload value={form.logo_url} onChange={url => set('logo_url', url || null)} />
 
-                  {/* Name + Slug */}
                   <div className="grid grid-cols-2 gap-3">
                     <div className="col-span-2">
                       <Field label={`${t.brands.brandName ?? 'Название'} *`}>
@@ -533,7 +505,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     </div>
                   </div>
 
-                  {/* Descriptions */}
                   <Section title={t.brands.descriptions ?? 'Описание'}>
                     <Field label="Descriere RO">
                       <textarea value={form.description_ro ?? ''} onChange={e => set('description_ro', e.target.value)} rows={2} className={ta} />
@@ -543,7 +514,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     </Field>
                   </Section>
 
-                  {/* Country + Founded */}
                   <Section title={t.brands.countryInfo ?? 'Страна / Год'} defaultOpen={false}>
                     <div className="grid grid-cols-2 gap-3">
                       <Field label="Țara (RO)">
@@ -561,7 +531,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     </div>
                   </Section>
 
-                  {/* Segment + Website */}
                   <Section title={t.brands.segment ?? 'Сегмент / Сайт'} defaultOpen={false}>
                     <div className="grid grid-cols-2 gap-3">
                       <Field label="Segment RO">
@@ -579,7 +548,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     </Field>
                   </Section>
 
-                  {/* Banners */}
                   <Section title={t.brands.banners ?? 'Баннеры'} defaultOpen={false}>
                     <div className="flex items-center gap-1.5 mb-1">
                       <Monitor className="w-3.5 h-3.5 admin-muted" />
@@ -593,7 +561,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     <BannerUpload value={form.banner_mobile_url} onChange={url => set('banner_mobile_url', url)} label="Banner Mobile" hint="800×600px" />
                   </Section>
 
-                  {/* PDF Catalog */}
                   <Section title="PDF Каталог" defaultOpen={false}>
                     <Field label="URL PDF Каталога">
                       <div className="space-y-2">
@@ -623,7 +590,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     </Field>
                   </Section>
 
-                  {/* Error */}
                   {saveErr && (
                     <div className="flex items-start gap-2 text-red-500 bg-red-50 px-3 py-2">
                       <AlertCircle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
@@ -631,7 +597,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     </div>
                   )}
 
-                  {/* Save */}
                   <button
                     onClick={handleSave} disabled={saving}
                     className="w-full flex items-center justify-center gap-2 admin-solid admin-on-solid text-xs py-3 admin-hover-solid disabled:opacity-50 transition-colors"
@@ -640,7 +605,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
                     {saving ? (t.brands.saving ?? 'Сохранение…') : editingId === 'new' ? (t.brands.create ?? 'Создать бренд') : (t.brands.save ?? 'Сохранить')}
                   </button>
 
-                  {/* Extra bottom padding for mobile so Save isn't under nav */}
                   <div className="h-4 lg:h-0" />
                 </div>
               </div>
@@ -649,7 +613,6 @@ CREATE POLICY IF NOT EXISTS "Allow all" ON public.brands FOR ALL USING (true) WI
         </div>
       </div>
 
-      {/* ── Delete modal ── */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/60 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <div className="admin-surface w-full sm:max-w-sm p-6 border-t sm:border admin-border">

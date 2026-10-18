@@ -70,12 +70,12 @@ export function ProductCardView({ product, language, href, actions, brandControl
       <div className="flex flex-1 flex-col gap-2 border-t border-gray-100 p-2 sm:p-4">
         {product.brand && <p className="text-xs font-medium text-gray-500">{product.brand}</p>}
         <h2 className="line-clamp-2 min-h-11 text-xs sm:text-[15px] font-medium leading-[1.45] text-gray-900">{name}</h2>
-        <p className="text-xs text-gray-400">{product.sku || `ART-${product.id}`}</p>
+        <p className="text-xs text-gray-600">{product.sku || `ART-${product.id}`}</p>
         <div className="mt-auto flex flex-wrap items-baseline gap-x-2 sm:gap-x-3 gap-y-1 border-t border-gray-100 pt-3">
           <p className={`whitespace-nowrap text-xl sm:text-2xl font-semibold ${onSale ? 'text-brand' : 'text-gray-900'}`}>
             {formatPrice(currentPrice, language)} <span className="text-sm font-normal">MDL</span>
           </p>
-          {onSale && <p className="whitespace-nowrap text-sm text-gray-400 line-through">{formatPrice(product.price, language)} MDL</p>}
+          {onSale && <p className="whitespace-nowrap text-sm text-gray-600 line-through">{formatPrice(product.price, language)} MDL</p>}
         </div>
       </div>
       </CardLink>

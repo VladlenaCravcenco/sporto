@@ -21,8 +21,8 @@ export function DeliveryTerms() {
       subtitle: 'Livrăm pe întreg teritoriul Republicii Moldova. Fiecare comandă este pregătită cu grijă și expediată la timp.',
       updated: 'Actualizat: martie 2026',
       zones: [
-        { city: 'Chișinău', time: '1–2 zile lucrătoare', price: 'Gratuit de la 500 MDL', priceAlt: 'Sub 500 MDL — calculat individual' },
-        { city: 'Alte orașe și localități RM', time: '2–5 zile lucrătoare', price: 'Calculat individual', priceAlt: 'Confirmat la plasarea comenzii' },
+        { city: 'Chișinău', time: '1–2 zile lucrătoare', price: 'Gratuit de la 500 MDL', priceAlt: 'Sub 500 MDL — 100 MDL' },
+        { city: 'Alte orașe și localități RM', time: '2–5 zile lucrătoare', price: 'Gratuit de la 500 MDL', priceAlt: 'Sub 500 MDL — 100 MDL' },
       ],
       sections: [
         {
@@ -110,8 +110,8 @@ export function DeliveryTerms() {
       subtitle: 'Доставляем по всей территории Республики Молдова. Каждый заказ тщательно подготавливается и отправляется в срок.',
       updated: 'Обновлено: март 2026',
       zones: [
-        { city: 'Кишинёв', time: '1–2 рабочих дня', price: 'Бесплатно от 500 MDL', priceAlt: 'До 500 MDL — рассчитывается отдельно' },
-        { city: 'Другие города и населённые пункты РМ', time: '2–5 рабочих дней', price: 'Рассчитывается отдельно', priceAlt: 'Подтверждается при оформлении заказа' },
+        { city: 'Кишинёв', time: '1–2 рабочих дня', price: 'Бесплатно от 500 MDL', priceAlt: 'Менее 500 MDL — 100 MDL' },
+        { city: 'Другие города и населённые пункты РМ', time: '2–5 рабочих дней', price: 'Бесплатно от 500 MDL', priceAlt: 'Менее 500 MDL — 100 MDL' },
       ],
       sections: [
         {
@@ -210,13 +210,13 @@ export function DeliveryTerms() {
         />
         <section className="border-b border-gray-100">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <Link to="/" className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group">
+            <Link to="/" className="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors mb-10 group">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               {content.back}
             </Link>
 
             <div className="max-w-3xl">
-              <p className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
+              <p className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
               <h1 className="text-4xl lg:text-5xl text-black mb-6">{lang === 'ro' ? managed.title_ro : managed.title_ru}</h1>
             </div>
           </div>
@@ -247,12 +247,12 @@ export function DeliveryTerms() {
         canonical="/delivery-terms"
         lang={lang}
       />
-      {/* Hero */}
+
       <section className="border-b border-gray-100">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group"
+            className="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors mb-10 group"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             {content.back}
@@ -260,22 +260,21 @@ export function DeliveryTerms() {
 
           <div className="max-w-3xl">
             <h1 className="text-4xl lg:text-5xl text-black mb-6">{content.title}</h1>
-            <p className="text-gray-500 leading-relaxed max-w-xl">{content.subtitle}</p>
+            <p className="text-gray-600 leading-relaxed max-w-xl">{content.subtitle}</p>
             <p className="text-xs text-gray-300 mt-6 tracking-wide">{content.updated}</p>
           </div>
         </div>
       </section>
 
-      {/* Zones table */}
       <section className="border-b border-gray-100 bg-gray-50">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
-          <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-6">{content.zonesTitle}</p>
+          <p className="text-xs text-gray-600 uppercase tracking-[0.15em] mb-6">{content.zonesTitle}</p>
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b border-gray-200">
                   {content.zonesCols.map((col, i) => (
-                    <th key={i} className="text-left text-xs text-gray-400 uppercase tracking-[0.1em] pb-3 pr-8 first:pl-0 font-normal">
+                    <th key={i} className="text-left text-xs text-gray-600 uppercase tracking-[0.1em] pb-3 pr-8 first:pl-0 font-normal">
                       {col}
                     </th>
                   ))}
@@ -297,7 +296,7 @@ export function DeliveryTerms() {
                       <span className="text-sm text-gray-600">{zone.price}</span>
                     </td>
                     <td className="py-4">
-                      <span className="text-xs text-gray-400">{zone.priceAlt}</span>
+                      <span className="text-xs text-gray-600">{zone.priceAlt}</span>
                     </td>
                   </tr>
                 ))}
@@ -307,20 +306,18 @@ export function DeliveryTerms() {
         </div>
       </section>
 
-      {/* Content */}
       <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* Sticky sidebar */}
           <aside className="lg:col-span-3 hidden lg:block">
             <div className="sticky top-8">
-              <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-4">Cuprins</p>
+              <p className="text-xs text-gray-600 uppercase tracking-[0.15em] mb-4">Cuprins</p>
               <nav className="space-y-1">
                 {content.sections.map((s, i) => (
                   <a
                     key={i}
                     href={`#dsection-${i}`}
-                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors py-1.5 border-l-2 border-transparent hover:border-black pl-3"
+                    className="flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors py-1.5 border-l-2 border-transparent hover:border-black pl-3"
                   >
                     <span className="tabular-nums text-gray-300">{String(i + 1).padStart(2, '0')}</span>
                     {s.title.replace(/^\d+\.\s/, '')}
@@ -330,7 +327,6 @@ export function DeliveryTerms() {
             </div>
           </aside>
 
-          {/* Main */}
           <div className="lg:col-span-9 space-y-0 divide-y divide-gray-100">
             {content.sections.map((section, i) => (
               <div key={i} id={`dsection-${i}`} className="py-10 first:pt-0">
@@ -352,7 +348,7 @@ export function DeliveryTerms() {
 
                 {section.note && (
                   <div className="ml-12 mt-4 pl-4 border-l-2 border-gray-100">
-                    <p className="text-xs text-gray-400 leading-relaxed">{section.note}</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">{section.note}</p>
                   </div>
                 )}
               </div>
@@ -361,12 +357,11 @@ export function DeliveryTerms() {
         </div>
       </section>
 
-      {/* CTA */}
       <section className="border-t border-gray-100 bg-gray-50">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="max-w-xl">
             <h3 className="text-2xl text-black mb-3">{content.contact.title}</h3>
-            <p className="text-sm text-gray-500 mb-6">{content.contact.body}</p>
+            <p className="text-sm text-gray-600 mb-6">{content.contact.body}</p>
             <Link
               to="/contacts"
               className="inline-flex items-center gap-2 bg-black text-white text-xs px-6 py-3 hover:bg-gray-900 transition-colors"

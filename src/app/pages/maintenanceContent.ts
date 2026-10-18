@@ -1,3 +1,4 @@
+import { usePublicPageData } from '../contexts/PublicPageData';
 import { useEffect, useState } from 'react';
 import { supabase } from '../../lib/supabase';
 
@@ -254,8 +255,12 @@ export async function loadFromSupabase(): Promise<PageData> {
 
   const map = Object.fromEntries(data.map(r => [r.key, r.value]));
 
+  try { return normalizeContent(JSON.parse(map.data || '{}')); } catch { return { ...DEFAULTS }; }
+}
+
+function normalizeContent(value: unknown): PageData {
   try {
-    const parsed = JSON.parse(map.data || '{}') as Partial<PageData>;
+    const parsed = value as Partial<PageData>;
     return {
       ...DEFAULTS,
       ...parsed,
@@ -307,9 +312,11 @@ export function invalidateCache(data: PageData) {
 }
 
 export function useMaintenanceContent(): PageData {
-  const [data, setData] = useState<PageData>(cache ?? DEFAULTS);
+  const initial = usePublicPageData();
+  const [data, setData] = useState<PageData>(() => initial ? normalizeContent(initial.content[PAGE_KEY] || {}) : cache ?? DEFAULTS);
 
   useEffect(() => {
+    if (initial) return;
     if (cache) {
       setData(cache);
       return;
@@ -326,7 +333,7 @@ export function useMaintenanceContent(): PageData {
     }
 
     return () => { listeners.delete(handler); };
-  }, []);
+  }, [initial]);
 
-  return data;
+  return initial ? normalizeContent(initial.content[PAGE_KEY] || {}) : data;
 }

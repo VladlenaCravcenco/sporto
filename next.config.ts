@@ -3,6 +3,9 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   output: 'standalone',
   poweredByHeader: false,
+  // Keep SEO metadata in the initial head for HTML-only crawlers and audit tools.
+  // Verify response/render timing when changing this: metadata is no longer streamed.
+  htmlLimitedBots: /.*/,
   typescript: {
     tsconfigPath: './tsconfig.next.json',
   },

@@ -183,13 +183,9 @@ export function AdminBanners() {
   return (
     <div className="min-h-screen admin-canvas flex flex-col pb-16 lg:pb-0">
 
-      {/* ═��═════════════════════════════════
-          TOP BAR
-          ═══════════════════════════════════ */}
       <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-12 z-20">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Row 1: title + actions */}
           <div className="flex items-center h-11 gap-2">
             <Layers className="w-4 h-4 admin-muted flex-shrink-0" />
             <span className="text-sm admin-ink flex-shrink-0">{t.banners.title}</span>
@@ -199,7 +195,6 @@ export function AdminBanners() {
 
             <div className="flex-1" />
 
-            {/* Info toggle (mobile-friendly hint) */}
             <button
               onClick={() => setShowInfo(v => !v)}
               className={`w-8 h-8 flex items-center justify-center border transition-colors ${
@@ -210,7 +205,6 @@ export function AdminBanners() {
               <Info className="w-3.5 h-3.5" />
             </button>
 
-            {/* Preview (icon on mobile, text on desktop) */}
             <a
               href="/" target="_blank" rel="noopener noreferrer"
               className="w-8 h-8 sm:w-auto sm:px-3 flex items-center justify-center gap-1.5 text-xs admin-muted admin-hover-ink border admin-border hover:border-gray-400 transition-colors"
@@ -219,7 +213,6 @@ export function AdminBanners() {
               <span className="hidden sm:inline">{t.banners.showSql ? 'Preview' : 'Preview'}</span>
             </a>
 
-            {/* Refresh */}
             <button
               onClick={load} disabled={loading}
               className="w-8 h-8 flex items-center justify-center admin-muted admin-hover-ink transition-colors"
@@ -227,7 +220,6 @@ export function AdminBanners() {
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
 
-            {/* Add */}
             <button
               onClick={openNew}
               className="flex items-center gap-1.5 admin-solid admin-on-solid text-xs px-3 h-8 admin-hover-solid transition-colors flex-shrink-0"
@@ -239,7 +231,6 @@ export function AdminBanners() {
           </div>
         </div>
 
-        {/* Info bar (collapsible) */}
         {showInfo && (
           <div className="border-t admin-border admin-canvas px-4 sm:px-6 lg:px-8 py-3">
             <p className="text-[11px] admin-muted leading-relaxed">
@@ -252,12 +243,8 @@ export function AdminBanners() {
         )}
       </div>
 
-      {/* ═══════════════════════════════════
-          CONTENT
-          ═══════════════════════════════════ */}
       <div className="max-w-[1600px] mx-auto px-3 sm:px-6 lg:px-8 py-4 flex-1">
 
-        {/* SQL notice */}
         {noTable && (
           <div className="mb-4 border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
@@ -280,7 +267,6 @@ export function AdminBanners() {
           </div>
         )}
 
-        {/* ── Cards grid ── */}
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {Array.from({ length: 3 }).map((_, i) => (
@@ -311,7 +297,7 @@ export function AdminBanners() {
                   row.active ? 'admin-border' : 'admin-border opacity-60'
                 }`}
               >
-                {/* Image preview — clickable to edit */}
+
                 <div
                   className="aspect-[16/7] admin-solid relative overflow-hidden cursor-pointer"
                   onClick={() => openEdit(row)}
@@ -323,17 +309,17 @@ export function AdminBanners() {
                       <ImageIcon className="w-8 h-8 admin-ink" />
                     </div>
                   )}
-                  {/* Slide number */}
+
                   <div className="absolute top-2 left-2 text-xs text-white/50 tabular-nums">
                     {String(idx + 1).padStart(2, '0')}
                   </div>
-                  {/* Status badge */}
+
                   <div className={`absolute top-2 right-2 text-xs px-1.5 py-0.5   ${
                     row.active ? 'bg-green-500/80 admin-on-solid' : 'bg-gray-500/60 admin-on-solid'
                   }`}>
                     {row.active ? 'ON' : 'OFF'}
                   </div>
-                  {/* Title overlay */}
+
                   <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent px-3 py-3">
                     <p className="text-xs admin-on-solid truncate leading-tight">
                       {row.title_ro || <span className="admin-muted italic">{l('Fără titlu', 'Без заголовка')}</span>}
@@ -344,11 +330,10 @@ export function AdminBanners() {
                   </div>
                 </div>
 
-                {/* ── Card footer ── */}
                 <div className="border-t admin-border px-3 py-2">
-                  {/* Row 1: order + active toggle + edit */}
+
                   <div className="flex items-center gap-2">
-                    {/* Order arrows */}
+
                     <div className="flex items-center gap-0.5">
                       <button
                         onClick={() => reorder(row.id, 'up')} disabled={idx === 0}
@@ -366,7 +351,6 @@ export function AdminBanners() {
 
                     <div className="flex-1" />
 
-                    {/* Active toggle */}
                     <button
                       onClick={() => toggleActive(row)}
                       className={`flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 border transition-colors ${
@@ -381,7 +365,6 @@ export function AdminBanners() {
                       {row.active ? l('Activ', 'Активен') : l('Inactiv', 'Скрыт')}
                     </button>
 
-                    {/* Edit */}
                     <button
                       onClick={() => openEdit(row)}
                       className="flex items-center gap-1.5 text-[11px] px-2.5 py-1.5 border admin-border admin-muted admin-hover-border admin-hover-ink transition-colors  "
@@ -390,7 +373,6 @@ export function AdminBanners() {
                     </button>
                   </div>
 
-                  {/* Row 2: CTA link (only if set) */}
                   {row.cta_link && (
                     <p className="text-xs admin-muted font-mono mt-1.5 truncate pl-0.5">
                       → {row.cta_link}
@@ -403,17 +385,10 @@ export function AdminBanners() {
         )}
       </div>
 
-      {/* ═══════════════════════════════════
-          OVERLAY
-          ═══════════════════════════════════ */}
       {panelOpen && (
         <div className="fixed inset-0 bg-black/30 z-40 backdrop-blur-[1px]" onClick={closePanel} />
       )}
 
-      {/* ═══════════════════════════════════
-          EDIT PANEL
-          — Full screen on mobile, side drawer on sm+
-          ═══════════════════════════════════ */}
       <div className={`
         fixed inset-0 sm:inset-auto sm:top-0 sm:right-0 sm:h-full sm:w-[480px]
         admin-surface shadow-2xl z-50
@@ -422,7 +397,6 @@ export function AdminBanners() {
         ${panelOpen ? 'translate-x-0' : 'translate-x-full'}
       `}>
 
-        {/* Panel header */}
         <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b admin-border flex-shrink-0 admin-surface">
           <div className="min-w-0">
             <h2 className="text-sm admin-ink truncate">
@@ -437,11 +411,9 @@ export function AdminBanners() {
           </button>
         </div>
 
-        {/* Panel body — scrollable */}
         <div className="flex-1 overflow-y-auto">
           <div className="px-4 sm:px-6 py-4 space-y-4">
 
-            {/* ── Image upload ── */}
             <div>
               <Label>
                 {l('Imagine', 'Изображение')} <span className="normal-case admin-muted tracking-normal">· {l('recomandat 1600×700px', 'рек. 1600×700px')}</span>
@@ -450,7 +422,7 @@ export function AdminBanners() {
               {form.image_url ? (
                 <div className="relative aspect-[16/7] border admin-border overflow-hidden group">
                   <img src={form.image_url} alt="" className="w-full h-full object-cover" />
-                  {/* Hover overlay with actions */}
+
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/50 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
                     <button type="button" onClick={() => fileRef.current?.click()}
                       className="flex items-center gap-1.5 admin-surface admin-ink text-xs px-3 py-2 admin-hover-surface">
@@ -461,7 +433,7 @@ export function AdminBanners() {
                       <X className="w-3.5 h-3.5" />{l('Șterge', 'Удалить')}
                     </button>
                   </div>
-                  {/* Mobile tap buttons below image */}
+
                   <div className="sm:hidden absolute bottom-0 inset-x-0 flex">
                     <button type="button" onClick={() => fileRef.current?.click()}
                       className="flex-1 flex items-center justify-center gap-1.5 bg-black/70 admin-on-solid text-xs py-2">
@@ -499,7 +471,6 @@ export function AdminBanners() {
                 </div>
               )}
 
-              {/* URL input */}
               <div className="mt-2">
                 <label className="text-xs admin-muted mb-1 block">{l('sau URL imagine', 'или URL изображения')}</label>
                 <input type="text" value={form.image_url ?? ''}
@@ -509,7 +480,6 @@ export function AdminBanners() {
               </div>
             </div>
 
-            {/* ── Titles ── */}
             <div className="space-y-3">
               <div>
                 <Label>{l('Titlu RO', 'Заголовок RO')} <span className="text-red-400">*</span></Label>
@@ -527,7 +497,6 @@ export function AdminBanners() {
               </div>
             </div>
 
-            {/* ── Subtitles ── */}
             <div className="space-y-3">
               <div>
                 <Label>{l('Subtitlu RO', 'Подзаголовок RO')}</Label>
@@ -545,7 +514,6 @@ export function AdminBanners() {
               </div>
             </div>
 
-            {/* ── CTA ── */}
             <div className="space-y-3">
               <div>
                 <Label>{l('Link buton CTA', 'Ссылка кнопки CTA')}</Label>
@@ -575,7 +543,6 @@ export function AdminBanners() {
               </div>
             </div>
 
-            {/* ── Sort + Active ── */}
             <div className="flex items-center gap-4 py-1">
               <div>
                 <Label>{l('Ordine', 'Порядок')}</Label>
@@ -595,7 +562,7 @@ export function AdminBanners() {
                       : 'admin-border admin-muted hover:border-gray-400'
                   }`}
                 >
-                  {/* Toggle pill */}
+
                   <span className={`w-8 h-5 rounded-full flex items-center transition-colors flex-shrink-0 ${form.active ? 'bg-white/30' : 'admin-muted-surface'}`}>
                     <span className={`w-3.5 h-3.5 rounded-full shadow transition-transform mx-0.5 ${form.active ? 'admin-surface translate-x-3' : 'admin-surface translate-x-0'}`} />
                   </span>
@@ -607,12 +574,10 @@ export function AdminBanners() {
               </div>
             </div>
 
-            {/* Bottom spacer so last field isn't hidden behind footer */}
             <div className="h-2" />
           </div>
         </div>
 
-        {/* ── Panel footer ── */}
         <div className="flex-shrink-0 border-t admin-border admin-surface">
           <div className="flex items-center justify-between px-4 sm:px-6 py-3 gap-3">
             {editId ? (
@@ -635,12 +600,11 @@ export function AdminBanners() {
               </button>
             </div>
           </div>
-          {/* Bottom nav clearance on mobile */}
+
           <div className="h-16 lg:h-0" />
         </div>
       </div>
 
-      {/* ── Toast ── */}
       {toast && (
         <div className={`fixed bottom-20 lg:bottom-6 right-3 left-3 sm:left-auto sm:right-6 sm:w-72 z-[60] flex items-center gap-2 px-4 py-3 text-xs admin-on-solid shadow-xl ${toast.ok ? 'admin-solid' : 'bg-red-600'}`}>
           {toast.ok ? <Check className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}

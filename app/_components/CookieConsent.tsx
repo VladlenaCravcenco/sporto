@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { X } from 'lucide-react';
 import type { Language } from './HeaderPreview';
 
@@ -42,6 +42,17 @@ function saveConsent(value: Consent) {
 export function CookieConsent({ language, initialConsent }: { language: Language; initialConsent: Consent | null }) {
   const [consent, setConsent] = useState<Consent | null>(initialConsent);
   const text = copy[language];
+  const notice = useRef<HTMLElement>(null);
+
+  useEffect(() => {
+    if (consent !== null || !notice.current) return;
+    const element = notice.current;
+    const positionContacts = () => document.documentElement.style.setProperty('--sporto-contact-bottom', `${element.getBoundingClientRect().height + 16}px`);
+    positionContacts();
+    const observer = new ResizeObserver(positionContacts);
+    observer.observe(element);
+    return () => { observer.disconnect(); document.documentElement.style.removeProperty('--sporto-contact-bottom'); };
+  }, [consent, language]);
 
   useEffect(() => {
     setConsent(readConsent());
@@ -64,6 +75,7 @@ export function CookieConsent({ language, initialConsent }: { language: Language
     <>
       {consent === null && (
         <section
+          ref={notice}
           role="dialog"
           aria-live="polite"
           aria-label={language === 'ro' ? 'Preferințe cookie' : 'Настройки cookies'}
@@ -72,19 +84,19 @@ export function CookieConsent({ language, initialConsent }: { language: Language
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row items-start sm:items-center gap-4">
             <p className="text-xs text-gray-600 leading-relaxed flex-1">
               {text.text}{' '}
-              <a href={`/${language}/privacy-policy`} className="underline underline-offset-2 text-gray-500 hover:text-black transition-colors">
+              <a href={`/${language}/privacy-policy`} className="underline underline-offset-2 text-gray-600 hover:text-black transition-colors">
                 {text.policy}
               </a>
             </p>
 
             <div className="flex items-center gap-2 flex-shrink-0">
-              <button type="button" onClick={() => choose('declined')} className="text-xs font-medium text-gray-500 hover:text-gray-900 px-4 py-2.5 border border-gray-200 hover:border-gray-400 transition-colors">
+              <button type="button" onClick={() => choose('declined')} className="text-xs font-medium text-gray-600 hover:text-gray-900 px-4 py-2.5 border border-gray-200 hover:border-gray-400 transition-colors">
                 {text.decline}
               </button>
               <button type="button" onClick={() => choose('accepted')} className="text-xs font-semibold text-white bg-black hover:bg-gray-800 px-5 py-2.5 transition-colors">
                 {text.accept}
               </button>
-              <button type="button" onClick={() => choose('declined')} className="text-gray-400 hover:text-black transition-colors ml-1" aria-label={text.close} title={text.close}>
+              <button type="button" onClick={() => choose('declined')} className="text-gray-600 hover:text-black transition-colors ml-1 w-10 h-10 flex items-center justify-center" aria-label={text.close} title={text.close}>
                 <X className="w-4 h-4" />
               </button>
             </div>

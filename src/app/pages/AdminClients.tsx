@@ -175,7 +175,6 @@ export function AdminClients() {
   return (
     <div className="min-h-screen admin-canvas flex flex-col">
 
-      {/* Toast */}
       {toast && (
         <div className={`fixed top-4 right-4 z-50 px-4 py-3 text-xs flex items-center gap-2 shadow-lg ${toast.ok ? 'admin-solid admin-on-solid' : 'bg-red-600 admin-on-solid'}`}>
           {toast.ok ? <Check className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
@@ -183,7 +182,6 @@ export function AdminClients() {
         </div>
       )}
 
-      {/* Top bar */}
       <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-0 z-30">
         <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-wrap items-center min-h-12 py-2 gap-2">
@@ -193,7 +191,6 @@ export function AdminClients() {
               <span className="text-xs admin-muted-surface admin-muted px-2 py-0.5 tabular-nums">{rows.length}</span>
             </div>
 
-            {/* Search */}
             <div className="flex-1 min-w-[160px] max-w-xs relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted" />
               <input
@@ -210,7 +207,6 @@ export function AdminClients() {
               )}
             </div>
 
-            {/* Filter tabs */}
             <div className="flex items-center border admin-border overflow-hidden rounded-lg">
               {(['all', 'company', 'individual'] as Filter[]).map(f => (
                 <button key={f} onClick={() => setFilter(f)}
@@ -246,7 +242,6 @@ export function AdminClients() {
 
       <div className="admin-page-body max-w-[1600px] mx-auto w-full px-4 sm:px-6 lg:px-8 py-6 flex-1">
 
-        {/* SQL setup notice */}
         {noTable && (
           <div className="mb-6 border border-amber-200 bg-amber-50 p-5">
             <div className="flex items-start gap-3">
@@ -268,7 +263,6 @@ export function AdminClients() {
           </div>
         )}
 
-        {/* Offer panel */}
         {offerPanel && (
           <div className="mb-4 admin-surface border admin-border p-5">
             <div className="flex items-start justify-between mb-4">
@@ -312,10 +306,9 @@ export function AdminClients() {
           </div>
         )}
 
-        {/* Table */}
         {!noTable && (
           <div className="admin-surface border admin-border">
-            {/* Table header */}
+
             <div className="grid grid-cols-[auto_1fr_1fr_140px_120px_110px_80px] gap-0 border-b admin-border text-xs   admin-muted hidden lg:grid">
               <div className="px-4 py-3 flex items-center">
                 <button onClick={toggleAll}
@@ -359,7 +352,7 @@ export function AdminClients() {
                     key={row.id}
                     className={`group transition-colors ${selected.has(row.id) ? 'admin-canvas' : 'hover:bg-gray-50/50'}`}
                   >
-                    {/* Desktop row */}
+
                     <div className="hidden lg:grid grid-cols-[auto_1fr_1fr_140px_120px_110px_80px] items-center gap-0">
                       <div className="px-4 py-3.5">
                         <button onClick={() => toggleSelect(row.id)}
@@ -405,7 +398,6 @@ export function AdminClients() {
                       </div>
                     </div>
 
-                    {/* Mobile card */}
                     <div className="lg:hidden p-4">
                       <div className="flex flex-wrap items-start gap-3">
                         <button onClick={() => toggleSelect(row.id)}
@@ -436,7 +428,6 @@ export function AdminClients() {
                       </div>
                     </div>
 
-                    {/* Expanded detail */}
                     {detailId === row.id && (
                       <div className="border-t admin-border admin-canvas px-4 lg:px-14 py-4">
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
@@ -460,7 +451,6 @@ export function AdminClients() {
               </div>
             )}
 
-            {/* Footer */}
             {!loading && filtered.length > 0 && (
               <div className="border-t admin-border px-4 py-3 flex items-center justify-between">
                 <span className="text-xs admin-muted">

@@ -1,12 +1,27 @@
 import { Building2, Wrench, ArrowUpRight } from 'lucide-react';
 
-
-// ─── Unsplash images (same as on the home page) ────────────────────────────────
 const IMG_TURNKEY =
   'https://images.unsplash.com/photo-1740895307943-7878df384db1?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb21tZXJjaWFsJTIwZ3ltJTIwdHJlYWRtaWxscyUyMGRhcmslMjBoYWxsJTIwZml0bmVzcyUyMGVxdWlwbWVudCUyMHJvd3xlbnwxfHx8fDE3NzMyMTQ0ODl8MA&ixlib=rb-4.1.0&q=80&w=1080';
 
 const IMG_MAINTENANCE =
   'https://images.unsplash.com/photo-1667771511112-d7eed0ccfaa7?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxtZWNoYW5pYyUyMGZpeGluZyUyMGV4ZXJjaXNlJTIwbWFjaGluZSUyMHRvb2xzJTIwd3JlbmNoJTIwbWFpbnRlbmFuY2V8ZW58MXx8fHwxNzczMjE0NDg0fDA&ixlib=rb-4.1.0&q=80&w=1080';
+
+function serviceImage(source: string) {
+  const resized = (width: number) => {
+    const url = new URL(source);
+    url.searchParams.set('auto', 'format');
+    url.searchParams.delete('fm');
+    url.searchParams.set('w', String(width));
+    return url.href;
+  };
+  return {
+    src: resized(640),
+    srcSet: [384, 640, 960, 1440, 1920].map(width => `${resized(width)} ${width}w`).join(', '),
+    sizes: '(max-width: 767px) calc(100vw - 32px), (max-width: 1919px) calc((100vw - 76px) / 2), 928px',
+    loading: 'lazy' as const, decoding: 'async' as const, fetchPriority: 'low' as const,
+    width: 1080, height: 473,
+  };
+}
 
 export function ServicesBentoView({ language, basePath = '' }: { language: 'ro' | 'ru'; basePath?: string }) {
   const text: Record<string, string> = language === 'ro' ? {
@@ -25,14 +40,13 @@ export function ServicesBentoView({ language, basePath = '' }: { language: 'ro' 
   return (
     <div className="grid md:grid-cols-2 gap-2 md:gap-3">
 
-      {/* ── Turnkey Solutions ── */}
       <a
         href={`${basePath}/turnkey-solutions`}
         className="group bg-white border border-gray-200 hover:border-black transition-all duration-200 overflow-hidden flex flex-col"
       >
         <div className="aspect-[16/7] bg-gray-900 flex items-center justify-center relative overflow-hidden">
           <img
-            src={IMG_TURNKEY}
+            {...serviceImage(IMG_TURNKEY)}
             alt="Fitness club interior"
             className="absolute inset-0 w-full h-full object-cover opacity-50 group-hover:opacity-60 group-hover:scale-[1.03] transition-all duration-500"
           />
@@ -51,18 +65,17 @@ export function ServicesBentoView({ language, basePath = '' }: { language: 'ro' 
             <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-black transition-colors mt-2" />
           </div>
           <h3 className="text-gray-900 mb-2">{t('services.turnkey.title')}</h3>
-          <p className="text-sm text-gray-500 leading-relaxed">{t('services.turnkey.desc')}</p>
+          <p className="text-sm text-gray-600 leading-relaxed">{t('services.turnkey.desc')}</p>
         </div>
       </a>
 
-      {/* ── Maintenance Service ── */}
       <a
         href={`${basePath}/maintenance-service`}
         className="group bg-white border border-gray-200 hover:border-black transition-all duration-200 overflow-hidden flex flex-col"
       >
         <div className="aspect-[16/7] bg-black flex items-center justify-center relative overflow-hidden">
           <img
-            src={IMG_MAINTENANCE}
+            {...serviceImage(IMG_MAINTENANCE)}
             alt="Equipment maintenance"
             className="absolute inset-0 w-full h-full object-cover opacity-40 group-hover:opacity-55 group-hover:scale-[1.03] transition-all duration-500"
           />
@@ -81,7 +94,7 @@ export function ServicesBentoView({ language, basePath = '' }: { language: 'ro' 
             <ArrowUpRight className="w-4 h-4 text-gray-300 group-hover:text-black transition-colors mt-2" />
           </div>
           <h3 className="text-gray-900 mb-2">{t('services.maintenance.title')}</h3>
-          <p className="text-sm text-gray-500 leading-relaxed">{t('services.maintenance.desc')}</p>
+          <p className="text-sm text-gray-600 leading-relaxed">{t('services.maintenance.desc')}</p>
         </div>
       </a>
 

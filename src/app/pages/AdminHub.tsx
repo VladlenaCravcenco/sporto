@@ -25,7 +25,6 @@ export function AdminHub() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // ── Price list export state ───────────────────────────────────────────────
   const [exporting, setExporting]           = useState(false);
   const [exportLang, setExportLang]         = useState<'ro' | 'ru' | 'both'>('both');
   const [exportActive, setExportActive]     = useState(true);
@@ -55,7 +54,6 @@ export function AdminHub() {
     })();
   }, []);
 
-  // ── Загружаем категории с slug ────────────────────────────────────────────
   useEffect(() => {
     supabase
       .from('categories')
@@ -66,7 +64,6 @@ export function AdminHub() {
       });
   }, []);
 
-  // ── Экспорт ───────────────────────────────────────────────────────────────
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -91,7 +88,6 @@ export function AdminHub() {
 
       if (!data.length) throw new Error('Нет данных после фильтрации');
 
-      // ── Колонки ────────────────────────────────────────────────────────────
       type ColDef = { key: string; header: string; width: number };
       const baseCols: ColDef[] = [
         { key: 'num',      header: '№',           width: 6  },
@@ -115,7 +111,6 @@ export function AdminHub() {
         ...baseCols.slice(4),
       ];
 
-      // ── ExcelJS ────────────────────────────────────────────────────────────
       const wb = new ExcelJS.Workbook();
       wb.creator  = 'Sportosfera Admin';
       wb.created  = new Date();
@@ -124,7 +119,6 @@ export function AdminHub() {
       // Ширины колонок
       ws.columns = cols.map(c => ({ width: c.width }));
 
-      // ── Строка 1: заголовок компании ───────────────────────────────────────
       const titleRow = ws.addRow(['Sportosfera S.R.L. — Прайс-лист']);
       ws.mergeCells(1, 1, 1, cols.length);
       titleRow.height = 28;
@@ -133,7 +127,6 @@ export function AdminHub() {
       titleCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000000' } };
       titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
 
-      // ── Строка 2: мета ─────────────────────────────────────────────────────
       const metaText = [
         new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         `Категория: ${categoryLabel}`,
@@ -147,7 +140,6 @@ export function AdminHub() {
       metaCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF111111' } };
       metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
 
-      // ── Строка 3: заголовки колонок ────────────────────────────────────────
       const headerRow = ws.addRow(cols.map(c => c.header));
       headerRow.height = 22;
       headerRow.eachCell(cell => {
@@ -160,7 +152,6 @@ export function AdminHub() {
       // Заморозить до строки 4
       ws.views = [{ state: 'frozen', xSplit: 0, ySplit: 3 }];
 
-      // ── Данные ─────────────────────────────────────────────────────────────
       const BG_ODD  = 'FFFAFAFA';
       const BG_EVEN = 'FFFFFFFF';
 
@@ -199,7 +190,6 @@ export function AdminHub() {
         });
       });
 
-      // ── Строка ИТОГО ───────────────────────────────────────────────────────
       ws.addRow([]); // пустая строка-отступ
       const totalRow = ws.addRow(['ИТОГО:', data.length, lang === 'ru' ? 'позиций' : 'poziții']);
       totalRow.height = 18;
@@ -209,7 +199,6 @@ export function AdminHub() {
         cell.alignment = { vertical: 'middle' };
       });
 
-      // ── Скачать ────────────────────────────────────────────────────────────
       const buffer = await wb.xlsx.writeBuffer();
       const blob   = new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -229,7 +218,6 @@ export function AdminHub() {
     }
   };
 
-  // ── All modules (flat) ────────────────────────────────────────────────────
   const modules = [
     { to: '/admin/attributes', icon: <Settings className="w-6 h-6" />, title: lang === 'ru' ? 'Характеристики' : 'Caracteristici', desc: lang === 'ru' ? 'Параметры товаров и фильтры' : 'Parametri și filtre pentru produse', stat: '—', statBad: null, primary: false },
     { to: '/admin/requests',    icon: <ClipboardList className="w-6 h-6" />, title: t.hub.requestsTitle,   desc: t.hub.requestsDesc,   stat: '—',                                                              statBad: null,                                                                        primary: true  },

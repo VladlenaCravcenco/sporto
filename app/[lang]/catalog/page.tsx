@@ -1,3 +1,5 @@
+import { CategoryGuide } from '../../_components/CategoryGuide';
+import { CatalogScrollRestoration } from '../../_components/CatalogScrollRestoration';
 import { CatalogLink } from '../../_components/CatalogLink';
 import { productPath } from '../../_lib/product-url';
 import { CatalogSortControl } from '../../_components/CatalogSortControl';
@@ -8,6 +10,8 @@ import { ProductCardView } from '../../../src/app/components/ProductCardView';
 import type { Metadata } from 'next';
 import { ArrowLeft, ArrowRight, Package } from 'lucide-react';
 import { notFound, redirect } from 'next/navigation';
+import { getCategoryLanding, hasAdditionalFilters } from '../../_lib/catalog-seo';
+import { localizedMetadata } from '../../_lib/page-seo';
 import { type CatalogProduct, type CatalogSort } from '../../_lib/catalog-data';
 import type { Language } from '../../_components/HeaderPreview';
 
@@ -55,18 +59,24 @@ export async function generateMetadata({ params, searchParams }: CatalogPageProp
   const parsedPage = parsePage(query.page);
   const page = parsedPage && parsedPage > 1 ? parsedPage : 1;
   // Parameter combinations remain usable, but are not separate search landing pages.
-  const hasFilters = Object.keys(query).some(key => key !== 'page' && key !== 'sort' && query[key] !== undefined);
+  const selection = await getCategoryLanding(query, lang as Language);
+  const hasFilters = hasAdditionalFilters(query) || Boolean((query.category || query.subcategory) && !selection.landing) || selection.invalid;
+  const sort = parseSort(query.sort) || 'recommended';
+  const data = await getFilteredCatalog(query, page, sort, lang as Language);
   const canonical = `${siteUrl}${catalogHref(lang as Language, page, 'recommended', query)}`;
   const pageSuffix = page > 1 ? (isRo ? ` — pagina ${page}` : ` — страница ${page}`) : '';
 
   return {
+    ...localizedMetadata(lang as Language, catalogHref(lang as Language, page, 'recommended', query).replace(`/${lang}`, ''),
+      selection.name ? `${selection.name}${isRo ? ' în Moldova' : ' в Молдове'}${pageSuffix}` : (isRo ? `Catalog de echipamente sportive${pageSuffix}` : `Каталог спортивного оборудования${pageSuffix}`),
+      selection.description || (isRo ? 'Catalogul SPORTO de echipamente sportive profesionale disponibile în Moldova.' : 'Каталог профессионального спортивного оборудования SPORTO в Молдове.')),
     title: isRo
-      ? `Catalog de echipamente sportive${pageSuffix}`
-      : `Каталог спортивного оборудования${pageSuffix}`,
-    description: isRo
+      ? `${selection.name ? selection.name + ' în Moldova' : 'Catalog de echipamente sportive'}${pageSuffix}`
+      : `${selection.name ? selection.name + ' в Молдове' : 'Каталог спортивного оборудования'}${pageSuffix}`,
+    description: selection.description || (isRo
       ? 'Catalogul SPORTO de echipamente sportive profesionale disponibile în Moldova.'
-      : 'Каталог профессионального спортивного оборудования SPORTO в Молдове.',
-    robots: hasFilters ? { index: false, follow: true } : undefined,
+      : 'Каталог профессионального спортивного оборудования SPORTO в Молдове.'),
+    robots: hasFilters || data.status !== 'ready' || data.totalProducts === 0 ? { index: false, follow: true } : { index: true, follow: true },
     alternates: {
       canonical,
       languages: {
@@ -82,6 +92,8 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
   const [{ lang }, query] = await Promise.all([params, searchParams]);
   if (!languages.has(lang as Language)) notFound();
   const language = lang as Language;
+  const selection = await getCategoryLanding(query, language);
+  if (selection.invalid) notFound();
   const filters = query;
   const page = parsePage(query.page);
   const sort = parseSort(query.sort);
@@ -91,20 +103,25 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
   }
 
   const data = await getFilteredCatalog(query, page, sort, language);
+  if (data.status === 'error' || data.status === 'unavailable') throw new Error('Catalog unavailable');
   if (data.status === 'out-of-range') notFound();
 
   return (
     <section className="min-h-[70vh] bg-[#f5f6f7] py-10 md:py-14">
+      <CatalogScrollRestoration />
       <div className="mx-auto w-full max-w-[1920px] px-4 sm:px-6 lg:px-8">
         <div className="mb-8 flex flex-col gap-2">
           <h1 className="text-3xl font-semibold text-gray-950 md:text-4xl">
-            {language === 'ro' ? 'Catalog de produse' : 'Каталог товаров'}
+            {selection.name || (language === 'ro' ? 'Catalog de produse' : 'Каталог товаров')}
           </h1>
-          <p className="max-w-2xl text-base leading-7 text-gray-600">
-            {language === 'ro'
+          <p className="max-w-2xl text-sm leading-6 text-gray-600">
+            {(selection.guide ? (language === 'ro' ? 'Comparați modelele, caracteristicile și prețurile.' : 'Сравните модели, характеристики и цены.') : selection.description) || (language === 'ro'
               ? 'Echipamente sportive pentru săli, cluburi, instituții și antrenamente personale.'
-              : 'Спортивное оборудование для залов, клубов, учреждений и личных тренировок.'}
+              : 'Спортивное оборудование для залов, клубов, учреждений и личных тренировок.')}
           </p>
+          {(selection.landing?.child ? [selection.landing.category] : selection.landing ? selection.landing.category.subcategories : selection.categories).length > 0 && <nav aria-label={language === 'ro' ? 'Categorii de produse' : 'Категории товаров'} className="mt-3 flex flex-wrap gap-2">
+            {(selection.landing?.child ? [selection.landing.category] : selection.landing ? selection.landing.category.subcategories : selection.categories).map(item => <CatalogLink key={item.id} href={catalogHref(language, 1, 'recommended', selection.landing && !selection.landing.child ? { category: selection.landing.category.id, subcategory: item.id } : { category: item.id })} className="rounded border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 hover:border-gray-900">{item.name[language]}</CatalogLink>)}
+          </nav>}
         </div>
 
         {data.status === 'ready' && <div className="mb-3 flex items-center justify-between gap-3">
@@ -177,16 +194,8 @@ export default async function CatalogPage({ params, searchParams }: CatalogPageP
           </div>
         )}
 
-        {(data.status === 'error' || data.status === 'unavailable') && (
-          <div className="rounded-[5px] border border-red-200 bg-white px-6 py-16 text-center">
-            <h2 className="text-lg font-semibold text-gray-900">
-              {language === 'ro' ? 'Catalogul nu poate fi încărcat' : 'Не удалось загрузить каталог'}
-            </h2>
-            <p className="mt-2 text-sm text-gray-500">
-              {language === 'ro' ? 'Încercați din nou puțin mai târziu.' : 'Пожалуйста, попробуйте ещё раз немного позже.'}
-            </p>
-          </div>
-        )}
+
+        {page === 1 && !hasAdditionalFilters(query) && data.status === 'ready' && data.products.length > 0 && selection.guide && selection.landing && <CategoryGuide guide={selection.guide} category={selection.landing.category} language={language} />}
         </div>
         </div>
       </div>

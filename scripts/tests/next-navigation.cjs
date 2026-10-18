@@ -31,7 +31,7 @@ nav.push('/catalog?search=999');
 nav.replace({ pathname: '/product/test/42' });
 nav.push('/ro/catalog');
 assert.deepEqual(calls, [['push', '/ru/catalog?search=999'], ['replace', '/ru/product/test/42'], ['push', '/ro/catalog']]);
-const Link = load('app/_components/CatalogLink.tsx', { 'react/jsx-runtime': { jsx }, 'next/link': { default: 'NextLink' } }).CatalogLink;
+const Link = load('app/_components/CatalogLink.tsx', { 'react/jsx-runtime': { jsx }, 'next/link': { default: 'NextLink' }, './catalog-scroll': { saveCatalogPosition() {} } }).CatalogLink;
 const link = Link({ href: '/ru/catalog', children: 'Catalog' });
 assert.equal(link.props.href, '/ru/catalog');
 assert.equal(link.props.prefetch, false);

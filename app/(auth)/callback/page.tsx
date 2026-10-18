@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 
@@ -8,13 +8,22 @@ export default function CallbackPage() {
   const router = useRouter();
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
+  const started = useRef(false);
 
   useEffect(() => {
+    if (started.current) return;
+    started.current = true;
     async function handleCallback() {
       try {
         const supabase = createClient();
 
         let checkout = '';
+        let returnPath = '';
+        try {
+          const stored = sessionStorage.getItem('sporto:auth-return') || '';
+          sessionStorage.removeItem('sporto:auth-return');
+          if (/^\/(ru|ro)(?:\/|[?#]|$)/.test(stored) && !stored.includes('\\')) returnPath = stored;
+        } catch { /* Use the default destination if storage is unavailable. */ }
         try {
           const stored = sessionStorage.getItem('sporto:checkout-return') || '';
           if (/^\/(ru|ro)\/order-request$/.test(stored)) checkout = stored;
@@ -30,7 +39,7 @@ export default function CallbackPage() {
           setLoading(false);
           return;
         }
-        router.replace('/account?lang=ro');
+        router.replace(returnPath || '/ro/order-request');
       } catch (err) {
         setError('Something went wrong');
         setLoading(false);

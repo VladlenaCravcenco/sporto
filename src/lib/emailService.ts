@@ -15,7 +15,6 @@
 
 import emailjs from '@emailjs/browser';
 
-// ─── Config ───────────────────────────────────────────────────────────────────
 export const EMAILJS = {
   publicKey:  import.meta.env.VITE_EMAILJS_PUBLIC_KEY       || '',
   serviceId:  import.meta.env.VITE_EMAILJS_SERVICE_ID       || 'service_odgatyo',
@@ -35,7 +34,6 @@ function init() {
   _inited = true;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
 function fmtDate() {
   return new Intl.DateTimeFormat('ru-RU', {
     day: '2-digit', month: '2-digit', year: 'numeric',
@@ -54,7 +52,6 @@ function fmtItems(items: OrderEmailData['items']): string {
     .join('\n\n');
 }
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 export interface OrderEmailData {
   orderId:         string;
   clientName:      string;
@@ -75,7 +72,6 @@ export interface OrderEmailData {
   language: 'ru' | 'ro';
 }
 
-// ─── 1. Клиенту — подтверждение регистрации ──────────────────────────────────
 export async function sendWelcomeEmail(params: {
   email:            string;
   name:             string;
@@ -96,7 +92,6 @@ export async function sendWelcomeEmail(params: {
   }
 }
 
-// ─── 2. Админу — уведомление о новой заявке ──────────────────────────────────
 export async function sendAdminOrderNotification(data: OrderEmailData) {
   if (!isEmailConfigured() || !EMAILJS.tplAdmin) return;
   init();

@@ -1,3 +1,4 @@
+import { checkProductSkus, productSkuError } from '../../lib/product-sku';
 import { useState, useRef, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { supabase } from '../../lib/supabase';
@@ -14,7 +15,6 @@ import {
 } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 
-// ─── Brands ──────────────────────────────────────────────────────────────────
 const KNOWN_BRANDS = [
   'TECHNOGYM','HMS','NILS','SUHS','DITTMANN','EZOUS','CIMA',
   'WISH','FERRARI','LAMBORGHINI','REEBOK','ADIDAS','NIKE','KETTLER',
@@ -22,7 +22,6 @@ const KNOWN_BRANDS = [
   'DIKE','DIKES','MIKASA','MOLTEN','SELECT','SONDICO','UMBRO','PUMA',
 ];
 
-// ─── 12 categories matching the site ─────────────────────────────────────────
 const CATEGORY_OPTIONS = [
   { slug: 'aparate-cardio',       ro: 'Aparate Cardio',         ru: 'Кардио тренажеры' },
   { slug: 'aparate-forta',        ro: 'Aparate Forta',          ru: 'Силовые тренажеры' },
@@ -38,7 +37,6 @@ const CATEGORY_OPTIONS = [
   { slug: 'inventar-institutii',  ro: 'Inventar Institutii',    ru: 'Инвентарь для учреждений' },
 ];
 
-// ─── Auto-detect category from any text (section name OR product name) ────────
 // Order matters: more specific first
 const DETECT_RULES: { kw: string[]; slug: string }[] = [
   // Cardio
@@ -110,7 +108,6 @@ function parseNumber(val: unknown): number {
   return parseFloat(String(val).replace(/\s/g, '').replace(',', '.')) || 0;
 }
 
-// ─── A row is a "section / title / summary" row if it has no numeric Cod ──────
 // We also skip rows that somehow have a numeric Cod but price=0 AND qty=0
 // (those are zero-balance phantom rows or sub-total lines)
 
@@ -127,7 +124,6 @@ interface ParsedRow {
   qty: number;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 export function AdminImport() {
   const { lang } = useAdminLang();
   const fileRef = useRef<HTMLInputElement>(null);
@@ -144,7 +140,6 @@ export function AdminImport() {
     return category ? (lang === 'ro' ? category.ro : category.ru) : slug;
   };
 
-  // ── Parse Excel ─────────────────────────────────────────────────────────────
   const handleFile = useCallback((file: File) => {
     setFileName(file.name);
     setParseError('');
@@ -205,7 +200,7 @@ export function AdminImport() {
           const isProduct = !isNaN(codNum) && codNum > 0 && codNum < 1_000_000;
 
           if (!isProduct) {
-            // ── Non-product row: use as section context, never add to list ──
+
             // Pick whichever cell has text (sometimes category name is in col A)
             const anyText = (row as string[])
               .map(c => String(c ?? '').trim())
@@ -216,7 +211,6 @@ export function AdminImport() {
             continue; // ← NEVER added to product list
           }
 
-          // ── Product row ─────────────────────────────────────────────────────
           if (!nameRaw) continue; // no name → skip
 
           const price = cPrice >= 0 ? parseNumber(row[cPrice]) : 0;
@@ -275,15 +269,16 @@ export function AdminImport() {
     if (f) handleFile(f);
   }, [handleFile]);
 
-  // ── Update single row category ──────────────────────────────────────────────
   const setRowCategory = (idx: number, slug: string) => {
     setRows(prev => prev.map(r => r.idx === idx ? { ...r, category: slug } : r));
   };
 
-  // ── Import to Supabase ─────��────────────────────────────────────────────────
+  const [importError, setImportError] = useState<string | null>(null);
+
   const handleImport = async () => {
     setImporting(true);
     setImportResult(null);
+    setImportError(null);
 
     const toInsert = rows
       .filter(r => r.category)
@@ -304,6 +299,14 @@ export function AdminImport() {
         active: true,
       }));
 
+    try {
+      await checkProductSkus(supabase, toInsert);
+    } catch (error) {
+      setImportError(productSkuError(error, L('ro', 'ru') as 'ro' | 'ru'));
+      setImporting(false);
+      return;
+    }
+
     const BATCH = 200;
     let okCount = 0;
     let failCount = 0;
@@ -314,6 +317,7 @@ export function AdminImport() {
         .from('products')
         .upsert(batch, { onConflict: 'id' });
       if (error) {
+        setImportError(productSkuError(error, L('ro', 'ru') as 'ro' | 'ru'));
         console.error('Batch error:', error.message);
         failCount += batch.length;
       } else {
@@ -331,7 +335,6 @@ export function AdminImport() {
     if (failCount === 0) setStep('done');
   };
 
-  // ── CSV download ────────────────────────────────────────────────────────────
   const downloadCsv = () => {
     const good = rows.filter(r => r.category);
     const hdrs = ['id','name_ro','sku','brand','category','subcategory','price','unit','qty'];
@@ -349,16 +352,13 @@ export function AdminImport() {
     a.click();
   };
 
-  // ── Stats ───────────────────────────────────────────────────────────────────
   const readyCount   = rows.filter(r => r.category).length;
   const noCatCount   = rows.filter(r => !r.category).length;
   const displayRows  = filterNoCat ? rows.filter(r => !r.category) : rows;
 
-  // ─────────────────────────────────────────────────────────────────────────────
   return (
     <div className="admin-section">
 
-      {/* Header */}
       <div className="admin-section-heading">
         <div className="w-full">
           <h1 className="admin-ink">{L('Import produse din Excel', 'Импорт товаров из Excel')}</h1>
@@ -373,7 +373,6 @@ export function AdminImport() {
 
       <div className="w-full">
 
-        {/* ── UPLOAD ── */}
         {step === 'upload' && (
           <div className="max-w-2xl mx-auto">
             <div
@@ -418,10 +417,9 @@ export function AdminImport() {
           </div>
         )}
 
-        {/* ── PREVIEW ── */}
         {step === 'preview' && (
           <div>
-            {/* Summary */}
+
             <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
               <div className="flex items-center gap-3">
                 <div className="border admin-border px-4 py-2 text-center min-w-[72px]">
@@ -470,7 +468,6 @@ export function AdminImport() {
               </div>
             </div>
 
-            {/* Table */}
             <div className="border admin-border overflow-hidden mb-6">
               <div className="overflow-x-auto max-h-[520px] overflow-y-auto">
                 <table className="w-full text-xs">
@@ -524,7 +521,7 @@ export function AdminImport() {
               </div>
             </div>
 
-            {/* Import result */}
+            {importError && <p role="alert" className="mb-4 text-sm text-red-600">{importError}</p>}
             {importResult && (
               <div className={`mb-4 p-4 border flex items-center gap-3 ${
                 importResult.failed === 0
@@ -544,7 +541,6 @@ export function AdminImport() {
               </div>
             )}
 
-            {/* Import button */}
             <div className="flex gap-3 flex-wrap">
               <button
                 onClick={handleImport}
@@ -568,7 +564,6 @@ export function AdminImport() {
           </div>
         )}
 
-        {/* ── DONE ── */}
         {step === 'done' && importResult && (
           <div className="max-w-lg mx-auto text-center py-16">
             <div className="w-16 h-16 admin-solid flex items-center justify-center mx-auto mb-6">

@@ -2,6 +2,7 @@ const fs=require('node:fs'),ts=require('typescript'),React=require('react'),asse
 const {renderToStaticMarkup}=require('react-dom/server');let language='ru';const out={};
 function mockRequire(name){
  if(name.includes('supabase/client'))return {createClient:()=>{throw new Error('Must not authenticate during SSR')}};
+ if(name.includes('useCustomerSession'))return {useCustomerSession:()=>({user:null,name:'',loading:false})};
  if(name.includes('LanguageContext'))return {useLanguage:()=>({language})};
  if(name.includes('CartContext'))return {useCart:()=>({cart:[{id:'1',name:{ro:'Produs',ru:'Товар'},price:100,quantity:1}],totalPrice:100,totalItems:1,isFreeDelivery:false,totalWithDelivery:200})};
  if(name==='react-router')return {Link:({to,children,...props})=>React.createElement('a',{href:to,...props},children),useNavigate:()=>()=>{}};

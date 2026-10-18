@@ -22,7 +22,7 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABA
   }
 })().catch(error => {
   console.error('Database preflight failed:', error.message);
-  console.error('For sporto_home_sales_v1 apply src/database/2026-09-30_home_sales_rpc.sql first.');
-  console.error('Apply src/database/2026-09-28_search_rpc.sql in Supabase SQL Editor before deploying.');
+  console.error('Missing sporto_home_sales_v1. Restore the required database function before deploying.');
+  console.error('Required search RPCs are missing. Restore the database functions before deploying.');
   process.exitCode = 1;
 });

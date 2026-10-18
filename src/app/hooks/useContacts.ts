@@ -1,8 +1,8 @@
+import { usePublicPageData } from '../contexts/PublicPageData';
 import { useState, useEffect } from 'react';
 import { supabase } from '../../lib/supabase';
 import { CONTACTS } from '../../lib/contacts';
 
-// ── Social types ──────────────────────────────────────────────────────────────
 export type SocialType =
   | 'instagram' | 'facebook' | 'tiktok' | 'youtube'
   | 'linkedin'  | 'telegram' | 'whatsapp' | 'viber';
@@ -48,7 +48,6 @@ export const SOCIAL_SVG_PATHS: Record<SocialType, string> = {
     'M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z',
 };
 
-// ── ContactsData type ─────────────────────────────────────────────────────────
 export interface ContactsData {
   phone: string;
   phoneDisplay: string;
@@ -81,7 +80,6 @@ const FALLBACK: ContactsData = {
   socials: DEFAULT_SOCIALS,
 };
 
-// ── Fetch ────────────────────────────────────────────────────────────────────
 async function fetchContacts(): Promise<ContactsData> {
   const { data, error } = await supabase
     .from('site_settings')
@@ -89,11 +87,18 @@ async function fetchContacts(): Promise<ContactsData> {
 
   if (error || !data || data.length === 0) return { ...FALLBACK };
 
-  const obj = Object.fromEntries(data.map(r => [r.key, r.value]));
+  return normalizeContacts(Object.fromEntries(data.map(r => [r.key, r.value])));
+}
+
+function normalizeContacts(settings: Record<string, string>): ContactsData {
+  const obj = { ...settings };
 
   let socials: SocialEntry[] = DEFAULT_SOCIALS;
   if (obj.socials) {
-    try { socials = JSON.parse(obj.socials); } catch {}
+    try {
+      const parsed: unknown = JSON.parse(obj.socials);
+      if (Array.isArray(parsed)) socials = parsed.filter((item): item is SocialEntry => Boolean(item && typeof item === 'object' && typeof item.id === 'string' && typeof item.type === 'string' && Object.hasOwn(SOCIAL_CONFIG, item.type) && typeof item.url === 'string' && /^(https?:\/\/|viber:\/\/)/i.test(item.url)));
+    } catch {}
   }
 
   if (!obj.socials) {
@@ -117,7 +122,6 @@ async function fetchContacts(): Promise<ContactsData> {
   } as ContactsData;
 }
 
-// ── Global singleton cache ───────────────────────────────────────────────────
 let cache: ContactsData | null = null;
 const listeners: Set<(data: ContactsData) => void> = new Set();
 let loadingPromise: Promise<void> | null = null;
@@ -131,20 +135,21 @@ function loadOnce() {
 }
 
 export function useContacts(): ContactsData {
-  const [contacts, setContacts] = useState<ContactsData>(cache ?? FALLBACK);
+  const initial = usePublicPageData();
+  const [contacts, setContacts] = useState<ContactsData>(() => initial?.settings ? normalizeContacts(initial.settings) : cache ?? FALLBACK);
 
   useEffect(() => {
+    if (initial?.settings) return;
     if (cache) { setContacts(cache); return; }
     const handler = (data: ContactsData) => setContacts(data);
     listeners.add(handler);
     loadOnce();
     return () => { listeners.delete(handler); };
-  }, []);
+  }, [initial]);
 
-  return contacts;
+  return initial?.settings ? normalizeContacts(initial.settings) : contacts;
 }
 
-// ── Save (called by AdminContacts) ───────────────────────────────────────────
 export async function saveContacts(data: Record<string, string>): Promise<void> {
   const entries = Object.entries(data).map(([key, value]) => ({ key, value }));
   await supabase.from('site_settings').upsert(entries, { onConflict: 'key' });

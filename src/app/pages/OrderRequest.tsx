@@ -11,6 +11,7 @@ import { SeoHead } from '../components/SeoHead';
 import { trackGoogleAdsLead } from '../../lib/googleAds';
 import { OrderRequestSubmissionError, submitOrderRequest } from '../../lib/orderRequests';
 import { createClient as createAuthClient } from '../../../lib/supabase/client';
+import { useCustomerSession } from '../hooks/useCustomerSession';
 import { PhoneInput } from '../components/PhoneInput';
 
 type Step = 'cart' | 'success';
@@ -51,10 +52,10 @@ export function OrderRequest() {
 
   const L = (ro: string, ru: string) => language === 'ro' ? ro : ru;
 
+  const { user: authUser, name: authName, loading: authLoading } = useCustomerSession();
   const [googleLoading, setGoogleLoading] = useState(false);
   const [googleError, setGoogleError] = useState('');
   useEffect(() => {
-    let active = true;
     try {
       const draft = JSON.parse(sessionStorage.getItem('sporto:checkout-draft') || 'null');
       sessionStorage.removeItem('sporto:checkout-draft');
@@ -71,22 +72,34 @@ export function OrderRequest() {
     if (new URLSearchParams(window.location.search).has('auth_error')) {
       setGoogleError(language === 'ru' ? 'Вход не завершён. Попробуйте ещё раз или заполните форму.' : 'Autentificarea nu a fost finalizată. Încercați din nou sau completați formularul.');
     }
-    const auth = createAuthClient();
-    auth.auth.getUser().then(({data}) => {
-      if (!active || !data.user) return;
-      const user = data.user;
-      setGuest(prev => ({...prev, email: user.email || prev.email,
-        name: prev.name || user.user_metadata?.full_name || user.user_metadata?.name || ''}));
-    }).catch(() => {});
-    return () => { active = false; };
   }, [language]);
+
+  useEffect(() => {
+    if (!authUser) return;
+    setGuest(prev => ({ ...prev, name: prev.name || authName, email: prev.email || authUser.email || '' }));
+    setGoogleError('');
+  }, [authUser, authName]);
+
+  useEffect(() => {
+    const saveDraft = () => {
+      try {
+        sessionStorage.setItem('sporto:checkout-return', `/${language}/order-request`);
+        sessionStorage.setItem('sporto:checkout-draft', JSON.stringify(guest));
+      } catch { /* Manual checkout remains available. */ }
+    };
+    window.addEventListener('sporto:checkout-save', saveDraft);
+    return () => window.removeEventListener('sporto:checkout-save', saveDraft);
+  }, [guest, language]);
 
   const handleGoogle = async () => {
     setGoogleLoading(true);
     setGoogleError('');
     try {
-      sessionStorage.setItem('sporto:checkout-return', `/${language}/order-request`);
-      sessionStorage.setItem('sporto:checkout-draft', JSON.stringify(guest));
+      try {
+        sessionStorage.removeItem('sporto:auth-return');
+        sessionStorage.setItem('sporto:checkout-return', `/${language}/order-request`);
+        sessionStorage.setItem('sporto:checkout-draft', JSON.stringify(guest));
+      } catch { /* Google sign-in does not depend on optional form draft storage. */ }
       const { error } = await createAuthClient().auth.signInWithOAuth({provider: 'google', options: {
         redirectTo: `${window.location.origin}/callback`,
       }});
@@ -173,7 +186,6 @@ export function OrderRequest() {
     }
   };
 
-  // ── Success screen ─────────────────────────────────────────────────────────
   if (step === 'success') {
     return (
       <div className="min-h-screen bg-[#f5f6f7] flex items-center justify-center p-8">
@@ -207,11 +219,10 @@ export function OrderRequest() {
     );
   }
 
-  // ── Cart screen ─────────────────────────────────────────────────────────────
   return (
     <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead title="Order Request | Sporto" canonical="/order-request" noIndex lang={language as Language} />
-      {/* Header */}
+
       <div className="bg-black text-white">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-10">
           <div className="flex items-end justify-between gap-4">
@@ -253,7 +264,6 @@ export function OrderRequest() {
         ) : (
           <div className="grid lg:grid-cols-[1fr_380px] gap-6 items-start">
 
-            {/* ── Cart items ───────────────────────────────────────────────── */}
             <div className="border border-gray-200">
               <div className="px-5 py-4 border-b border-gray-100 flex items-center justify-between">
                 <h2 className="text-sm uppercase tracking-wider text-gray-900">
@@ -306,7 +316,6 @@ export function OrderRequest() {
                 ))}
               </div>
 
-              {/* Delivery row */}
               <div className={`flex gap-4 px-5 py-4 border-t ${isFreeDelivery ? 'border-gray-100 bg-gray-50/50' : 'border-gray-100'}`}>
                 <div className="w-16 h-16 flex-shrink-0 flex items-center justify-center">
                   <Truck className={`w-5 h-5 ${isFreeDelivery ? 'text-black' : 'text-gray-400'}`} />
@@ -340,7 +349,6 @@ export function OrderRequest() {
                 </div>
               </div>
 
-              {/* Totals */}
               <div className="border-t border-gray-200 bg-gray-50">
                 <div className="px-5 pt-4 pb-2 flex items-center justify-between">
                   <span className="text-xs text-gray-400 uppercase tracking-wider">
@@ -376,7 +384,6 @@ export function OrderRequest() {
               </div>
             </div>
 
-            {/* ── Checkout sidebar ─────────────────────────────────────────── */}
             <div className="rounded-lg border border-gray-200 bg-white sticky top-[112px]">
 
               <div className="px-5 pt-5 pb-4">
@@ -385,11 +392,13 @@ export function OrderRequest() {
               </div>
 
                     <div className="px-5 pb-4">
+                      {authLoading ? <p role="status" className="text-sm text-gray-500">{L('Verificăm autentificarea…', 'Проверяем вход…')}</p> : authUser ? <p className="text-sm text-gray-700">{L('Autentificat ca', 'Вы вошли как')} {authName || authUser.email}</p> : <>
                       <button type="button" disabled={googleLoading} onClick={handleGoogle} className="w-full rounded border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-900 hover:bg-gray-50 disabled:opacity-50">
                         {googleLoading ? L('Se deschide Google…', 'Открываем Google…') : L('Continuă cu Google', 'Продолжить с Google')}
                       </button>
                       {googleError && <p role="alert" className="mt-2 text-sm text-red-600">{googleError}</p>}
                       <p className="mt-3 text-center text-sm text-gray-500">{L('sau completați datele mai jos', 'или заполните данные ниже')}</p>
+                      </>}
                     </div>
                     <form onSubmit={handleGuestSubmit}>
                       <SpamTrapField value={website} onChange={setWebsite} />
@@ -473,8 +482,6 @@ function SpamTrapField({ value, onChange }: { value: string; onChange: (value: s
     </div>
   );
 }
-
-// ── Sub-components ────────────────────────────────────────────────────────────
 
 function OrderSummaryMini({
   totalPrice, isFreeDelivery, totalWithDelivery, L,

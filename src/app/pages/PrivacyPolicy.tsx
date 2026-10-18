@@ -193,13 +193,13 @@ export function PrivacyPolicy() {
         />
         <section className="border-b border-gray-100">
           <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-            <Link to="/" className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group">
+            <Link to="/" className="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors mb-10 group">
               <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
               {content.back}
             </Link>
 
             <div className="max-w-3xl">
-              <p className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
+              <p className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
               <h1 className="text-4xl lg:text-5xl text-black mb-6">{language === 'ro' ? managed.title_ro : managed.title_ru}</h1>
             </div>
           </div>
@@ -223,33 +223,30 @@ export function PrivacyPolicy() {
         noIndex={false}
       />
 
-      {/* ── HERO ── */}
       <section className="border-b border-gray-100">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors mb-10 group"
+            className="inline-flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors mb-10 group"
           >
             <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
             {content.back}
           </Link>
 
           <div className="max-w-3xl">
-            <p className="text-xs text-gray-400 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
+            <p className="text-xs text-gray-600 uppercase tracking-[0.2em] mb-4">{content.eyebrow}</p>
             <h1 className="text-4xl lg:text-5xl text-black mb-6">{content.title}</h1>
-            <p className="text-gray-500 leading-relaxed max-w-2xl">{content.intro}</p>
+            <p className="text-gray-600 leading-relaxed max-w-2xl">{content.intro}</p>
           </div>
         </div>
       </section>
 
-      {/* ── CONTENT ── */}
       <section className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-20">
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
 
-          {/* Sticky sidebar */}
           <aside className="lg:col-span-3 hidden lg:block">
             <div className="sticky top-8">
-              <p className="text-xs text-gray-400 uppercase tracking-[0.15em] mb-4">
+              <p className="text-xs text-gray-600 uppercase tracking-[0.15em] mb-4">
                 {language === 'ro' ? 'Cuprins' : 'Содержание'}
               </p>
               <nav className="space-y-1">
@@ -257,7 +254,7 @@ export function PrivacyPolicy() {
                   <a
                     key={i}
                     href={`#pp-section-${i}`}
-                    className="flex items-center gap-2 text-xs text-gray-400 hover:text-black transition-colors py-1.5 border-l-2 border-transparent hover:border-black pl-3"
+                    className="flex items-center gap-2 text-xs text-gray-600 hover:text-black transition-colors py-1.5 border-l-2 border-transparent hover:border-black pl-3"
                   >
                     <span className="tabular-nums text-gray-300">{String(i + 1).padStart(2, '0')}</span>
                     {s.title.replace(/^\d+\.\s/, '')}
@@ -267,7 +264,6 @@ export function PrivacyPolicy() {
             </div>
           </aside>
 
-          {/* Main text */}
           <div className="lg:col-span-9 space-y-0 divide-y divide-gray-100">
             {content.sections.map((section, i) => (
               <div key={i} id={`pp-section-${i}`} className="py-10 first:pt-0">
@@ -288,21 +284,19 @@ export function PrivacyPolicy() {
               </div>
             ))}
 
-            {/* Operator note */}
             <div className="py-10">
               <div className="border-l-2 border-black pl-5">
-                <p className="text-xs text-gray-500 leading-relaxed">{content.updated}</p>
+                <p className="text-xs text-gray-600 leading-relaxed">{content.updated}</p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* ── BOTTOM CTA ── */}
       <section className="border-t border-gray-100 bg-gray-50">
         <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
           <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-            <p className="text-sm text-gray-500">
+            <p className="text-sm text-gray-600">
               {language === 'ro'
                 ? 'Întrebări despre politica de confidențialitate?'
                 : 'Вопросы о политике конфиденциальности?'}

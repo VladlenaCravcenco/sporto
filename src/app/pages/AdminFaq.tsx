@@ -137,7 +137,6 @@ export function AdminFaq() {
     <div className="admin-section admin-editor-pane admin-single-editor">
       <div className="max-w-4xl mx-auto">
 
-        {/* Header */}
         <div className="admin-section-heading">
           <div>
             <p className="text-xs admin-muted   mb-1">{isRu ? 'Контент · О нас' : 'Conținut · Despre noi'}</p>
@@ -163,7 +162,6 @@ export function AdminFaq() {
           </div>
         </div>
 
-        {/* Info notice */}
         <div className="flex items-start gap-3 border admin-border admin-muted-surface px-4 py-3 mb-6">
           <Info className="w-4 h-4 admin-muted flex-shrink-0 mt-0.5" />
           <p className="text-xs admin-muted leading-relaxed">

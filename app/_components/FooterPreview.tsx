@@ -21,6 +21,7 @@ const copy = {
   ro: {
     about: 'Activăm în mai multe segmente de piață: B2C, B2B și B2G.',
     links: 'Link-uri utile', legal: 'Informații juridice', contact: 'Contact', schedule: 'Program',
+    developed: 'Creat și dezvoltat de',
     home: 'Acasă', aboutLink: 'Despre noi', catalog: 'Catalog', turnkey: 'Soluții la cheie',
     maintenance: 'Service și mentenanță', terms: 'Condiții de colaborare', delivery: 'Condiții de livrare',
     privacy: 'Politica de confidențialitate', rights: 'Toate drepturile rezervate',
@@ -28,6 +29,7 @@ const copy = {
   ru: {
     about: 'Мы работаем в нескольких рыночных сегментах: B2C, B2B и B2G.',
     links: 'Полезные ссылки', legal: 'Правовая информация', contact: 'Контакты', schedule: 'График',
+    developed: 'Разработано и создано',
     home: 'Главная', aboutLink: 'О нас', catalog: 'Каталог', turnkey: 'Решения под ключ',
     maintenance: 'Сервис и обслуживание', terms: 'Условия сотрудничества', delivery: 'Условия доставки',
     privacy: 'Политика конфиденциальности', rights: 'Все права защищены',
@@ -68,19 +70,19 @@ export function FooterPreview({ language, contacts }: { language: Language; cont
   ] as const;
 
   return (
-    <footer className="bg-black text-gray-500">
+    <footer className="bg-black text-gray-400">
       <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-0 border-b border-gray-900">
           <div className="md:col-span-3 py-10 md:border-r border-gray-900 md:pr-8">
             <Logo className="h-8 w-auto mb-4" color="#ffffff" />
-            <p className="text-xs text-gray-500 leading-relaxed max-w-xs">{text.about}</p>
+            <p className="text-xs text-gray-400 leading-relaxed max-w-xs">{text.about}</p>
           </div>
 
           <div className="md:col-span-3 py-10 md:border-r border-gray-900 md:px-8">
             <h2 className="text-xs font-semibold text-gray-400 mb-4">{text.links}</h2>
             <ul className="space-y-2">
               {links.map(([href, label]) => (
-                <li key={href}><CatalogLink href={href} className="text-xs text-gray-500 hover:text-white transition-colors inline-flex items-center gap-1 group">{label}<ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /></CatalogLink></li>
+                <li key={href}><CatalogLink href={href} className="text-xs text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1 group">{label}<ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /></CatalogLink></li>
               ))}
             </ul>
           </div>
@@ -89,7 +91,7 @@ export function FooterPreview({ language, contacts }: { language: Language; cont
             <h2 className="text-xs font-semibold text-gray-400 mb-4">{text.legal}</h2>
             <ul className="space-y-2">
               {legal.map(([href, label]) => (
-                <li key={href}><CatalogLink href={href} className="text-xs text-gray-500 hover:text-white transition-colors inline-flex items-center gap-1 group">{label}<ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /></CatalogLink></li>
+                <li key={href}><CatalogLink href={href} className="text-xs text-gray-400 hover:text-white transition-colors inline-flex items-center gap-1 group">{label}<ArrowUpRight className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" /></CatalogLink></li>
               ))}
             </ul>
           </div>
@@ -97,18 +99,18 @@ export function FooterPreview({ language, contacts }: { language: Language; cont
           <div className="md:col-span-2 py-10 md:border-r border-gray-900 md:px-8">
             <h2 className="text-xs font-semibold text-gray-400 mb-4">{text.contact}</h2>
             <ul className="space-y-3">
-              <li><CatalogLink href={`mailto:${contacts.email}`} className="flex items-center gap-2 text-xs text-gray-500 hover:text-white transition-colors"><Mail className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />{contacts.email}</CatalogLink></li>
-              <li><CatalogLink href={`tel:${contacts.phone}`} className="flex items-center gap-2 text-xs text-gray-500 hover:text-white transition-colors"><Phone className="w-3.5 h-3.5 text-gray-600 flex-shrink-0" />{contacts.phoneDisplay}</CatalogLink></li>
+              <li><CatalogLink href={`mailto:${contacts.email}`} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"><Mail className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{contacts.email}</CatalogLink></li>
+              <li><CatalogLink href={`tel:${contacts.phone}`} className="flex items-center gap-2 text-xs text-gray-400 hover:text-white transition-colors"><Phone className="w-3.5 h-3.5 text-gray-400 flex-shrink-0" />{contacts.phoneDisplay}</CatalogLink></li>
               <li>
-                <CatalogLink href={contacts.mapsDirectionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-xs text-gray-500 hover:text-white transition-colors group">
-                  <MapPin className="w-3.5 h-3.5 text-gray-600 flex-shrink-0 mt-0.5" />
+                <CatalogLink href={contacts.mapsDirectionsUrl} target="_blank" rel="noopener noreferrer" className="flex items-start gap-2 text-xs text-gray-400 hover:text-white transition-colors group">
+                  <MapPin className="w-3.5 h-3.5 text-gray-400 flex-shrink-0 mt-0.5" />
                   <span>{address}<ExternalLink className="inline w-2.5 h-2.5 ml-1 opacity-0 group-hover:opacity-60 transition-opacity" /></span>
                 </CatalogLink>
               </li>
               {contacts.socials.length > 0 && (
                 <li className="flex items-center gap-3 pt-1">
                   {contacts.socials.map(social => (
-                    <CatalogLink key={social.id} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={socialLabels[social.type]} title={socialLabels[social.type]} className="text-gray-600 hover:text-white transition-colors"><SocialIcon type={social.type} /></CatalogLink>
+                    <CatalogLink key={social.id} href={social.url} target="_blank" rel="noopener noreferrer" aria-label={socialLabels[social.type]} title={socialLabels[social.type]} className="text-gray-400 hover:text-white transition-colors"><SocialIcon type={social.type} /></CatalogLink>
                   ))}
                 </li>
               )}
@@ -117,21 +119,21 @@ export function FooterPreview({ language, contacts }: { language: Language; cont
 
           <div className="md:col-span-2 py-10 md:pl-8">
             <h2 className="text-xs font-semibold text-gray-400 mb-4">{text.schedule}</h2>
-            <div className="text-xs text-gray-500 whitespace-pre-line leading-relaxed">{hours}</div>
+            <div className="text-xs text-gray-400 whitespace-pre-line leading-relaxed">{hours}</div>
           </div>
         </div>
 
         <div className="py-5 border-t border-gray-900 flex flex-col sm:flex-row items-center justify-between gap-2">
-          <p className="text-xs text-gray-600">© 2026 SPORTOSFERA S.R.L. {text.rights}.</p>
+          <p className="text-xs text-gray-400">© 2026 SPORTOSFERA S.R.L. {text.rights}.</p>
           <div className="flex items-center gap-4">
             <CookieSettingsButton language={language} />
-            <p className="text-xs text-gray-700">Moldova · B2B Wholesale</p>
+            <p className="text-xs text-gray-400">Moldova · B2B Wholesale</p>
           </div>
         </div>
         <div className="py-3 border-t border-gray-900 flex items-center justify-center">
-          <CatalogLink href="https://godevca.com" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 text-[11px] text-gray-700 hover:text-gray-500 transition-colors">
+          <CatalogLink href="https://godevca.com" target="_blank" rel="noopener noreferrer" className="group inline-flex items-center gap-1.5 text-[11px] text-gray-400 hover:text-gray-400 transition-colors">
             <span className="w-1 h-1 rounded-full bg-gray-700 group-hover:bg-gray-500 transition-colors" />
-            Разработано &amp; создано <span className="text-gray-600 group-hover:text-gray-400 font-medium">GODEVCA</span><ArrowUpRight className="w-2.5 h-2.5 opacity-50" />
+            {text.developed} <span className="text-gray-400 group-hover:text-gray-400 font-medium">GODEVCA</span><ArrowUpRight className="w-2.5 h-2.5 opacity-50" />
           </CatalogLink>
         </div>
       </div>
