@@ -5,13 +5,15 @@ import { logoutAdmin } from '../lib/adminAuth';
 import {
   Package, Star, Upload, LogOut, ExternalLink,
   LayoutDashboard, Layers, Bookmark, Users, ShoppingCart,
-  Tag, Bell, Globe, ChevronDown, Phone, Megaphone, HelpCircle, Wrench, FileText, Settings, Menu,
+  Tag, Bell, X, Phone, Megaphone, HelpCircle, Wrench, FileText, Settings, Menu, Sun, Moon,
 } from 'lucide-react';
 import { useAdminNotifications } from './hooks/useAdminNotifications';
 import { toast } from 'sonner';
 import { Toaster } from './components/ui/sonner';
 import { AdminLangProvider, useAdminLang } from './contexts/AdminLangContext';
 import { SeoHead } from './components/SeoHead';
+import './admin.css';
+import { useAdminTheme, setAdminTheme } from './contexts/adminTheme';
 
 function AdminLayoutInner() {
   const navigate   = useNavigate();
@@ -19,11 +21,10 @@ function AdminLayoutInner() {
   const [authed, setAuthed] = useState<boolean | null>(null);
   const { unreadCount, latestRequest, clearUnread } = useAdminNotifications();
   const { lang, setLang, t } = useAdminLang();
-  const [openGroup, setOpenGroup] = useState<string | null>(null);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const navRef = useRef<HTMLDivElement>(null);
+  const theme = useAdminTheme();
+  const menuRef = useRef<HTMLDialogElement>(null);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
-  // ── Navigation groups ───────────────────────────────────────────────────────
   const GROUPS = [
     {
       key: 'clients',
@@ -66,43 +67,16 @@ function AdminLayoutInner() {
     },
   ];
 
-  const isGroupActive = (g: typeof GROUPS[number]) =>
-    g.items.some(i => location.pathname.startsWith(i.to));
-
-  const isActive = (to: string) => location.pathname.startsWith(to);
-  const activeMobileGroup = GROUPS.find(isGroupActive) ?? null;
-  const mobileTabLabel = (key: 'dashboard' | 'clients' | 'products' | 'content' | 'logout') => {
-    if (lang === 'ru') {
-      if (key === 'dashboard') return 'Главная';
-      if (key === 'clients') return 'Заявки';
-      if (key === 'products') return 'Товары';
-      if (key === 'content') return 'Контент';
-      return 'Выйти';
-    }
-    if (key === 'dashboard') return 'Panou';
-    if (key === 'clients') return 'Cereri';
-    if (key === 'products') return 'Produse';
-    if (key === 'content') return 'Conținut';
-    return 'Ieși';
-  };
-
-  // Close dropdown when clicking outside
+  const isActive = (to: string) => location.pathname === to || location.pathname.startsWith(`${to}/`);
+  const currentItem = GROUPS.flatMap(group => group.items).find(item => isActive(item.to));
+  const closeMenu = () => menuRef.current?.close();
+  useEffect(() => { menuRef.current?.close(); }, [location.pathname]);
   useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      if (navRef.current && !navRef.current.contains(e.target as Node)) {
-        setOpenGroup(null);
-        setMobileMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handler);
-    return () => document.removeEventListener('mousedown', handler);
+    const media = window.matchMedia('(min-width: 1024px)');
+    const closeOnDesktop = () => { if (media.matches) menuRef.current?.close(); };
+    media.addEventListener('change', closeOnDesktop);
+    return () => media.removeEventListener('change', closeOnDesktop);
   }, []);
-
-  // Close dropdowns and mobile menu on route change
-  useEffect(() => {
-    setOpenGroup(null);
-    setMobileMenuOpen(false);
-  }, [location.pathname]);
 
   // New request toast
   useEffect(() => {
@@ -141,320 +115,65 @@ function AdminLayoutInner() {
 
   if (authed === null) {
     return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="w-4 h-4 border border-white/20 border-t-white/80 rounded-full animate-spin" />
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="w-4 h-4 border border-gray-200 border-t-gray-800 rounded-full animate-spin" />
       </div>
     );
   }
   if (!authed) return null;
 
-  return (
-    <>
-      <SeoHead title="Admin | Sporto" canonical="/admin" noIndex />
-      <div className="min-h-screen bg-gray-50 flex flex-col">
+  const navigation = <>
+    <Link to="/admin" className={`admin-nav-link ${location.pathname === '/admin' ? 'is-active' : ''}`} aria-current={location.pathname === '/admin' ? 'page' : undefined} onClick={closeMenu}>
+      <LayoutDashboard size={16} /><span>{t.nav.dashboard}</span>
+    </Link>
+    {GROUPS.map(group => <section className="admin-nav-group" key={group.key}>
+      <h2>{group.label}</h2>
+      {group.items.map(item => <Link key={item.to} to={item.to} className={`admin-nav-link ${isActive(item.to) ? 'is-active' : ''}`} aria-current={isActive(item.to) ? 'page' : undefined} onClick={closeMenu}>
+        {item.icon}<span>{item.label}</span>
+        {'badge' in item && typeof item.badge === 'number' && item.badge > 0 && <span className="admin-count">{item.badge > 99 ? '99+' : item.badge}</span>}
+      </Link>)}
+    </section>)}
+  </>;
 
-      {/* ── TOP NAV ─────────────────────────────────────────────────────────── */}
-      <nav ref={navRef} className="bg-black text-white sticky top-0 z-50 flex-shrink-0">
-        <div className="max-w-[1600px] mx-auto px-3 sm:px-6">
-          <div className="flex items-center h-12 gap-1">
-
-            {/* Brand */}
-            <Link to="/admin" className="flex items-center gap-1.5 mr-2 sm:mr-3 flex-shrink-0 min-w-0">
-              <span className="text-[11px] sm:text-xs tracking-[0.12em] sm:tracking-[0.15em] text-white truncate">SPORTO</span>
-              <span className="text-[8px] sm:text-[9px] uppercase tracking-[0.2em] sm:tracking-widest bg-white/15 text-white/70 px-1.5 py-0.5">
-                ADMIN
-              </span>
-            </Link>
-
-            <div className="hidden lg:block w-px h-4 bg-white/15 mr-2 flex-shrink-0" />
-
-            {/* ── Desktop: Dashboard + 3 groups ── */}
-            <div className="hidden lg:flex items-center gap-0.5 flex-1">
-
-              {/* Dashboard */}
-              <Link
-                to="/admin"
-                className={`flex items-center gap-1.5 px-3 h-12 text-xs transition-colors border-b-2 whitespace-nowrap flex-shrink-0 ${
-                  location.pathname === '/admin'
-                    ? 'text-white border-white'
-                    : 'text-white/50 border-transparent hover:text-white/80 hover:border-white/30'
-                }`}
-              >
-                <LayoutDashboard className="w-[18px] h-[18px]" />
-                <span>{t.nav.dashboard}</span>
-              </Link>
-
-              {/* Group dropdowns */}
-              {GROUPS.map(group => {
-                const active = isGroupActive(group);
-                const open   = openGroup === group.key;
-                return (
-                  <div key={group.key} className="relative flex-shrink-0">
-                    <button
-                      onClick={() => setOpenGroup(open ? null : group.key)}
-                      className={`flex items-center gap-1.5 px-3 h-12 text-xs transition-colors border-b-2 whitespace-nowrap ${
-                        active || open
-                          ? 'text-white border-white'
-                          : 'text-white/50 border-transparent hover:text-white/80 hover:border-white/30'
-                      }`}
-                    >
-                      {group.icon}
-                      <span>{group.label}</span>
-                      <ChevronDown className={`w-3 h-3 transition-transform ${open ? 'rotate-180' : ''}`} />
-                      {/* Badge on Clients group */}
-                      {group.key === 'clients' && unreadCount > 0 && (
-                        <span className="min-w-[16px] h-4 bg-red-500 text-white text-[9px] flex items-center justify-center px-1 rounded-full font-medium leading-none">
-                          {unreadCount > 9 ? '9+' : unreadCount}
-                        </span>
-                      )}
-                    </button>
-
-                    {/* Dropdown */}
-                    {open && (
-                      <div className="absolute top-full left-0 mt-0 bg-gray-950 border border-white/15 shadow-2xl min-w-[180px] py-1 z-50">
-                        {group.items.map(item => (
-                          <Link
-                            key={item.to}
-                            to={item.to}
-                            className={`flex items-center gap-2.5 px-4 py-2.5 text-xs transition-colors ${
-                              isActive(item.to)
-                                ? 'text-white bg-white/10'
-                                : 'text-white/60 hover:text-white hover:bg-white/5'
-                            }`}
-                          >
-                            {item.icon}
-                            <span>{item.label}</span>
-                            {'badge' in item && (item as any).badge > 0 && (
-                              <span className="ml-auto min-w-[16px] h-4 bg-red-500 text-white text-[9px] flex items-center justify-center px-1 rounded-full font-medium leading-none">
-                                {(item as any).badge > 9 ? '9+' : (item as any).badge}
-                              </span>
-                            )}
-                          </Link>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                );
-              })}
+  return <>
+    <SeoHead title="Admin | Sporto" canonical="/admin" noIndex />
+    <div className="admin-shell" data-admin-theme={theme}>
+      <a href="#admin-main" className="admin-skip">{lang === 'ru' ? 'К содержимому' : 'La conținut'}</a>
+      <aside className="admin-sidebar">
+        <Link to="/admin" className="admin-brand">SPORTO<span>admin</span></Link>
+        <nav className="admin-navigation" aria-label={lang === 'ru' ? 'Разделы админки' : 'Secțiuni administrare'}>{navigation}</nav>
+        <button className="admin-logout" onClick={handleLogout}><LogOut size={16} />{t.nav.logout}</button>
+      </aside>
+      <div className="admin-workarea">
+        <header className="admin-topbar">
+          <button ref={menuButtonRef} className="admin-icon-button admin-menu-trigger" aria-label={lang === 'ru' ? 'Открыть меню' : 'Deschide meniul'} aria-haspopup="dialog" onClick={() => menuRef.current?.showModal()}><Menu size={20} /></button>
+          <div className="admin-breadcrumb"><span>SPORTO</span><span aria-hidden="true">/</span><strong>{currentItem?.label || t.nav.dashboard}</strong></div>
+          <div className="admin-topbar-actions">
+            <div className="admin-theme-switch" role="group" aria-label={lang === 'ru' ? 'Тема интерфейса' : 'Tema interfeței'}>
+              <button type="button" aria-pressed={theme === 'light'} onClick={() => setAdminTheme('light')} title={lang === 'ru' ? 'Светлая тема' : 'Temă luminoasă'}><Sun size={16} /><span>{lang === 'ru' ? 'Светлая' : 'Luminoasă'}</span></button>
+              <button type="button" aria-pressed={theme === 'dark'} onClick={() => setAdminTheme('dark')} title={lang === 'ru' ? 'Тёмная тема' : 'Temă întunecată'}><Moon size={16} /><span>{lang === 'ru' ? 'Тёмная' : 'Întunecată'}</span></button>
             </div>
-
-            {/* ── Mobile spacer ── */}
-            <div className="flex-1 lg:hidden" />
-
-            {/* ── Mobile menu button ── */}
-            <button
-              onClick={() => setMobileMenuOpen(open => !open)}
-              className="flex items-center justify-center w-8 h-12 text-white/50 hover:text-white transition-colors lg:hidden"
-              aria-label="Open admin menu"
-            >
-              <Menu className="w-4 h-4" />
-            </button>
-
-            {/* ── Right side ── */}
-            <div className="flex items-center gap-0.5 flex-shrink-0">
-
-              {/* Language switcher */}
-              <div className="flex items-center border border-white/20 overflow-hidden mr-0.5 sm:mr-1">
-                <button
-                  onClick={() => setLang('ru')}
-                  className={`px-1.5 sm:px-2 h-7 text-[10px] uppercase tracking-widest transition-colors ${
-                    lang === 'ru' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
-                  }`}
-                >
-                  RU
-                </button>
-                <div className="w-px h-4 bg-white/20" />
-                <button
-                  onClick={() => setLang('ro')}
-                  className={`px-1.5 sm:px-2 h-7 text-[10px] uppercase tracking-widest transition-colors ${
-                    lang === 'ro' ? 'bg-white text-black' : 'text-white/50 hover:text-white'
-                  }`}
-                >
-                  RO
-                </button>
-              </div>
-
-              {/* Bell */}
-              <Link
-                to="/admin/requests"
-                onClick={clearUnread}
-                className="relative flex items-center justify-center w-8 sm:w-9 h-12 text-white/40 hover:text-white transition-colors"
-                title={t.nav.requests}
-              >
-                <Bell className={`w-4 h-4 ${unreadCount > 0 ? 'text-white' : ''}`} />
-                {unreadCount > 0 && (
-                  <span className="absolute top-2 right-0.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] flex items-center justify-center px-1 rounded-full font-medium leading-none">
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </span>
-                )}
-              </Link>
-
-              {/* Site */}
-              <a
-                href="/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center justify-center w-8 sm:w-9 lg:w-auto lg:gap-1.5 lg:px-3 h-12 text-xs text-white/40 hover:text-white/70 transition-colors"
-                title={t.nav.site}
-              >
-                <ExternalLink className="w-3.5 h-3.5" />
-                <span className="hidden lg:inline">{t.nav.site}</span>
-              </a>
-
-              {/* Logout — desktop only */}
-              <button
-                onClick={handleLogout}
-                className="hidden lg:flex items-center gap-1.5 px-3 h-12 text-xs text-white/40 hover:text-red-400 transition-colors"
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span>{t.nav.logout}</span>
-              </button>
+            <div className="admin-language" role="group" aria-label={lang === 'ru' ? 'Язык интерфейса' : 'Limba interfeței'}>
+              {(['ru', 'ro'] as const).map(value => <button key={value} aria-pressed={lang === value} onClick={() => setLang(value)}>{value.toUpperCase()}</button>)}
             </div>
+            <Link to="/admin/requests" onClick={clearUnread} className="admin-icon-button admin-bell" aria-label={`${t.nav.requests}${unreadCount ? ` (${unreadCount})` : ''}`} title={t.nav.requests}><Bell size={17} />{unreadCount > 0 && <span className="admin-notification-dot" />}</Link>
+            <a href="/" target="_blank" rel="noopener noreferrer" className="admin-site-link" title={t.nav.site}><ExternalLink size={15} /><span>{t.nav.site}</span></a>
           </div>
-        </div>
-
-        {mobileMenuOpen && (
-          <div className="absolute inset-x-0 top-full bg-black text-white border-t border-white/10 z-40">
-            <div className="max-w-[1600px] mx-auto px-3 sm:px-4 py-4 space-y-4">
-              {GROUPS.map(group => (
-                <div key={group.key}>
-                  <div className="flex items-center gap-2 text-[11px] uppercase tracking-[0.25em] text-white/60 mb-2">
-                    {group.icon}
-                    <span>{group.label}</span>
-                  </div>
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    {group.items.map(item => (
-                      <Link
-                        key={item.to}
-                        to={item.to}
-                        className={`border border-white/10 px-3 py-2.5 text-xs text-left transition-colors min-w-0 ${
-                          isActive(item.to)
-                            ? 'bg-white/10 text-white'
-                            : 'text-white/70 hover:text-white hover:bg-white/5'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="flex-shrink-0">{item.icon}</span>
-                          <span className="truncate">{item.label}</span>
-                        </div>
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-      </nav>
-
-      {activeMobileGroup && (
-        <div className="lg:hidden sticky top-12 z-40 bg-black border-b border-white/10">
-          <div className="px-3 py-2">
-            <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.18em] text-white/45 mb-2">
-              <span className="flex-shrink-0">{activeMobileGroup.icon}</span>
-              <span className="truncate">{activeMobileGroup.label}</span>
-            </div>
-            <div className="flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-              {activeMobileGroup.items.map(item => (
-                <Link
-                  key={item.to}
-                  to={item.to}
-                  className={`flex items-center gap-2 px-3 py-2 text-xs whitespace-nowrap border transition-colors flex-shrink-0 ${
-                    isActive(item.to)
-                      ? 'bg-white text-black border-white'
-                      : 'border-white/10 text-white/65 hover:text-white hover:border-white/30'
-                  }`}
-                >
-                  <span className="flex-shrink-0">{item.icon}</span>
-                  <span>{item.label}</span>
-                  {'badge' in item && (item as any).badge > 0 && (
-                    <span className={`min-w-[16px] h-4 px-1 flex items-center justify-center text-[9px] leading-none ${
-                      isActive(item.to) ? 'bg-black text-white' : 'bg-red-500 text-white'
-                    }`}>
-                      {(item as any).badge > 9 ? '9+' : (item as any).badge}
-                    </span>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ── PAGE CONTENT ─────────────────────────────────────────────────────── */}
-      <div className="flex-1 pb-16 lg:pb-0">
-        <Outlet />
+        </header>
+        <main id="admin-main" tabIndex={-1} className="admin-content"><Outlet /></main>
       </div>
-
-      {/* ── MOBILE BOTTOM TAB BAR ─────────────────────────────────────────────── */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-50 bg-black/95 backdrop-blur border-t border-white/10">
-        <div className="flex items-stretch h-[58px]">
-
-          {/* Dashboard */}
-          <Link
-            to="/admin"
-            className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-              location.pathname === '/admin' ? 'text-white' : 'text-white/35 active:text-white/70'
-            }`}
-          >
-            {location.pathname === '/admin' && (
-              <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-white" />
-            )}
-            <LayoutDashboard className="w-[18px] h-[18px]" />
-            <span className="max-w-[56px] truncate text-[8px] tracking-wide leading-none">{mobileTabLabel('dashboard')}</span>
-          </Link>
-
-          {/* 3 groups */}
-          {GROUPS.map(group => {
-            const active = isGroupActive(group);
-            return (
-              <Link
-                key={group.key}
-                to={group.firstRoute}
-                className={`relative flex-1 flex flex-col items-center justify-center gap-0.5 transition-colors ${
-                  active ? 'text-white' : 'text-white/35 active:text-white/70'
-                }`}
-              >
-                {active && (
-                  <span className="absolute top-0 left-1/2 -translate-x-1/2 w-8 h-[2px] bg-white" />
-                )}
-                <span className="relative">
-                  {group.icon}
-                  {group.key === 'clients' && unreadCount > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[14px] h-3.5 bg-red-500 text-white text-[8px] flex items-center justify-center px-0.5 rounded-full font-medium leading-none">
-                      {unreadCount > 9 ? '9+' : unreadCount}
-                    </span>
-                  )}
-                </span>
-                <span className="max-w-[56px] truncate text-[8px] tracking-wide leading-none">
-                  {mobileTabLabel(group.key as 'clients' | 'products' | 'content')}
-                </span>
-              </Link>
-            );
-          })}
-
-          {/* Logout on mobile */}
-          <button
-            onClick={handleLogout}
-            className="flex-1 flex flex-col items-center justify-center gap-0.5 text-white/35 active:text-red-400 transition-colors"
-          >
-            <LogOut className="w-[18px] h-[18px]" />
-            <span className="max-w-[56px] truncate text-[8px] tracking-wide leading-none">{mobileTabLabel('logout')}</span>
-          </button>
-
+      <dialog ref={menuRef} className="admin-mobile-menu" aria-label={lang === 'ru' ? 'Меню админки' : 'Meniu administrare'} onClick={event => { if (event.target === event.currentTarget) closeMenu(); }} onClose={() => menuButtonRef.current?.focus()}>
+        <div className="admin-mobile-menu-inner">
+          <div className="admin-mobile-menu-heading"><span className="admin-brand">SPORTO<span>admin</span></span><button autoFocus className="admin-icon-button" onClick={closeMenu} aria-label={lang === 'ru' ? 'Закрыть меню' : 'Închide meniul'}><X size={20} /></button></div>
+          <nav className="admin-navigation" aria-label={lang === 'ru' ? 'Разделы админки' : 'Secțiuni administrare'}>{navigation}</nav>
+          <button className="admin-logout" onClick={handleLogout}><LogOut size={16} />{t.nav.logout}</button>
         </div>
-      </div>
-
-      <Toaster position="bottom-right" />
-      </div>
-    </>
-  );
+      </dialog>
+      <Toaster position="bottom-right" theme={theme} />
+    </div>
+  </>;
 }
 
 export function AdminLayout() {
-  return (
-    <AdminLangProvider>
-      <AdminLayoutInner />
-    </AdminLangProvider>
-  );
+  return <AdminLangProvider><AdminLayoutInner /></AdminLangProvider>;
 }

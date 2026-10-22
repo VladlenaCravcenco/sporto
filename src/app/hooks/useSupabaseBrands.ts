@@ -2,7 +2,6 @@ import { useEffect, useState, useCallback } from 'react';
 import { supabase, fetchAllSupabaseRows, type BrandRow } from '../../lib/supabase';
 import { cacheGet, cacheSet, cacheInvalidate, TTL_LONG } from '../../lib/queryCache';
 
-// ─── Retry helper (same pattern as products hook) ─────────────────────────────
 async function withRetry<T>(
   fn: () => PromiseLike<{ data: T | null; error: { message: string } | null }>,
   maxAttempts = 3,
@@ -19,7 +18,6 @@ async function withRetry<T>(
   return { data: null, error: lastError };
 }
 
-// ─── All brands (for admin) ───────────────────────────────────────────────────
 export function useSupabaseBrands() {
   const [brands, setBrands] = useState<BrandRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -75,7 +73,6 @@ export function useSupabaseBrands() {
   };
 }
 
-// ─── Active brands (public site) ─────────────────────────────────────────────
 // Gets distinct brand names from active products, then fetches matching brand rows.
 // Cached for 10 minutes — this is the heaviest query on the home page.
 export function useActiveBrands() {
@@ -146,7 +143,6 @@ export function useActiveBrands() {
   return { brands, loading };
 }
 
-// ─── Brand count per name (for admin list) ────────────────────────────────────
 export function useBrandProductCounts() {
   const [counts, setCounts] = useState<Record<string, number>>({});
 
@@ -180,7 +176,6 @@ export function useBrandProductCounts() {
   return counts;
 }
 
-// ─── Get brand by name (for product detail pages) ────────────────────────────
 export function useBrandByName(brandName: string | null | undefined) {
   const [brand, setBrand] = useState<BrandRow | null>(null);
   const [loading, setLoading] = useState(true);

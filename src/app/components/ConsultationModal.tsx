@@ -265,23 +265,21 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
       className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center sm:p-4"
       onClick={handleOverlayClick}
     >
-      {/* Backdrop */}
+
       <div
         className="absolute inset-0 bg-black/60 backdrop-blur-[2px]"
         data-backdrop="true"
       />
 
-      {/* Panel */}
       <div
         className="relative z-10 bg-white w-full sm:max-w-lg max-h-[92vh] sm:max-h-[90vh] overflow-y-auto shadow-2xl flex flex-col rounded-t-xl sm:rounded-none"
         onClick={e => e.stopPropagation()}
       >
-        {/* Mobile drag handle */}
+
         <div className="sm:hidden flex justify-center pt-3 pb-1 flex-shrink-0">
           <div className="w-8 h-1 bg-gray-200 rounded-full" />
         </div>
 
-        {/* Close button */}
         <button
           onClick={onClose}
           className="absolute top-4 right-4 sm:top-5 sm:right-5 w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors z-10"
@@ -290,7 +288,7 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
         </button>
 
         {done ? (
-          /* ── THANK YOU STATE ── */
+
           <div className="flex flex-col items-center justify-center text-center px-6 py-12 sm:px-10 sm:py-16 flex-1">
             <div className="w-12 h-12 sm:w-14 sm:h-14 bg-black flex items-center justify-center mb-6 sm:mb-8">
               <Check className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
@@ -309,10 +307,9 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
             </button>
           </div>
         ) : (
-          /* ── FORM STATE ── */
+
           <form onSubmit={handleSubmit} noValidate>
 
-            {/* Header */}
             <div className="px-5 pt-4 pb-5 sm:px-8 sm:pt-10 sm:pb-8 border-b border-gray-100">
               <h2 className="text-lg sm:text-[clamp(1.4rem,3vw,1.9rem)] leading-[1.15] sm:leading-[1.1] tracking-tight text-black whitespace-pre-line mb-2 sm:mb-3">
                 {T.title}
@@ -320,10 +317,8 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
               <p className="text-xs text-gray-400 leading-relaxed">{T.sub}</p>
             </div>
 
-            {/* Fields */}
             <div className="px-5 py-5 space-y-4 sm:px-8 sm:py-8 sm:space-y-6">
 
-              {/* Client type toggle */}
               <div>
                 <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">
                   {T.clientTypeLabel}
@@ -356,7 +351,6 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
                 </div>
               </div>
 
-              {/* Name */}
               <div>
                 <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5 sm:mb-2">
                   {T.nameLabel} <span className="text-black">*</span>
@@ -374,9 +368,8 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
                 {errors.name && <p className="mt-1 text-[10px] text-black">{errors.name}</p>}
               </div>
 
-              {/* Phone + Email side by side on mobile too */}
               <div className="grid grid-cols-2 gap-3 sm:gap-4 sm:grid-cols-1">
-                {/* Phone */}
+
                 <div>
                   <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5 sm:mb-2">
                     {T.phoneLabel} <span className="text-black">*</span>
@@ -392,7 +385,6 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
                   {errors.phone && <p className="mt-1 text-[10px] text-black">{errors.phone}</p>}
                 </div>
 
-                {/* Email */}
                 <div>
                   <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5 sm:mb-2">
                     {T.emailLabel}
@@ -407,7 +399,6 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
                 </div>
               </div>
 
-              {/* Company — only for legal entities */}
               {form.clientType === 'company' && (
                 <div>
                   <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5 sm:mb-2">
@@ -426,7 +417,6 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
                 </div>
               )}
 
-              {/* Message */}
               <div>
                 <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-1.5 sm:mb-2">
                   {T.messageLabel}
@@ -441,7 +431,6 @@ export function ConsultationModal({ open, onClose, type }: ConsultationModalProp
               </div>
             </div>
 
-            {/* Submit */}
             <div className="px-5 pb-6 sm:px-8 sm:pb-8">
               <button
                 type="submit"

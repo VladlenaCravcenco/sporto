@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js';
+import { createBrowserClient } from '@supabase/ssr';
+import { adminTransport } from './admin-transport';
 
-// ─── Переменные окружения (Vite) ──────────────────────────────────────────────
 // Локально: файл .env в корне проекта
 // На Vercel: Settings → Environment Variables
 const SUPABASE_URL =
@@ -14,7 +15,9 @@ const SUPABASE_ANON_KEY =
 export const SITE_URL =
   ((import.meta.env.VITE_SITE_URL as string) || 'https://www.sporto.md').replace(/\/+$/, '');
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+export const supabase = import.meta.env.VITE_NEXT_SSR
+  ? createBrowserClient(SUPABASE_URL, SUPABASE_ANON_KEY, { global: { fetch: adminTransport } })
+  : createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // PostgREST / Supabase often caps a single response at 1000 rows.
 // Read large tables in chunks so catalogs/admin screens don't silently stop at 1000.
@@ -41,7 +44,6 @@ export async function fetchAllSupabaseRows<T>(
   return allRows;
 }
 
-// ─── Row shape from Supabase ──────────────────────────────────────────────────
 export interface ProductRow {
   id: string;
   name_ro: string;
@@ -63,11 +65,11 @@ export interface ProductRow {
   image_url: string | null;
   images: string[] | null;   // gallery (images[0] === image_url)
   youtube_url: string | null; // full YouTube URL, e.g. https://youtu.be/abc123
+  has_warranty: boolean;
   featured: boolean;
   active: boolean;
 }
 
-// ─── Banner row ───────────────────────────────────────────────────────────────
 export interface BannerRow {
   id: string;
   title_ro: string | null;
@@ -83,7 +85,6 @@ export interface BannerRow {
   created_at: string;
 }
 
-// ─── Brand row ────────────────────────────────────────────────────────────────
 export interface BrandRow {
   id: string;
   name: string;
@@ -109,7 +110,6 @@ export interface BrandRow {
   created_at: string;
 }
 
-// ─── Category / Subcategory rows ──────────────────────────────────────────────
 export interface CategoryRow {
   id: string;
   slug: string;
@@ -132,7 +132,6 @@ export interface SubcategoryRow {
   created_at: string;
 }
 
-// ─── Client (registered user) row ─────────────────────────────────────────────
 export interface ClientRow {
   id: string;
   auth_user_id: string | null;
@@ -146,7 +145,6 @@ export interface ClientRow {
   created_at: string;
 }
 
-// ─── Order request row ────────────────────────────────────────────────────────
 export interface OrderRequestRow {
   id: string;
   client_id: string | null;

@@ -4,7 +4,7 @@ import {
   ShoppingCart, RefreshCw, Search, X, Check, Mail,
   Phone, Building2, AlertCircle, ChevronDown, ChevronUp,
   Package, Clock, CheckCircle, XCircle, Loader2,
-  Trash2, MapPin, User, SendHorizonal, MessageSquare,
+  Trash2, MapPin, User, SendHorizonal, MessageSquare, History,
 } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
 import { dispatchClearAdminRequestUnread } from '../hooks/useAdminNotifications';
@@ -58,10 +58,8 @@ function writeLocalAdminComments(next: Record<string, string>) {
   } catch {}
 }
 
-/* ─── status config is built in the component (needs t) ─── */
-
 export function AdminRequests() {
-  const { t } = useAdminLang();
+  const { t, lang } = useAdminLang();
 
   const STATUS_CONFIG: Record<Status, { label: string; bg: string; text: string; border: string; icon: ReactNode }> = {
     new:         { label: t.requests.statusNew,        bg: 'bg-black',       text: 'text-white',       border: 'border-black',       icon: <Clock       className="w-3 h-3" /> },
@@ -74,6 +72,7 @@ export function AdminRequests() {
   const [loading, setLoading]         = useState(true);
   const [noTable, setNoTable]         = useState(false);
   const [showSql, setShowSql]         = useState(false);
+  const [historyClient, setHistoryClient] = useState<{ id: string; name: string } | null>(null);
   const [search, setSearch]           = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [expandedId, setExpandedId]   = useState<string | null>(null);
@@ -145,7 +144,8 @@ export function AdminRequests() {
 
   const deleteRequest = async (id: string) => {
     if (!confirm(t.requests.deleteConfirm ?? 'Удалить заявку?')) return;
-    await supabase.from('order_requests').delete().eq('id', id);
+    const { error } = await supabase.from('order_requests').delete().eq('id', id);
+    if (error) { showToast(error.message, false); return; }
     setRows(r => r.filter(req => req.id !== id));
     if (expandedId === id) setExpandedId(null);
     showToast(t.requests.deleted ?? 'Заявка удалена');
@@ -177,6 +177,7 @@ export function AdminRequests() {
   const showNewestRequests = async () => {
     dispatchClearAdminRequestUnread();
     const nextRows = await load();
+    setHistoryClient(null);
     setStatusFilter('new');
     setExpandedId(nextRows.find(r => r.status === 'new')?.id ?? null);
   };
@@ -189,53 +190,49 @@ export function AdminRequests() {
       r.client_email.toLowerCase().includes(q) ||
       (r.client_phone || '').includes(q);
     const matchStatus = statusFilter === 'all' || r.status === statusFilter;
-    return matchSearch && matchStatus;
+    return matchSearch && matchStatus && (!historyClient || r.client_id === historyClient.id);
   });
 
+  const historyRows = historyClient ? rows.filter(row => row.client_id === historyClient.id) : rows;
   const counts: Record<StatusFilter, number> = {
-    all:         rows.length,
-    new:         rows.filter(r => r.status === 'new').length,
-    in_progress: rows.filter(r => r.status === 'in_progress').length,
-    done:        rows.filter(r => r.status === 'done').length,
-    cancelled:   rows.filter(r => r.status === 'cancelled').length,
+    all:         historyRows.length,
+    new:         historyRows.filter(r => r.status === 'new').length,
+    in_progress: historyRows.filter(r => r.status === 'in_progress').length,
+    done:        historyRows.filter(r => r.status === 'done').length,
+    cancelled:   historyRows.filter(r => r.status === 'cancelled').length,
   };
 
-  /* ── Helpers ── */
   const fmtDate = (iso: string) => {
     const d = new Date(iso);
     return `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')} ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen admin-canvas flex flex-col">
 
-      {/* ── Toast ── */}
       {toast && (
-        <div className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 sm:w-72 z-50 px-4 py-3 text-xs flex items-center gap-2 shadow-lg ${toast.ok ? 'bg-black text-white' : 'bg-red-600 text-white'}`}>
+        <div className={`fixed top-16 right-3 left-3 sm:left-auto sm:right-4 sm:w-72 z-50 px-4 py-3 text-xs flex items-center gap-2 shadow-lg ${toast.ok ? 'admin-solid admin-on-solid' : 'bg-red-600 admin-on-solid'}`}>
           {toast.ok ? <Check className="w-3.5 h-3.5 flex-shrink-0" /> : <AlertCircle className="w-3.5 h-3.5 flex-shrink-0" />}
           {toast.msg}
         </div>
       )}
 
-      {/* ════════════════════════════════
-          TOP BAR  
-          ════════════════════════════════ */}
-      <div className="bg-white border-b border-gray-100 sticky top-12 z-20">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="admin-page-toolbar admin-surface border-b admin-border sticky top-12 z-20">
+        <div className="max-w-[1200px] mx-auto px-4 sm:px-6 lg:px-8">
 
-          {/* Row 1: title + counts + refresh */}
           <div className="flex items-center h-11 gap-2">
-            <ShoppingCart className="w-4 h-4 text-gray-400 flex-shrink-0" />
-            <span className="text-sm text-gray-900 flex-shrink-0">
+            <ShoppingCart className="w-4 h-4 admin-muted flex-shrink-0" />
+            <span className="text-sm admin-ink flex-shrink-0">
               {t.requests.title}
             </span>
-            <span className="text-[11px] bg-gray-100 text-gray-500 px-2 py-0.5 tabular-nums flex-shrink-0">
+            <span className="text-[11px] admin-muted-surface admin-muted px-2 py-0.5 tabular-nums flex-shrink-0">
               {rows.length}
             </span>
             {counts.new > 0 && (
               <button
                 onClick={showNewestRequests}
-                className="text-[11px] bg-black text-white px-2 py-0.5 tabular-nums animate-pulse flex-shrink-0 hover:bg-gray-800 transition-colors"
+                className="inline-flex items-center self-center rounded border border-black bg-black text-white animate-pulse motion-reduce:animate-none px-2 text-[11px] leading-none tabular-nums flex-shrink-0 admin-hover-ink transition-colors"
+                style={{ minHeight: 0, height: 24 }}
               >
                 {counts.new} {t.requests.statusNew?.toLowerCase() ?? 'новых'}
               </button>
@@ -244,27 +241,26 @@ export function AdminRequests() {
             <button
               onClick={load}
               disabled={loading}
-              className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
+              className="w-9 h-9 rounded flex items-center justify-center admin-muted admin-hover-ink hover:bg-gray-100 transition-colors"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
             </button>
           </div>
 
-          {/* Row 2: search — full width on mobile */}
           <div className="pb-2.5">
             <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-300 pointer-events-none" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 admin-muted pointer-events-none" />
               <input
                 type="text"
                 value={search}
                 onChange={e => setSearch(e.target.value)}
                 placeholder={t.requests.searchPlaceholder ?? 'Поиск по клиенту, email, телефону…'}
-                className="w-full h-8 pl-9 pr-8 text-xs border border-gray-200 focus:outline-none focus:border-black transition-colors bg-white"
+                className="w-full h-8 pl-9 pr-8 text-xs border admin-border focus:outline-none admin-focus-border transition-colors admin-surface"
               />
               {search && (
                 <button
                   onClick={() => setSearch('')}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-300 hover:text-black"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 admin-muted admin-hover-ink"
                 >
                   <X className="w-3 h-3" />
                 </button>
@@ -274,12 +270,8 @@ export function AdminRequests() {
         </div>
       </div>
 
-      {/* ════════════════════════════════
-          CONTENT
-          ════════════════════════════════ */}
-      <div className="max-w-[1600px] mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 flex-1">
+      <div className="admin-page-body max-w-[1200px] mx-auto w-full px-3 sm:px-6 lg:px-8 py-4 flex-1">
 
-        {/* SQL notice */}
         {noTable && (
           <div className="mb-4 border border-amber-200 bg-amber-50 p-4">
             <div className="flex items-start gap-3">
@@ -295,7 +287,7 @@ export function AdminRequests() {
                   {showSql ? 'Скрыть SQL' : 'Показать SQL'}
                 </button>
                 {showSql && (
-                  <pre className="bg-amber-100/50 border border-amber-200 p-3 text-[10px] text-amber-900 overflow-x-auto leading-relaxed mt-1 whitespace-pre-wrap break-all">
+                  <pre className="bg-amber-100/50 border border-amber-200 p-3 text-xs text-amber-900 overflow-x-auto leading-relaxed mt-1 whitespace-pre-wrap break-all">
                     {SQL_SETUP}
                   </pre>
                 )}
@@ -304,7 +296,13 @@ export function AdminRequests() {
           </div>
         )}
 
-        {/* ── Status filter tabs ── */}
+        {historyClient && <div className="mb-3 flex flex-wrap items-center justify-between gap-2 rounded border admin-border admin-surface px-3 py-2 text-sm">
+          <span>{lang === 'ru' ? 'История заявок' : 'Istoricul cererilor'}: <strong>{historyClient.name}</strong> · {rows.filter(row => row.client_id === historyClient.id).length}</span>
+          <button type="button" onClick={() => { setHistoryClient(null); setSearch(''); setStatusFilter('all'); }} className="inline-flex items-center gap-1 px-2 py-1 text-xs underline">
+            <X className="w-3 h-3" />{lang === 'ru' ? 'Все заявки' : 'Toate cererile'}
+          </button>
+        </div>}
+
         {!noTable && (
           <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-0.5 scrollbar-none">
             {(['all', 'new', 'in_progress', 'done', 'cancelled'] as StatusFilter[]).map(s => (
@@ -313,32 +311,31 @@ export function AdminRequests() {
                 onClick={() => setStatusFilter(s)}
                 className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 text-[11px] border transition-colors ${
                   statusFilter === s
-                    ? 'bg-black text-white border-black'
-                    : 'bg-white text-gray-500 border-gray-200 hover:border-gray-400 hover:text-black'
+                    ? 'admin-solid admin-on-solid admin-border-strong'
+                    : 'admin-surface admin-muted admin-border hover:border-gray-400 admin-hover-ink'
                 }`}
               >
                 {s !== 'all' && STATUS_CONFIG[s as Status].icon}
                 <span className="whitespace-nowrap">
                   {s === 'all' ? (t.requests.filterAll ?? 'Все') : STATUS_CONFIG[s as Status].label}
                 </span>
-                <span className="tabular-nums text-[10px] opacity-60">{counts[s]}</span>
+                <span className="tabular-nums text-xs opacity-60">{counts[s]}</span>
               </button>
             ))}
           </div>
         )}
 
-        {/* ── Cards list ── */}
         {!noTable && (
           loading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <div key={i} className="bg-white border border-gray-100 animate-pulse h-20 sm:h-[72px]" />
+                <div key={i} className="admin-surface border admin-border animate-pulse h-20 sm:h-[72px]" />
               ))}
             </div>
           ) : filtered.length === 0 ? (
-            <div className="bg-white border border-gray-100 py-16 text-center">
+            <div className="admin-surface border admin-border py-16 text-center">
               <ShoppingCart className="w-8 h-8 text-gray-200 mx-auto mb-3" />
-              <p className="text-sm text-gray-400">
+              <p className="text-sm admin-muted">
                 {search || statusFilter !== 'all'
                   ? (t.requests.nothingFound ?? 'Ничего не найдено')
                   : (t.requests.empty ?? 'Заявок пока нет')}
@@ -357,57 +354,62 @@ export function AdminRequests() {
                 return (
                   <div
                     key={req.id}
-                    className={`bg-white border transition-all ${
-                      expanded ? 'border-gray-300' : 'border-gray-100'
+                    className={`admin-surface border transition-all ${
+                      expanded ? 'admin-border' : 'admin-border'
                     }`}
                   >
 
-                    {/* ─── Collapsed card row ─── */}
                     <div
-                      className="flex items-stretch cursor-pointer"
+                      className="relative flex flex-wrap sm:flex-nowrap items-stretch cursor-pointer"
                       onClick={() => setExpandedId(expanded ? null : req.id)}
                     >
 
-                      {/* Left status stripe */}
-                      <div className={`w-1 flex-shrink-0 ${cfg.bg}`} />
+                      <div className="w-full sm:w-auto sm:flex-1 min-w-0 px-3 pt-2.5 pb-1 sm:py-3 sm:px-4">
 
-                      {/* Main content */}
-                      <div className="flex-1 min-w-0 px-3 py-3 sm:px-4">
-
-                        {/* Row 1: status + date */}
-                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                          <span className={`inline-flex items-center gap-1 text-[10px] px-2 py-0.5 uppercase tracking-wide ${cfg.bg} ${cfg.text}`}>
-                            {cfg.icon}
-                            {cfg.label}
-                          </span>
-                          <span className="text-[10px] text-gray-400 tabular-nums flex-shrink-0">
+                        <div className="flex items-center justify-between gap-2 mb-1">
+                          <div onClick={event => event.stopPropagation()} className="relative inline-flex items-center rounded focus-within:ring-2 focus-within:ring-gray-400">
+                            <span className={`inline-flex items-center gap-1 rounded px-2 py-1 text-xs leading-4 ${cfg.bg} ${cfg.text}`}>
+                              {cfg.icon}<span>{cfg.label}</span>
+                              {updatingId === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : <ChevronDown className="w-3 h-3" />}
+                            </span>
+                            <select
+                              aria-label={lang === 'ru' ? 'Изменить статус заявки' : 'Schimbă statutul cererii'}
+                              value={req.status}
+                              disabled={updatingId === req.id}
+                              onChange={event => updateStatus(req.id, event.target.value as Status)}
+                              className="absolute inset-0 w-full h-full cursor-pointer opacity-0"
+                              style={{ minHeight: 0 }}
+                            >
+                              {(Object.keys(STATUS_CONFIG) as Status[]).map(status => <option key={status} value={status} className="bg-white text-black">{STATUS_CONFIG[status].label}</option>)}
+                            </select>
+                          </div>
+                          <span className="text-xs admin-muted tabular-nums flex-shrink-0">
                             {fmtDate(req.created_at)}
                           </span>
                         </div>
 
-                        {/* Row 2: name + total */}
                         <div className="flex items-start justify-between gap-2">
                           <div className="min-w-0 flex-1">
-                            <p className="text-xs text-gray-900 truncate leading-snug">
+                            <p className="text-sm font-medium admin-ink truncate leading-snug">
                               {req.client_name}
                             </p>
                             {req.client_company && (
-                              <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                              <p className="text-xs admin-muted truncate mt-0.5">
                                 {req.client_company}
                               </p>
                             )}
-                            <p className="text-[10px] text-gray-400 truncate mt-0.5">
+                            <p className="text-xs admin-muted truncate mt-0.5">
                               {req.client_email}
                             </p>
                           </div>
-                          {/* Price + item count */}
+
                           <div className="text-right flex-shrink-0">
-                            <p className="text-sm text-gray-900 tabular-nums leading-snug">
+                            <p className="text-sm font-medium admin-ink tabular-nums leading-snug whitespace-nowrap">
                               {req.total_price.toLocaleString()}
-                              <span className="text-[10px] text-gray-400 ml-0.5">MDL</span>
+                              <span className="text-xs admin-muted ml-0.5">MDL</span>
                             </p>
                             {items.length > 0 && (
-                              <p className="text-[10px] text-gray-400 mt-0.5">
+                              <p className="text-xs admin-muted mt-0.5">
                                 {items.length} {t.requests.items ?? 'поз.'}
                               </p>
                             )}
@@ -415,30 +417,51 @@ export function AdminRequests() {
                         </div>
                       </div>
 
-                      {/* Right: actions */}
                       <div
-                        className="flex flex-col items-center justify-center gap-1 px-2 border-l border-gray-100"
+                        className="w-full sm:w-auto flex items-center justify-end gap-1 px-2 pb-1 sm:py-1 sm:border-l admin-border"
                         onClick={e => e.stopPropagation()}
                       >
                         <a
                           href={`mailto:${req.client_email}`}
-                          className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
-                          title={req.client_email}
+                          className="w-9 h-9 rounded flex items-center justify-center admin-muted admin-hover-ink hover:bg-gray-100 transition-colors"
+                          aria-label={lang === 'ru' ? 'Написать клиенту' : 'Scrie clientului'}
+                          title={lang === 'ru' ? 'Написать клиенту' : 'Scrie clientului'}
                         >
                           <Mail className="w-3.5 h-3.5" />
                         </a>
+                        {import.meta.env.VITE_NEXT_SSR && req.client_id && (
+                          <button type="button" onClick={() => {
+                            setHistoryClient({ id: req.client_id!, name: req.client_name });
+                            setSearch('');
+                            setStatusFilter('all');
+                          }} className="w-9 h-9 rounded flex items-center justify-center admin-muted admin-hover-ink hover:bg-gray-100" aria-label={lang === 'ru' ? 'История заявок клиента' : 'Istoricul cererilor clientului'} title={lang === 'ru' ? 'Все заявки этого клиента' : 'Toate cererile acestui client'}>
+                            <History className="w-4 h-4" />
+                          </button>
+                        )}
                         {req.client_phone && (
                           <a
                             href={`tel:${req.client_phone}`}
-                            className="w-8 h-8 flex items-center justify-center text-gray-400 hover:text-black transition-colors"
-                            title={req.client_phone}
+                            className="w-9 h-9 rounded flex items-center justify-center admin-muted admin-hover-ink hover:bg-gray-100 transition-colors"
+                            aria-label={lang === 'ru' ? 'Позвонить клиенту' : 'Sună clientul'}
+                            title={lang === 'ru' ? 'Позвонить клиенту' : 'Sună clientul'}
                           >
                             <Phone className="w-3.5 h-3.5" />
                           </a>
                         )}
+                        {expanded && <button
+                          type="button"
+                          onClick={() => deleteRequest(req.id)}
+                          aria-label={t.requests.delete ?? 'Удалить заявку'}
+                          title={t.requests.delete ?? 'Удалить заявку'}
+                          className="w-9 h-9 rounded flex items-center justify-center admin-muted hover:text-red-600 hover:bg-red-50 transition-colors"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>}
                         <button
                           onClick={() => setExpandedId(expanded ? null : req.id)}
-                          className="w-8 h-8 flex items-center justify-center text-gray-300 hover:text-black transition-colors"
+                          aria-expanded={expanded}
+                          aria-label={lang === 'ru' ? (expanded ? 'Свернуть заявку' : 'Открыть заявку') : (expanded ? 'Restrânge cererea' : 'Deschide cererea')}
+                          className="w-9 h-9 rounded flex items-center justify-center admin-muted admin-hover-ink hover:bg-gray-100 transition-colors"
                         >
                           {expanded
                             ? <ChevronUp className="w-3.5 h-3.5" />
@@ -447,136 +470,51 @@ export function AdminRequests() {
                       </div>
                     </div>
 
-                    {/* ─── Expanded detail ─── */}
                     {expanded && (
-                      <div className="border-t border-gray-100 bg-gray-50">
+                      <div className="border-t admin-border admin-canvas">
 
-                        {/* ── Client + comments ── */}
-                        <div className="px-3 sm:px-5 py-4 bg-white border-b border-gray-100">
-                          <div className="grid grid-cols-1 xl:grid-cols-[1.3fr_1.3fr_1fr] gap-4">
-                            <div>
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
-                                {t.requests.client ?? 'Клиент'}
-                              </p>
-                              <div className="space-y-1.5">
-                                <InfoRow icon={<User className="w-3 h-3" />} value={req.client_name} />
-                                <InfoRow icon={<Mail className="w-3 h-3" />} value={req.client_email} link={`mailto:${req.client_email}`} />
-                                <InfoRow icon={<MapPin className="w-3 h-3" />} value={req.delivery_address || t.requests.noComment || '—'} />
-                              </div>
-                            </div>
-
-                            <div>
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
-                                {t.requests.clientComment ?? 'Комментарий клиента'}
-                              </p>
-                              <div className="space-y-1.5">
-                                <InfoRow icon={<Building2 className="w-3 h-3" />} value={req.client_company || t.requests.noComment || '—'} />
-                                <InfoRow icon={<Phone className="w-3 h-3" />} value={req.client_phone || t.requests.noComment || '—'} link={req.client_phone ? `tel:${req.client_phone}` : undefined} />
-                                <InfoRow icon={<MessageSquare className="w-3 h-3" />} value={clientComment} multiline />
-                              </div>
-                            </div>
-
-                            <div>
-                              <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
-                                {t.requests.adminComment ?? 'Комментарий администратора'}
-                              </p>
-                              <textarea
-                                value={adminComment}
-                                onChange={e => setAdminComments(prev => ({ ...prev, [req.id]: e.target.value }))}
-                                placeholder={t.requests.adminCommentPlaceholder ?? 'Добавить комментарий...'}
-                                rows={8}
-                                className="w-full h-44 border border-gray-200 bg-white px-4 py-3 text-[11px] text-gray-700 placeholder:text-gray-300 leading-relaxed align-top focus:outline-none focus:border-black transition-colors resize-none"
-                              />
-                              <div className="mt-2">
-                                <button
-                                  onClick={() => saveAdminComment(req.id)}
-                                  disabled={savingCommentId === req.id || !isCommentChanged}
-                                  className={`w-full flex items-center justify-center gap-2 py-2.5 text-[11px] uppercase tracking-widest transition-colors ${
-                                    savingCommentId === req.id || !isCommentChanged
-                                      ? 'bg-gray-100 text-gray-400 border border-gray-200 cursor-default'
-                                      : 'bg-black text-white hover:bg-gray-800'
-                                  }`}
-                                >
-                                  {savingCommentId === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SendHorizonal className="w-3.5 h-3.5" />}
-                                  {t.requests.saveComment ?? 'Добавить комментарий'}
-                                </button>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* ── Status changer ── */}
-                        <div className="px-3 sm:px-5 py-3 border-b border-gray-100 bg-white">
-                          <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
-                            {t.requests.status ?? 'Статус'}
-                          </p>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                            {(Object.keys(STATUS_CONFIG) as Status[]).map(s => {
-                              const sc = STATUS_CONFIG[s];
-                              const isCurrent = req.status === s;
-                              return (
-                                <button
-                                  key={s}
-                                  disabled={updatingId === req.id}
-                                  onClick={() => updateStatus(req.id, s)}
-                                  className={`flex items-center justify-center gap-1.5 px-2 py-2 text-[11px] border transition-all ${
-                                    isCurrent
-                                      ? `${sc.bg} ${sc.text} ${sc.border}`
-                                      : 'border-gray-200 text-gray-500 hover:border-gray-400 hover:text-black bg-white'
-                                  }`}
-                                >
-                                  {updatingId === req.id && !isCurrent
-                                    ? <Loader2 className="w-3 h-3 animate-spin" />
-                                    : sc.icon}
-                                  <span className="truncate">{sc.label}</span>
-                                  {isCurrent && <Check className="w-3 h-3 flex-shrink-0 ml-auto" />}
-                                </button>
-                              );
-                            })}
-                          </div>
-                        </div>
-
-                        {/* ── Cart items ── */}
-                        <div className="px-3 sm:px-5 py-3">
-                          <p className="text-[9px] uppercase tracking-widest text-gray-400 mb-2">
+                        <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-2 sm:gap-4 p-2 sm:p-4">
+                          <div className="min-w-0">                        {/* ── Cart items ── */}
+                        <div className="sm:p-4">
+                          <p className="text-xs admin-muted mb-1.5">
                             {t.requests.cartItems ?? 'Товары'} ({items.length})
                           </p>
 
                           {items.length === 0 ? (
-                            <p className="text-xs text-gray-400 py-4 text-center">
+                            <p className="text-xs admin-muted py-4 text-center">
                               {t.requests.noItems ?? 'Нет товаров'}
                             </p>
                           ) : (
                             <div className="space-y-1.5">
                               {items.map((item, idx) => (
-                                <div key={idx} className="flex items-center gap-2.5 bg-white border border-gray-100 px-3 py-2.5">
-                                  {/* Thumb */}
-                                  <div className="w-9 h-9 flex-shrink-0 bg-gray-50 border border-gray-100 flex items-center justify-center overflow-hidden">
+                                <div key={idx} className="grid grid-cols-[72px_minmax(0,1fr)] sm:grid-cols-[88px_minmax(0,1fr)_auto] items-center gap-x-2 sm:gap-x-3 gap-y-1 admin-surface border admin-border p-2 sm:p-3">
+
+                                  <div className="row-span-2 sm:row-span-1 w-[72px] h-[72px] sm:w-[88px] sm:h-[88px] flex-shrink-0 admin-canvas border admin-border flex items-center justify-center overflow-hidden">
                                     {item.image_url
-                                      ? <img src={item.image_url} alt="" className="w-full h-full object-cover" />
-                                      : <Package className="w-3.5 h-3.5 text-gray-300" />}
+                                      ? <img src={item.image_url} alt={item.name_ru || item.name_ro || ''} loading="lazy" className="w-full h-full object-contain" />
+                                      : <Package className="w-3.5 h-3.5 admin-muted" />}
                                   </div>
-                                  {/* Name + SKU */}
+
                                   <div className="flex-1 min-w-0">
-                                    <p className="text-[11px] text-gray-900 leading-tight line-clamp-2">
-                                      {item.name_ru || item.name_ro}{item.sku ? ` [${item.sku}]` : ''}
+                                    <p className="text-xs sm:text-sm admin-ink leading-snug break-words">
+                                      {lang === 'ru' ? item.name_ru || item.name_ro : item.name_ro || item.name_ru}
                                     </p>
+                                    {item.sku && <p className="mt-1 text-xs admin-muted">{lang === 'ru' ? 'Артикул' : 'Cod'}: {item.sku}</p>}
                                   </div>
-                                  {/* Qty × price */}
-                                  <div className="flex-shrink-0 text-right">
-                                    <p className="text-[11px] text-gray-900 tabular-nums">
+
+                                  <div className="col-start-2 sm:col-start-auto sm:text-right whitespace-nowrap">
+                                    <p className="text-sm font-medium admin-ink tabular-nums">
                                       {(item.price * item.qty).toLocaleString()} MDL
                                     </p>
-                                    <p className="text-[10px] text-gray-400">
+                                    <p className="text-xs admin-muted">
                                       {item.qty} × {item.price.toLocaleString()}
                                     </p>
                                   </div>
                                 </div>
                               ))}
 
-                              {/* Total row */}
-                              <div className="bg-black text-white px-3 py-2.5 flex items-center justify-between">
-                                <span className="text-[10px] uppercase tracking-widest">
+                              <div className="admin-solid admin-on-solid px-3 py-2.5 flex items-center justify-between">
+                                <span className="text-xs  ">
                                   {t.requests.total ?? 'Итого'}
                                 </span>
                                 <span className="text-sm tabular-nums">
@@ -586,14 +524,63 @@ export function AdminRequests() {
                             </div>
                           )}
 
-                          {/* Delete */}
-                          <button
-                            onClick={() => deleteRequest(req.id)}
-                            className="mt-3 w-full flex items-center justify-center gap-2 text-[11px] text-gray-400 hover:text-red-500 border border-gray-200 hover:border-red-200 py-2.5 transition-colors"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                            {t.requests.delete ?? 'Удалить заявку'}
-                          </button>
+                        </div>
+                          </div>
+                          <aside className="min-w-0">                        {/* ── Client + comments ── */}
+                        <div className="p-3 sm:p-4 admin-surface border admin-border rounded-lg">
+                          <div className="grid grid-cols-1 gap-3 sm:gap-4">
+                            <div>
+                              <p className="text-xs admin-muted mb-1.5">
+                                {t.requests.client ?? 'Клиент'}
+                              </p>
+                              <div className="space-y-1.5">
+                                <div className="hidden sm:block"><InfoRow icon={<User className="w-3 h-3" />} value={req.client_name} /></div>
+                                <InfoRow icon={<Mail className="w-3 h-3" />} value={req.client_email} link={`mailto:${req.client_email}`} />
+                                <InfoRow icon={<MapPin className="w-3 h-3" />} value={req.delivery_address || t.requests.noComment || '—'} />
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-xs admin-muted mb-1.5">
+                                {t.requests.clientComment ?? 'Комментарий клиента'}
+                              </p>
+                              <div className="space-y-1.5">
+                                {req.client_company && <InfoRow icon={<Building2 className="w-3 h-3" />} value={req.client_company} />}
+                                <InfoRow icon={<Phone className="w-3 h-3" />} value={req.client_phone || t.requests.noComment || '—'} link={req.client_phone ? `tel:${req.client_phone}` : undefined} />
+                                <InfoRow icon={<MessageSquare className="w-3 h-3" />} value={clientComment} multiline />
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-xs admin-muted mb-1.5">
+                                {t.requests.adminComment ?? 'Комментарий администратора'}
+                              </p>
+                              <textarea
+                                value={adminComment}
+                                onChange={e => setAdminComments(prev => ({ ...prev, [req.id]: e.target.value }))}
+                                placeholder={t.requests.adminCommentPlaceholder ?? 'Добавить комментарий...'}
+                                rows={2}
+                                className="w-full min-h-16 border admin-border admin-surface px-3 py-2 text-sm admin-ink placeholder:text-gray-300 leading-relaxed align-top focus:outline-none admin-focus-border transition-colors resize-y"
+                              />
+                              <div className="mt-2">
+                                <button
+                                  onClick={() => saveAdminComment(req.id)}
+                                  disabled={savingCommentId === req.id || !isCommentChanged}
+                                  className={`inline-flex items-center justify-center gap-2 px-3 py-2 text-xs   transition-colors ${
+                                    savingCommentId === req.id || !isCommentChanged
+                                      ? 'admin-muted-surface admin-muted border admin-border cursor-default'
+                                      : 'admin-solid admin-on-solid admin-hover-solid'
+                                  }`}
+                                >
+                                  {savingCommentId === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <SendHorizonal className="w-3.5 h-3.5" />}
+                                  {lang === 'ru' ? 'Сохранить' : 'Salvează'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                          </aside>
                         </div>
                       </div>
                     )}
@@ -611,10 +598,10 @@ export function AdminRequests() {
 function InfoRow({ icon, value, link, multiline = false }: { icon: React.ReactNode; value: string; link?: string; multiline?: boolean }) {
   return (
     <div className={`flex gap-2 ${multiline ? 'items-start' : 'items-center'}`}>
-      <span className={`text-gray-400 flex-shrink-0 ${multiline ? 'mt-0.5' : ''}`}>{icon}</span>
+      <span className={`admin-muted flex-shrink-0 ${multiline ? 'mt-0.5' : ''}`}>{icon}</span>
       {link
-        ? <a href={link} className="text-[11px] text-gray-700 hover:text-black hover:underline truncate">{value}</a>
-        : <span className={`text-[11px] text-gray-700 ${multiline ? 'leading-relaxed whitespace-pre-wrap' : 'truncate'}`}>{value}</span>}
+        ? <a href={link} className="text-sm admin-ink admin-hover-ink hover:underline break-words min-w-0">{value}</a>
+        : <span className={`text-sm min-w-0 break-words admin-ink ${multiline ? 'leading-relaxed whitespace-pre-wrap' : ''}`}>{value}</span>}
     </div>
   );
 }

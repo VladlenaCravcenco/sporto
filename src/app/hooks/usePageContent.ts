@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { usePublicPageData } from '../contexts/PublicPageData';
 import { supabase } from '../../lib/supabase';
 
 export type PageContentType = 'terms' | 'delivery' | 'privacy';
@@ -50,9 +51,12 @@ export function invalidatePageContent(type: PageContentType, data: PageContent) 
 }
 
 export function usePageContent(type: PageContentType): PageContent | null {
-  const [data, setData] = useState<PageContent | null>(cache.get(type) ?? null);
+  const initial = usePublicPageData();
+  const seeded = initial?.content[pageKey(type)];
+  const [data, setData] = useState<PageContent | null>(() => initial ? (seeded?.content_ro && seeded?.content_ru ? seeded as unknown as PageContent : null) : cache.get(type) ?? null);
 
   useEffect(() => {
+    if (initial) return;
     if (cache.has(type)) {
       setData(cache.get(type) ?? null);
       return;
@@ -73,7 +77,7 @@ export function usePageContent(type: PageContentType): PageContent | null {
     }
 
     return () => { listeners.get(type)?.delete(setData); };
-  }, [type]);
+  }, [type, initial]);
 
-  return data;
+  return initial ? (seeded?.content_ro && seeded?.content_ru ? seeded as unknown as PageContent : null) : data;
 }

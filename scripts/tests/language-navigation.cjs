@@ -1,0 +1,14 @@
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const ts = require('typescript');
+const exports_ = {};
+new Function('exports', ts.transpileModule(fs.readFileSync('app/_lib/language-navigation.ts', 'utf8'), { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText)(exports_);
+const { languageTarget } = exports_;
+const product = new URL('https://www.sporto.md/ru/product/russkoe-imya/123?test=1#details');
+assert.equal(languageTarget(product, 'ro', 'https://www.sporto.md/ro/product/nume-roman/123'), '/ro/product/nume-roman/123?test=1#details');
+assert.equal(languageTarget(new URL('https://www.sporto.md/ro/product/nume-roman/123'), 'ru', '/ru/product/russkoe-imya/123'), '/ru/product/russkoe-imya/123');
+assert.equal(languageTarget(product, 'ro', '/ro/product/wrong/456'), '/ro/product/russkoe-imya/123?test=1#details');
+assert.equal(languageTarget(product, 'ro'), '/ro/product/russkoe-imya/123?test=1#details');
+assert.equal(languageTarget(new URL('https://www.sporto.md/ru/catalog?category=weights&page=2'), 'ro'), '/ro/catalog?category=weights&page=2');
+assert.equal(languageTarget(new URL('https://www.sporto.md/login?lang=ru&next=%2Faccount'), 'ro'), '/login?lang=ro&next=%2Faccount');
+console.log('PASS: localized product slug and identity, query/hash preservation, metadata fallback, catalog and auth language changes.');
