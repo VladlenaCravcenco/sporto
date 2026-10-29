@@ -1,3 +1,4 @@
+import { applyAdminProductSearch } from '../../lib/admin-product-search';
 import { useSimilarProducts } from '../hooks/useSimilarProducts';
 import { useProductSkuStatus } from '../hooks/useProductSkuStatus';
 import { checkProductSkus, productSkuError } from '../../lib/product-sku';
@@ -448,21 +449,6 @@ function subcatLabel(categories: ReturnType<typeof useCategories>, catId: string
   return categories.find(c => c.id === catId)?.subcategories.find(s => s.id === subId)?.name.ro ?? subId;
 }
 
-function sanitizeQuery(raw: string) {
-  return raw.trim().replace(/[,%()]/g, ' ');
-}
-
-function buildAdminProductSearch(search: string) {
-  const pattern = `%${search}%`;
-  return [
-    `name_ro.ilike.${pattern}`,
-    `name_ru.ilike.${pattern}`,
-    `sku.ilike.${pattern}`,
-    `brand.ilike.${pattern}`,
-    `id.ilike.${pattern}`,
-  ].join(',');
-}
-
 function applyAdminProductFilters(
   query: any,
   params: {
@@ -476,10 +462,9 @@ function applyAdminProductFilters(
   },
 ) {
   let next = query;
-  const search = sanitizeQuery(params.search);
   const brand = params.brand.trim();
 
-  if (search) next = next.or(buildAdminProductSearch(search));
+  next = applyAdminProductSearch(next, params.search);
   if (params.category.trim()) next = next.eq('category', params.category.trim());
   if (brand) next = next.ilike('brand', `%${brand}%`);
   if (params.subcategory.trim()) next = next.eq('subcategory', params.subcategory.trim());
@@ -497,6 +482,7 @@ export function AdminProducts() {
   const [rows, setRows] = useState<ProductRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
+  const listRequest = useRef(0);
   const [catFilter, setCatFilter] = useState('');
   const [brandFilter, setBrandFilter] = useState('');
   const [subcatFilter, setSubcatFilter] = useState('');
@@ -505,6 +491,8 @@ export function AdminProducts() {
   const [sortAsc, setSortAsc] = useState(true);
   const [page, setPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
+  const latestListQuery = useRef('');
+  latestListQuery.current = JSON.stringify([search, catFilter, brandFilter, subcatFilter, statusFilter, sortKey, sortAsc, page]);
 
   // Edit panel
   const [panelOpen, setPanelOpen] = useState(false);
@@ -540,6 +528,10 @@ export function AdminProducts() {
   }, []);
 
   const load = useCallback(async () => {
+    const queryKey = JSON.stringify([search, catFilter, brandFilter, subcatFilter, statusFilter, sortKey, sortAsc, page]);
+    if (queryKey !== latestListQuery.current) return;
+    const requestId = ++listRequest.current;
+    const isCurrent = () => requestId === listRequest.current && queryKey === latestListQuery.current;
     setLoading(true);
     try {
       const from = (page - 1) * PAGE_SIZE;
@@ -559,18 +551,23 @@ export function AdminProducts() {
         },
       );
       const { data, count, error } = await query.range(from, to);
+      if (!isCurrent()) return;
       if (error) throw error;
       setRows((data as ProductRow[]) ?? []);
       setTotalCount(count ?? 0);
     } catch (error) {
+      if (!isCurrent()) return;
       setRows([]);
       setTotalCount(0);
       showToast(error instanceof Error ? error.message : 'Failed to load products', false);
     }
-    setLoading(false);
+    if (isCurrent()) setLoading(false);
   }, [page, search, catFilter, brandFilter, subcatFilter, statusFilter, sortKey, sortAsc]);
 
-  useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = setTimeout(() => { void load(); }, 250);
+    return () => { clearTimeout(timer); listRequest.current++; };
+  }, [load]);
 
   useEffect(() => {
     setPage(1);

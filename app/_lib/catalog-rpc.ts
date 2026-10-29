@@ -1,3 +1,4 @@
+import { searchCatalog } from './search-catalog';
 import { createClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 import { getCatalogNavigation, type CatalogProduct, type CatalogSort, type CatalogLanguage } from './catalog-data';
@@ -38,12 +39,15 @@ export async function getRpcCatalog(query: CatalogQuery, page: number, sort: Cat
   }
   const search = (valuesOf(query, 'search')[0] || '').trim();
   if (search) filters.searchSpec = prepareSearchQuery(search);
-  const [response, categories, allDefinitions] = await Promise.all([
-    database().rpc(search ? 'sporto_catalog_search_v1' : 'sporto_catalog_v1', { filters, page_number: page, sort_order: sort, locale: language }),
-    getCatalogNavigation(), definitions(),
-  ]);
-  if (response.error) throw response.error;
-  const data = response.data as CatalogResponse;
+  const [categories, allDefinitions] = await Promise.all([getCatalogNavigation(), definitions()]);
+  let data: CatalogResponse;
+  if (search) {
+    data = await searchCatalog(database(), query, page, sort, language, allDefinitions);
+  } else {
+    const response = await database().rpc('sporto_catalog_v1', { filters, page_number: page, sort_order: sort, locale: language });
+    if (response.error) throw response.error;
+    data = response.data as CatalogResponse;
+  }
   if (!data || !Array.isArray(data.products) || !Array.isArray(data.facets) || !Number.isFinite(data.totalProducts))
     throw new Error('Invalid catalog RPC response');
   const totalPages = Math.ceil(data.totalProducts / 24);

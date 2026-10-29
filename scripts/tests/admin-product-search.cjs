@@ -1,0 +1,12 @@
+const fs=require('node:fs'),ts=require('typescript'),assert=require('node:assert/strict');
+const source=fs.readFileSync('src/app/pages/AdminProducts.tsx','utf8');const ast=ts.createSourceFile('admin.tsx',source,ts.ScriptTarget.Latest,true,ts.ScriptKind.TSX);let handler;
+function visit(node){if(ts.isVariableDeclaration(node)&&node.name.getText(ast)==='load')handler=node.initializer.arguments[0].getText(ast);ts.forEachChild(node,visit)}visit(ast);assert.ok(handler);
+const names=['search','catFilter','brandFilter','subcatFilter','statusFilter','sortKey','sortAsc','page','latestListQuery','listRequest','setLoading','applyAdminProductFilters','supabase','setRows','setTotalCount','showToast','PAGE_SIZE'];
+const out={};new Function('exports',ts.transpileModule(`export function make(ctx:any){const {${names.join(',')}}=ctx;return ${handler}}`,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(out);
+const shared={latestListQuery:{current:''},listRequest:{current:0}};const state={rows:[],total:0,loading:false,errors:[]};let complete=[];
+function make(search){const key=JSON.stringify([search,'','','','all','name_ro',true,1]);shared.latestListQuery.current=key;const ctx={...shared,search,catFilter:'',brandFilter:'',subcatFilter:'',statusFilter:'all',sortKey:'name_ro',sortAsc:true,page:1,PAGE_SIZE:50,setLoading:v=>state.loading=v,setRows:v=>state.rows=v,setTotalCount:v=>state.total=v,showToast:e=>state.errors.push(e),applyAdminProductFilters:(q,params)=>{assert.equal(params.search,search);return q},supabase:{from:()=>({select:()=>({range:()=>new Promise(resolve=>complete.push(resolve))})})}};return out.make(ctx);}
+(async()=>{
+ const old=make('123')();const full=make('123456789')();complete[1]({data:[{sku:'123456789'}],count:1,error:null});await full;complete[0]({data:[{sku:'123'}],count:50,error:null});await old;assert.equal(state.rows[0].sku,'123456789');assert.equal(state.total,1);assert.equal(state.loading,false);
+ complete=[];const failing=make('123')();const newer=make('123456789')();complete[1]({data:[{sku:'123456789'}],count:1,error:null});await newer;complete[0]({error:{message:'stale error'}});await failing;assert.equal(state.rows[0].sku,'123456789');assert.equal(state.errors.length,0);
+ assert.ok(!source.includes('maxLength={3}'));console.log('PASS: full SKU reaches query; late results/errors cannot overwrite latest search.');
+})().catch(e=>{console.error(e);process.exitCode=1});

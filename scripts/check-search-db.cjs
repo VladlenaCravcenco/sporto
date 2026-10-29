@@ -7,12 +7,13 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABA
 (async () => {
   if (!url || !key) throw Error('Supabase public configuration is missing');
   const db = createClient(url, key, { auth: { persistSession: false, autoRefreshToken: false } });
-  const spec = { raw: ['insportline'], synonyms: [], concepts: [] };
   const requests = [
     ['sporto_home_sales_v1', {}, 20],
-    ['sporto_search_v1', { spec, locale: 'ro' }, 8],
-    ['sporto_catalog_search_v1', { filters: { searchSpec: spec }, page_number: 1, sort_order: 'recommended', locale: 'ru' }, 24],
+    ['sporto_catalog_v1', { filters: {}, page_number: 1, sort_order: 'recommended', locale: 'ro' }, 24],
   ];
+  const search = await db.from('products').select('id,name_ro,name_ru,sku,brand,price,sale_price,qty').eq('active', true).or('name_ro.ilike.%minge%,name_ru.ilike.%minge%,sku.ilike.%minge%,brand.ilike.%minge%').order('id').limit(8).abortSignal(AbortSignal.timeout(30000));
+  if (search.error) throw Error(`Direct search: ${search.error.message}`);
+  console.log(`Direct product search: OK (${search.data.length} rows)`);
   for (const [name, args, limit] of requests) {
     const { data, error } = await db.rpc(name, args).abortSignal(AbortSignal.timeout(30000));
     if (error) throw Error(`${name}: ${error.message}`);
@@ -22,7 +23,6 @@ const key = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.VITE_SUPABA
   }
 })().catch(error => {
   console.error('Database preflight failed:', error.message);
-  console.error('Missing sporto_home_sales_v1. Restore the required database function before deploying.');
-  console.error('Required search RPCs are missing. Restore the database functions before deploying.');
+  console.error('Check public product access and the home/catalog database functions before deploying.');
   process.exitCode = 1;
 });

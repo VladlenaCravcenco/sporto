@@ -1,4 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
+import { readSearchProducts } from './search-products';
+import { effectivePrice } from './catalog-filters';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { getSupabasePublicConfig } from './supabase-env';
 import { prepareSearchQuery } from './search-query';
 import type { SearchResult, MatchType } from '../../src/lib/searchEngine';
@@ -10,6 +12,19 @@ interface SearchResponse {
   hasFuzzy: boolean; hasSynonym: boolean; hasConcept: boolean;
   suggestions: string[];
 }
+
+async function searchDirect(db: SupabaseClient, spec: ReturnType<typeof prepareSearchQuery>, language: 'ro' | 'ru'): Promise<SearchResponse> {
+  const matches = (await readSearchProducts(db, spec)).filter(product => (spec.min === undefined || effectivePrice(product) >= spec.min) && (spec.max === undefined || effectivePrice(product) <= spec.max));
+  matches.sort((a,b) => Number((b.qty || 0)>0)-Number((a.qty || 0)>0) || ((language === 'ru' ? a.name_ru || a.name_ro : a.name_ro) || '').localeCompare((language === 'ru' ? b.name_ru || b.name_ro : b.name_ro) || '', language) || a.id.localeCompare(b.id));
+  const products = matches.slice(0,8);
+  return {
+    products: products.map(product => ({ ...product, score: 60, match_type: 'exact' })),
+    total: matches.length, brands: [...new Set(products.map(p => p.brand).filter(Boolean))] as string[],
+    categories: [...new Set(products.map(p => p.category).filter(Boolean))] as string[],
+    hasFuzzy: false, hasSynonym: false, hasConcept: false, suggestions: [],
+  };
+}
+
 type SearchValue = { result: SearchResult; suggestions: string[] };
 const results = new Map<string, { expires: number; value: SearchValue }>();
 const pending = new Map<string, Promise<SearchValue>>();
@@ -28,9 +43,7 @@ export async function getSmartSearch(query: string, language: 'ro' | 'ru'): Prom
     const config = getSupabasePublicConfig();
     if (!config) throw new Error('Search configuration missing');
     const db = createClient(config.url, config.key, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data, error } = await db.rpc('sporto_search_v1', { spec, locale: language });
-    if (error) throw error;
-    const response = data as SearchResponse;
+    const response = await searchDirect(db, spec, language);
     if (!response || !Array.isArray(response.products) || response.products.length > 8 || !Number.isFinite(response.total))
       throw new Error('Invalid search response');
     const value: SearchValue = {

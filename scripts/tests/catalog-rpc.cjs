@@ -24,6 +24,7 @@ const db={
 const {getRpcCatalog}=compile('app/_lib/catalog-rpc.ts',{
  '@supabase/supabase-js':{createClient:()=>db},
  './supabase-env':{getSupabasePublicConfig:()=>({url:'fixture',key:'fixture'})},
+ './search-catalog':{searchCatalog:async(db,query,page,sort,language,defs)=>{calls.push({name:'direct',query,page,sort,language,defs});return {products:[{id:'p1'}],totalProducts:25,facets:[],minPrice:10,maxPrice:100};}},
  './catalog-data':{getCatalogNavigation:async()=>[{id:'cardio',name:{ro:'Cardio',ru:'Кардио'},subcategories:[]}]},
  './public-cache':compile('app/_lib/public-cache.ts'),
  './catalog-filters':compile('app/_lib/catalog-filters.ts'),
@@ -38,10 +39,9 @@ const {getRpcCatalog}=compile('app/_lib/catalog-rpc.ts',{
  assert.equal(result.facets.groups.find(g=>g.key==='brand').options[0].count,25);
  assert.equal((await getRpcCatalog({},3,'recommended','ro')).status,'out-of-range');
  await getRpcCatalog({search:'гантели до 200',brand:'HMS'},1,'recommended','ru');
- assert.equal(calls.at(-1).name,'sporto_catalog_search_v1');
- assert.equal(calls.at(-1).args.filters.searchSpec.max,200);
- assert.ok(calls.at(-1).args.filters.searchSpec.synonyms.includes('gantere'));
- assert.equal(calls.at(-1).args.filters.brand,'HMS');
+ assert.equal(calls.at(-1).name,'direct');
+ assert.equal(calls.at(-1).query.search,'гантели до 200');
+ assert.equal(calls.at(-1).query.brand,'HMS');
  rpcError={message:'permission denied'};
  await assert.rejects(getRpcCatalog({},1,'recommended','ro'));
  console.log('RPC adapter: query, labels, counts, pagination and error checks passed; no bulk product downloads.');
