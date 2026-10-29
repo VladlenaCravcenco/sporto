@@ -1,3 +1,4 @@
+import { AdminEditorWorkspace } from '../components/AdminEditorWorkspace';
 import { useState, useEffect } from 'react';
 import {
   Save, Monitor, FileText, Plus, Trash2,
@@ -10,7 +11,6 @@ import { CONTACTS } from '../../lib/contacts';
 import { saveContacts } from '../hooks/useContacts';
 import { usePreviewFieldFocus } from '../hooks/usePreviewFieldFocus';
 
-// ── Типы ────────────────────────────────────────────────────────────────────
 interface SocialEntry {
   id: string;
   type: SocialType;
@@ -32,7 +32,6 @@ interface ContactsData {
   socials: SocialEntry[];
 }
 
-// ── Соцсети — конфиг ────────────────────────────────────────────────────────
 const SOCIAL_CONFIG: Record<SocialType, { label: string; color: string; placeholder: string; icon: string }> = {
   instagram: { label: 'Instagram', color: '#E1306C', placeholder: 'https://instagram.com/sporto.md',     icon: '📸' },
   facebook:  { label: 'Facebook',  color: '#1877F2', placeholder: 'https://facebook.com/sporto.md',      icon: '👥' },
@@ -46,7 +45,6 @@ const SOCIAL_CONFIG: Record<SocialType, { label: string; color: string; placehol
 
 const ALL_SOCIAL_TYPES = Object.keys(SOCIAL_CONFIG) as SocialType[];
 
-// ── Дефолты ─────────────────────────────────────────────────────────────────
 const DEFAULTS: ContactsData = {
   phone:      CONTACTS.phoneDisplay,
   phone_2:    '',
@@ -64,7 +62,6 @@ const DEFAULTS: ContactsData = {
   ],
 };
 
-// ── Supabase helpers ─────────────────────────────────────────────────────────
 function fromSupabase(rows: { key: string; value: string }[]): Partial<ContactsData> {
   const obj = Object.fromEntries(rows.map(r => [r.key, r.value]));
   const result: Partial<ContactsData> = {};
@@ -99,17 +96,16 @@ function toSupabase(data: ContactsData): Record<string, string> {
 // Телефон → raw для ссылки
 function toRaw(phone: string) { return phone.replace(/[^\d+]/g, ''); }
 
-// ── Поля ────────────────────────────────────────────────────────────────────
 function Field({ label, value, onChange, type = 'text', placeholder, hint }: {
   label: string; value: string; onChange: (v: string) => void;
   type?: string; placeholder?: string; hint?: string;
 }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{label}</div>
+      <div className="text-xs   admin-muted mb-1">{label}</div>
       <input type={type} value={value} onChange={e => onChange(e.target.value)} placeholder={placeholder}
-        className="w-full h-9 bg-black border border-white/20 px-3 text-xs text-white placeholder-gray-600 focus:border-white/60 focus:outline-none transition-colors" />
-      {hint && <div className="text-[9px] text-gray-700 mt-1 leading-relaxed">{hint}</div>}
+        className="w-full h-9 admin-surface border admin-border px-3 text-xs admin-ink admin-placeholder admin-focus-border focus:outline-none transition-colors" />
+      {hint && <div className="text-xs admin-ink mt-1 leading-relaxed">{hint}</div>}
     </div>
   );
 }
@@ -119,17 +115,17 @@ function BiField({ label, valRo, valRu, onRo, onRu }: {
 }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{label}</div>
+      <div className="text-xs   admin-muted mb-1">{label}</div>
       <div className="grid grid-cols-2 gap-2">
         <div>
-          <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">RO</div>
+          <div className="text-xs admin-ink   mb-1">RO</div>
           <input value={valRo} onChange={e => onRo(e.target.value)}
-            className="w-full h-9 bg-black border border-white/20 px-3 text-xs text-white focus:border-white/60 focus:outline-none transition-colors" />
+            className="w-full h-9 admin-surface border admin-border px-3 text-xs admin-ink admin-focus-border focus:outline-none transition-colors" />
         </div>
         <div>
-          <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">RU</div>
+          <div className="text-xs admin-ink   mb-1">RU</div>
           <input value={valRu} onChange={e => onRu(e.target.value)}
-            className="w-full h-9 bg-black border border-white/20 px-3 text-xs text-white focus:border-white/60 focus:outline-none transition-colors" />
+            className="w-full h-9 admin-surface border admin-border px-3 text-xs admin-ink admin-focus-border focus:outline-none transition-colors" />
         </div>
       </div>
     </div>
@@ -139,13 +135,12 @@ function BiField({ label, valRo, valRu, onRo, onRu }: {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">{title}</div>
+      <div className="text-xs   admin-muted mb-2 pb-1.5 border-b admin-border">{title}</div>
       <div className="space-y-3">{children}</div>
     </div>
   );
 }
 
-// ── SVG иконки соцсетей (те же что на сайте) ────────────────────────────────
 const SOCIAL_SVGS: Record<SocialType, React.ReactNode> = {
   whatsapp:  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.555 4.104 1.523 5.826L.044 23.428a.5.5 0 0 0 .612.612l5.602-1.479A11.946 11.946 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.882a9.868 9.868 0 0 1-5.034-1.376l-.36-.214-3.733.985.999-3.642-.235-.374A9.869 9.869 0 0 1 2.118 12C2.118 6.533 6.533 2.118 12 2.118c5.467 0 9.882 4.415 9.882 9.882 0 5.467-4.415 9.882-9.882 9.882z"/></svg>,
   telegram:  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L7.17 13.5l-2.95-.924c-.64-.203-.654-.64.135-.954l11.566-4.458c.537-.194 1.006.131.973.057z"/></svg>,
@@ -157,7 +152,6 @@ const SOCIAL_SVGS: Record<SocialType, React.ReactNode> = {
   linkedin:  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 0 1-2.063-2.065 2.064 2.064 0 1 1 2.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>,
 };
 
-// ── Превью ───────────────────────────────────────────────────────────────────
 function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; activeFieldId: string | null; focusField: (id: string) => void }) {
   const phone = d.phone || DEFAULTS.phone;
   const email = d.email || DEFAULTS.email;
@@ -174,7 +168,7 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
 
   return (
     <div className="bg-white min-h-full">
-      {/* Hero mock */}
+
       <div className="bg-black text-white px-8 py-8 border-b border-white/5">
         <div className="text-[9px] uppercase tracking-[0.2em] text-gray-600 mb-3 flex items-center gap-2">
           <div className="w-px h-3 bg-gray-700" /> Colaborare
@@ -188,14 +182,13 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
       </div>
 
       <div className="px-8 py-8 space-y-4">
-        {/* Section label */}
+
         <div className="text-[9px] uppercase tracking-widest text-gray-400 flex items-center gap-3">
           <span>Date Juridice & Contact</span>
           <div className="flex-1 h-px bg-gray-100" />
           <span className="text-gray-300">preview · RO</span>
         </div>
 
-        {/* Contact cards */}
         <div className="grid grid-cols-2 gap-3">
           <button type="button" onClick={() => focusField('email')} className={`group border p-4 flex items-start gap-3 transition-colors text-left ${activeFieldId === 'email' ? 'border-black' : 'border-gray-100 hover:border-gray-300'}`}>
             <div className="w-8 h-8 bg-gray-50 group-hover:bg-black flex items-center justify-center flex-shrink-0 transition-colors">
@@ -218,7 +211,6 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
           </button>
         </div>
 
-        {/* Legal card — точная копия стиля сайта */}
         <div className="border border-gray-100">
           <div className="px-5 pt-5 pb-4 border-b border-gray-100 flex items-center gap-3">
             <div className="w-7 h-7 bg-black flex items-center justify-center">
@@ -258,7 +250,6 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
           </div>
         </div>
 
-        {/* Messengers — квадратные кнопки с SVG как на сайте */}
         {d.socials.filter(s => s.url).length > 0 && (
           <div
             role="button"
@@ -295,9 +286,6 @@ function ContactsPreview({ d, activeFieldId, focusField }: { d: ContactsData; ac
   );
 }
 
-
-
-// ── Главный компонент ────────────────────────────────────────────────────────
 export function AdminContacts() {
   const { lang } = useAdminLang();
   const isRu = lang === 'ru';
@@ -369,31 +357,30 @@ export function AdminContacts() {
 
   if (loading) {
     return (
-      <div className="flex h-[calc(100vh-48px)] items-center justify-center bg-black">
-        <div className="w-4 h-4 border border-white/20 border-t-white rounded-full animate-spin" />
+      <div className="flex h-[calc(100vh-48px)] items-center justify-center admin-surface">
+        <div className="w-4 h-4 border admin-border border-t-white rounded-full animate-spin" />
       </div>
     );
   }
 
   return (
-    <div className="flex h-[calc(100vh-48px)] overflow-hidden bg-black">
+    <AdminEditorWorkspace>
 
-      {/* ══ LEFT — EDITOR ══ */}
-      <div className="w-[400px] shrink-0 flex flex-col border-r border-white/10 overflow-y-auto">
+      <div className="admin-editor-pane">
 
-        <div className="sticky top-0 z-10 bg-black border-b border-white/10 px-5 py-4">
+        <div className="sticky top-0 z-10 admin-surface border-b admin-border px-5 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">{isRu ? 'Контент' : 'Conținut'}</p>
-              <h1 className="text-base text-white">{isRu ? 'Контакты' : 'Contacte'}</h1>
+              <p className="text-xs admin-muted  ">{isRu ? 'Контент' : 'Conținut'}</p>
+              <h1 className="text-base admin-ink">{isRu ? 'Контакты' : 'Contacte'}</h1>
             </div>
             <div className="flex items-center gap-2">
               <button onClick={handleReset}
-                className="h-8 px-3 text-[10px] text-gray-600 border border-white/10 hover:border-white/30 hover:text-gray-300 transition-colors uppercase tracking-wider">
+                className="h-8 px-3 text-xs admin-muted border admin-border admin-hover-border hover:text-gray-300 transition-colors  ">
                 {isRu ? 'Сброс' : 'Reset'}
               </button>
               <button onClick={handleSave} disabled={saving || !hasChanges}
-                className={`flex items-center gap-1.5 px-4 h-8 text-xs uppercase tracking-widest transition-colors ${hasChanges && !saving ? 'bg-white text-black hover:bg-gray-100' : 'bg-white/10 text-gray-600 cursor-default'}`}>
+                className={`flex items-center gap-1.5 px-4 h-8 text-xs   transition-colors ${hasChanges && !saving ? 'admin-solid admin-on-solid admin-hover-surface' : 'admin-muted-surface admin-muted cursor-default'}`}>
                 {saving
                   ? <span className="w-3 h-3 border border-gray-400 border-t-white rounded-full animate-spin" />
                   : <Save className="w-3 h-3" />}
@@ -402,7 +389,7 @@ export function AdminContacts() {
             </div>
           </div>
           {hasChanges && (
-            <div className="mt-2 text-[9px] text-amber-500 uppercase tracking-widest flex items-center gap-1.5">
+            <div className="mt-2 text-xs text-amber-500   flex items-center gap-1.5">
               <span className="w-1 h-1 rounded-full bg-amber-500 inline-block" />
               {isRu ? 'Есть несохранённые изменения' : 'Modificări nesalvate'}
             </div>
@@ -412,7 +399,7 @@ export function AdminContacts() {
         <div className="px-5 py-5 space-y-6">
 
           <Section title={isRu ? 'Телефоны' : 'Telefoane'}>
-            <div ref={registerField('phone')} className={activeFieldId === 'phone' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('phone')} className={activeFieldId === 'phone' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <Field
               label={isRu ? 'Основной телефон' : 'Telefon principal'}
               value={data.phone} onChange={v => set('phone', v)} type="tel"
@@ -422,7 +409,7 @@ export function AdminContacts() {
                 : 'Introdu cu spații (+373 61 262 777) — se afișează frumos, link-ul se creează automat'}
             />
             </div>
-            <div ref={registerField('phone_2')} className={activeFieldId === 'phone_2' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('phone_2')} className={activeFieldId === 'phone_2' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <Field
               label={isRu ? 'Второй телефон (необязательно)' : 'Al 2-lea telefon (opțional)'}
               value={data.phone_2} onChange={v => set('phone_2', v)} type="tel"
@@ -432,18 +419,18 @@ export function AdminContacts() {
           </Section>
 
           <Section title="Email">
-            <div ref={registerField('email')} className={activeFieldId === 'email' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('email')} className={activeFieldId === 'email' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <Field label="Email" value={data.email} onChange={v => set('email', v)} type="email" placeholder={DEFAULTS.email} />
             </div>
           </Section>
 
           <Section title={isRu ? 'Адрес и часы' : 'Adresă și ore'}>
-            <div ref={registerField('address')} className={activeFieldId === 'address' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('address')} className={activeFieldId === 'address' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <BiField label={isRu ? 'Адрес' : 'Adresă'}
               valRo={data.address_ro} valRu={data.address_ru}
               onRo={v => set('address_ro', v)} onRu={v => set('address_ru', v)} />
             </div>
-            <div ref={registerField('hours')} className={activeFieldId === 'hours' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('hours')} className={activeFieldId === 'hours' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <BiField label={isRu ? 'Часы работы' : 'Ore de lucru'}
               valRo={data.hours_ro} valRu={data.hours_ru}
               onRo={v => set('hours_ro', v)} onRu={v => set('hours_ru', v)} />
@@ -451,42 +438,41 @@ export function AdminContacts() {
           </Section>
 
           <Section title={isRu ? 'Юридические данные' : 'Date juridice'}>
-            <div ref={registerField('legal_name')} className={activeFieldId === 'legal_name' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('legal_name')} className={activeFieldId === 'legal_name' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <Field label={isRu ? 'Юр. название' : 'Denumire juridică'} value={data.legal_name} onChange={v => set('legal_name', v)} placeholder={DEFAULTS.legal_name} />
             </div>
-            <div ref={registerField('legal_idno')} className={activeFieldId === 'legal_idno' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('legal_idno')} className={activeFieldId === 'legal_idno' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             <Field label={isRu ? 'Код фискал (IDNO)' : 'Cod fiscal (IDNO)'} value={data.legal_idno} onChange={v => set('legal_idno', v)} placeholder={DEFAULTS.legal_idno} />
             </div>
           </Section>
 
-          {/* ── Соцсети ── */}
           <Section title={isRu ? 'Соцсети и мессенджеры' : 'Rețele sociale & mesagerie'}>
-            <div ref={registerField('socials')} className={activeFieldId === 'socials' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
+            <div ref={registerField('socials')} className={activeFieldId === 'socials' ? 'ring-1 ring-white/40 admin-muted-surface p-2 -m-2' : ''}>
             {data.socials.length > 0 && (
               <div className="space-y-2">
                 {data.socials.map((s, idx) => {
                   const cfg = SOCIAL_CONFIG[s.type];
                   return (
-                    <div key={s.id} className="border border-white/10 p-2.5">
+                    <div key={s.id} className="border admin-border p-2.5">
                       <div className="flex items-center justify-between mb-2">
                         <div className="flex items-center gap-2">
                           <span>{cfg.icon}</span>
-                          <span className="text-[10px] text-white uppercase tracking-wider">{cfg.label}</span>
+                          <span className="text-xs admin-ink  ">{cfg.label}</span>
                         </div>
                         <div className="flex items-center gap-0.5">
                           <button onClick={() => moveSocial(s.id, -1)} disabled={idx === 0}
-                            className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-white disabled:opacity-20 transition-colors text-xs">↑</button>
+                            className="w-6 h-6 flex items-center justify-center admin-muted admin-hover-ink disabled:opacity-20 transition-colors text-xs">↑</button>
                           <button onClick={() => moveSocial(s.id, 1)} disabled={idx === data.socials.length - 1}
-                            className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-white disabled:opacity-20 transition-colors text-xs">↓</button>
+                            className="w-6 h-6 flex items-center justify-center admin-muted admin-hover-ink disabled:opacity-20 transition-colors text-xs">↓</button>
                           <button onClick={() => removeSocial(s.id)}
-                            className="w-6 h-6 flex items-center justify-center text-gray-600 hover:text-red-400 transition-colors">
+                            className="w-6 h-6 flex items-center justify-center admin-muted hover:text-red-400 transition-colors">
                             <Trash2 className="w-3 h-3" />
                           </button>
                         </div>
                       </div>
                       <input type="url" value={s.url} onChange={e => updateSocial(s.id, e.target.value)}
                         placeholder={cfg.placeholder}
-                        className="w-full h-8 bg-black border border-white/10 px-2.5 text-[11px] text-white placeholder-gray-700 focus:border-white/40 focus:outline-none transition-colors" />
+                        className="w-full h-8 admin-surface border admin-border px-2.5 text-[11px] admin-ink placeholder-gray-700 admin-focus-border focus:outline-none transition-colors" />
                     </div>
                   );
                 })}
@@ -496,7 +482,7 @@ export function AdminContacts() {
 
             {availableTypes.length > 0 && (
               <div>
-                <div className="text-[9px] text-gray-600 uppercase tracking-widest mb-2">
+                <div className="text-xs admin-muted   mb-2">
                   {isRu ? '+ Добавить сеть' : '+ Adaugă rețea'}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
@@ -504,7 +490,7 @@ export function AdminContacts() {
                     const cfg = SOCIAL_CONFIG[type];
                     return (
                       <button key={type} onClick={() => addSocial(type)}
-                        className="flex items-center gap-1 px-2 py-1.5 border border-white/10 text-[10px] text-gray-400 hover:border-white/30 hover:text-white transition-colors">
+                        className="flex items-center gap-1 px-2 py-1.5 border admin-border text-xs admin-muted admin-hover-border admin-hover-ink transition-colors">
                         <Plus className="w-2.5 h-2.5" />
                         {cfg.icon} {cfg.label}
                       </button>
@@ -515,7 +501,7 @@ export function AdminContacts() {
             )}
           </Section>
 
-          <div className="border border-white/10 px-4 py-3 text-[10px] text-gray-600 leading-relaxed">
+          <div className="border admin-border px-4 py-3 text-xs admin-muted leading-relaxed">
             💡 {isRu
               ? 'После сохранения данные обновятся везде: шапка, футер, страница контактов.'
               : 'După salvare, datele se actualizează peste tot: antet, subsol, pagina de contacte.'}
@@ -523,20 +509,19 @@ export function AdminContacts() {
         </div>
       </div>
 
-      {/* ══ RIGHT — PREVIEW ══ */}
-      <div className="flex-1 flex flex-col overflow-hidden bg-gray-50">
-        <div className="shrink-0 bg-white border-b border-gray-200 px-5 py-2.5 flex items-center gap-3">
-          <Monitor className="w-4 h-4 text-gray-400" />
-          <span className="text-[10px] text-gray-500 flex-1 uppercase tracking-widest">/contacts</span>
-          <div className={`flex items-center gap-1.5 text-[10px] uppercase tracking-widest ${hasChanges ? 'text-amber-500' : 'text-gray-400'}`}>
+      <div className="admin-preview-pane flex-1 flex flex-col overflow-hidden admin-canvas">
+        <div className="shrink-0 admin-solid border-b admin-border px-5 py-2.5 flex items-center gap-3">
+          <Monitor className="w-4 h-4 admin-muted" />
+          <span className="text-xs admin-muted flex-1  ">/contacts</span>
+          <div className={`flex items-center gap-1.5 text-xs   ${hasChanges ? 'text-amber-500' : 'admin-muted'}`}>
             <span className={`w-1.5 h-1.5 rounded-full ${hasChanges ? 'bg-amber-400' : 'bg-green-400'}`} />
             {hasChanges ? (isRu ? 'Не сохранено' : 'Nesalvat') : (isRu ? 'Актуально' : 'Actualizat')}
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto">
+        <div data-admin-preview className="flex-1 overflow-y-auto">
           <ContactsPreview d={data} activeFieldId={activeFieldId} focusField={focusField} />
         </div>
       </div>
-    </div>
+    </AdminEditorWorkspace>
   );
 }

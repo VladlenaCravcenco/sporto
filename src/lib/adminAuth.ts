@@ -1,4 +1,4 @@
-// ─── Admin Authentication via Supabase Auth ───────────────────────────────────
+
 // Regular site users ALSO use Supabase Auth after the migration.
 // To distinguish admin from regular users we set a localStorage flag
 // ONLY when loginAdmin() is called via /admin/login.

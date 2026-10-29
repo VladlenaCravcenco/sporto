@@ -1,0 +1,1 @@
+export const adminSections: readonly string[] = ['products', 'brands', 'categories', 'attributes', 'featured', 'import', 'requests', 'clients', 'banners', 'contacts', 'popup', 'faq', 'services', 'maintenance', 'content-pages', 'email-setup'];

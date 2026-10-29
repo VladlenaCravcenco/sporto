@@ -2,8 +2,6 @@ import { useState } from 'react';
 import { Mail, Copy, Check, ExternalLink, AlertCircle, CheckCircle2, ChevronDown, ChevronUp } from 'lucide-react';
 import { EMAILJS, isEmailConfigured } from '../../lib/emailService';
 
-// ── HTML шаблоны ──────────────────────────────────────────────────────────────
-
 const HTML_WELCOME = `<!DOCTYPE html>
 <html>
 <head><meta charset="UTF-8"><style>
@@ -116,7 +114,6 @@ body{font-family:Arial,sans-serif;background:#f5f5f5;margin:0;padding:24px}
 </div>
 </body></html>`;
 
-// ── Component ─────────────────────────────────────────────────────────────────
 export function AdminEmailSetup() {
   const [copied, setCopied] = useState<string | null>(null);
   const [open, setOpen]     = useState<string | null>('t1');
@@ -180,15 +177,14 @@ export function AdminEmailSetup() {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="admin-section">
       <div className="max-w-[860px] mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Header */}
-        <div className="flex items-center gap-3 mb-6">
-          <Mail className="w-5 h-5 text-gray-400" />
+        <div className="admin-section-heading">
+          <Mail className="w-5 h-5 admin-muted" />
           <div>
-            <h1 className="text-sm text-gray-900">Настройка EmailJS</h1>
-            <p className="text-xs text-gray-400 mt-0.5">2 шаблона · service_odgatyo · ~10 минут</p>
+            <h1 className="text-sm admin-ink">Настройка EmailJS</h1>
+            <p className="text-xs admin-muted mt-0.5">2 шаблона · service_odgatyo · ~10 минут</p>
           </div>
           {configured ? (
             <span className="ml-auto flex items-center gap-1.5 text-xs text-green-600 bg-green-50 border border-green-200 px-3 py-1.5">
@@ -201,51 +197,47 @@ export function AdminEmailSetup() {
           )}
         </div>
 
-        {/* Quick steps */}
-        <div className="grid grid-cols-4 gap-px bg-gray-200 border border-gray-200 mb-6">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-px admin-muted-surface border admin-border mb-6">
           {[
             { n: '1', t: 'Сервис уже подключён', sub: 'service_odgatyo · Gmail' },
             { n: '2', t: 'Создать Template 1', sub: 'Welcome · регистрация' },
             { n: '3', t: 'Создать Template 2', sub: 'Order Admin · заявки' },
             { n: '4', t: 'Добавить .env', sub: '5 переменных' },
           ].map(s => (
-            <div key={s.n} className="bg-white p-4">
-              <div className="text-xs text-gray-400 mb-1">Шаг {s.n}</div>
-              <div className="text-xs text-gray-900">{s.t}</div>
-              <div className="text-[10px] text-gray-400 mt-0.5">{s.sub}</div>
+            <div key={s.n} className="admin-surface p-4">
+              <div className="text-xs admin-muted mb-1">Шаг {s.n}</div>
+              <div className="text-xs admin-ink">{s.t}</div>
+              <div className="text-xs admin-muted mt-0.5">{s.sub}</div>
             </div>
           ))}
         </div>
 
-        {/* Templates */}
         <div className="space-y-3 mb-6">
           {TEMPLATES.map(tpl => (
-            <div key={tpl.id} className="bg-white border border-gray-200">
+            <div key={tpl.id} className="admin-surface border admin-border">
 
-              {/* Accordion header */}
               <button
                 onClick={() => setOpen(open === tpl.id ? null : tpl.id)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left hover:bg-gray-50 transition-colors"
+                className="w-full flex items-center justify-between px-5 py-4 text-left admin-hover-surface transition-colors"
               >
                 <div className="flex items-center gap-3">
-                  <span className="text-[10px] text-white bg-black px-2 py-0.5 tracking-wider">{tpl.badge}</span>
+                  <span className="text-xs admin-on-solid admin-solid px-2 py-0.5 ">{tpl.badge}</span>
                   <div>
-                    <div className="text-sm text-gray-900">{tpl.title}</div>
-                    <div className="text-[10px] text-gray-400 mt-0.5">{tpl.who}</div>
+                    <div className="text-sm admin-ink">{tpl.title}</div>
+                    <div className="text-xs admin-muted mt-0.5">{tpl.who}</div>
                   </div>
                 </div>
                 {open === tpl.id
-                  ? <ChevronUp className="w-4 h-4 text-gray-400 flex-shrink-0" />
-                  : <ChevronDown className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                  ? <ChevronUp className="w-4 h-4 admin-muted flex-shrink-0" />
+                  : <ChevronDown className="w-4 h-4 admin-muted flex-shrink-0" />
                 }
               </button>
 
               {open === tpl.id && (
-                <div className="border-t border-gray-100 px-5 pb-6 pt-4 space-y-5">
+                <div className="border-t admin-border px-5 pb-6 pt-4 space-y-5">
 
-                  {/* Инструкция */}
-                  <div className="bg-gray-50 border border-gray-200 p-4 text-xs text-gray-600 leading-relaxed">
-                    <span className="text-gray-900">Как создать: </span>
+                  <div className="admin-canvas border admin-border p-4 text-xs admin-muted leading-relaxed">
+                    <span className="admin-ink">Как создать: </span>
                     <a href="https://dashboard.emailjs.com/admin/templates" target="_blank" rel="noopener noreferrer"
                       className="underline inline-flex items-center gap-1">
                       EmailJS Dashboard → Email Templates <ExternalLink className="w-3 h-3" />
@@ -253,18 +245,17 @@ export function AdminEmailSetup() {
                     {' '}→ <strong>Create New Template</strong> → вставьте данные ниже → <strong>Save</strong>
                   </div>
 
-                  {/* To / Subject */}
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {[
                       { label: 'To Email', val: tpl.to,      key: `to-${tpl.id}` },
                       { label: 'Subject',  val: tpl.subject,  key: `sub-${tpl.id}` },
                     ].map(f => (
                       <div key={f.key}>
-                        <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-1">{f.label}</p>
-                        <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2">
-                          <code className="text-xs text-gray-700 flex-1 truncate">{f.val}</code>
+                        <p className="text-xs admin-muted   mb-1">{f.label}</p>
+                        <div className="flex items-center gap-2 admin-canvas border admin-border px-3 py-2">
+                          <code className="text-xs admin-ink flex-1 truncate">{f.val}</code>
                           <button onClick={() => copy(f.val, f.key)}
-                            className="text-gray-400 hover:text-black transition-colors flex-shrink-0">
+                            className="admin-muted admin-hover-ink transition-colors flex-shrink-0">
                             {copied === f.key
                               ? <Check className="w-3 h-3 text-green-500" />
                               : <Copy className="w-3 h-3" />}
@@ -274,34 +265,32 @@ export function AdminEmailSetup() {
                     ))}
                   </div>
 
-                  {/* HTML */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <p className="text-[10px] text-gray-400 uppercase tracking-wider">
+                      <p className="text-xs admin-muted  ">
                         HTML Body — вставьте в поле <strong>Content</strong>
                       </p>
                       <button onClick={() => copy(tpl.html, `html-${tpl.id}`)}
-                        className="flex items-center gap-1.5 text-[10px] bg-black text-white px-3 py-1.5 hover:bg-gray-800 transition-colors">
+                        className="flex items-center gap-1.5 text-xs admin-solid admin-on-solid px-3 py-1.5 admin-hover-solid transition-colors">
                         {copied === `html-${tpl.id}`
                           ? <><Check className="w-3 h-3" /> Скопировано</>
                           : <><Copy className="w-3 h-3" /> Скопировать HTML</>}
                       </button>
                     </div>
-                    <pre className="bg-gray-50 border border-gray-200 p-3 text-[9px] text-gray-500 overflow-x-auto max-h-36 leading-relaxed select-all">
+                    <pre className="admin-canvas border admin-border p-3 text-xs admin-muted overflow-x-auto max-h-36 leading-relaxed select-all">
                       {tpl.html}
                     </pre>
                   </div>
 
-                  {/* Variables */}
                   <div>
-                    <p className="text-[10px] text-gray-400 uppercase tracking-wider mb-2">
+                    <p className="text-xs admin-muted   mb-2">
                       Переменные в шаблоне
                     </p>
                     <div className="grid grid-cols-2 gap-1">
                       {tpl.vars.map(v => (
-                        <div key={v.v} className="flex items-center gap-2 px-3 py-1.5 bg-gray-50 border border-gray-100">
-                          <code className="text-[10px] text-gray-700 flex-shrink-0">{v.v}</code>
-                          <span className="text-[10px] text-gray-400">— {v.d}</span>
+                        <div key={v.v} className="flex items-center gap-2 px-3 py-1.5 admin-canvas border admin-border">
+                          <code className="text-xs admin-ink flex-shrink-0">{v.v}</code>
+                          <span className="text-xs admin-muted">— {v.d}</span>
                         </div>
                       ))}
                     </div>
@@ -313,12 +302,11 @@ export function AdminEmailSetup() {
           ))}
         </div>
 
-        {/* ENV */}
-        <div className="bg-white border border-gray-200">
-          <div className="px-5 py-4 border-b border-gray-100">
-            <p className="text-sm text-gray-900">Переменные окружения (.env)</p>
-            <p className="text-[10px] text-gray-400 mt-0.5">
-              После создания шаблонов — добавьте в <code className="bg-gray-100 px-1">.env</code> или Vercel → Environment Variables
+        <div className="admin-surface border admin-border">
+          <div className="px-5 py-4 border-b admin-border">
+            <p className="text-sm admin-ink">Переменные окружения (.env)</p>
+            <p className="text-xs admin-muted mt-0.5">
+              После создания шаблонов — добавьте в <code className="admin-muted-surface px-1">.env</code> или Vercel → Environment Variables
             </p>
           </div>
           <div className="p-5 space-y-3">
@@ -332,49 +320,47 @@ export function AdminEmailSetup() {
             ].map(({ key, hint, current }) => (
               <div key={key}>
                 <div className="flex items-center justify-between mb-1">
-                  <code className="text-xs text-gray-900">{key}</code>
+                  <code className="text-xs admin-ink">{key}</code>
                   {current && current !== '' && (
-                    <span className="text-[10px] text-green-600 flex items-center gap-1">
+                    <span className="text-xs text-green-600 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Задан
                     </span>
                   )}
                 </div>
-                <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 px-3 py-2">
-                  <code className="text-[10px] text-gray-500 flex-1">{key}=ваш_ключ_здесь</code>
+                <div className="flex items-center gap-2 admin-canvas border admin-border px-3 py-2">
+                  <code className="text-xs admin-muted flex-1">{key}=ваш_ключ_здесь</code>
                   <button onClick={() => copy(`${key}=`, key)}
-                    className="text-gray-400 hover:text-black transition-colors flex-shrink-0">
+                    className="admin-muted admin-hover-ink transition-colors flex-shrink-0">
                     {copied === key ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                   </button>
                 </div>
-                <p className="text-[10px] text-gray-400 mt-1">{hint}</p>
+                <p className="text-xs admin-muted mt-1">{hint}</p>
               </div>
             ))}
 
-            {/* Copy all */}
-            <div className="pt-2 border-t border-gray-100">
+            <div className="pt-2 border-t admin-border">
               <div className="flex items-center justify-between mb-2">
-                <p className="text-[10px] text-gray-400 uppercase tracking-wider">Скопировать шаблон .env</p>
+                <p className="text-xs admin-muted  ">Скопировать шаблон .env</p>
                 <button onClick={() => copy(ENV_EXAMPLE, 'envall')}
-                  className="flex items-center gap-1.5 text-[10px] bg-black text-white px-3 py-1.5 hover:bg-gray-800 transition-colors">
+                  className="flex items-center gap-1.5 text-xs admin-solid admin-on-solid px-3 py-1.5 admin-hover-solid transition-colors">
                   {copied === 'envall'
                     ? <><Check className="w-3 h-3" /> Скопировано</>
                     : <><Copy className="w-3 h-3" /> Скопировать</>}
                 </button>
               </div>
-              <pre className="bg-gray-50 border border-gray-200 p-3 text-[10px] text-gray-500 leading-relaxed select-all">
+              <pre className="admin-canvas border admin-border p-3 text-xs admin-muted leading-relaxed select-all">
                 {ENV_EXAMPLE}
               </pre>
             </div>
           </div>
         </div>
 
-        {/* Done */}
         {configured && (
-          <div className="mt-4 bg-black text-white p-5 flex items-start gap-4">
+          <div className="mt-4 admin-solid admin-on-solid p-5 flex items-start gap-4">
             <CheckCircle2 className="w-5 h-5 flex-shrink-0 mt-0.5" />
             <div>
               <p className="text-sm mb-1">Всё настроено!</p>
-              <p className="text-xs text-gray-400 leading-relaxed">
+              <p className="text-xs admin-muted leading-relaxed">
                 При регистрации клиент получит письмо с подтверждением.
                 При каждой новой заявке вам придёт уведомление на <strong>{EMAILJS.adminEmail}</strong>.
               </p>

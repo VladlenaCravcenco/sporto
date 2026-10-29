@@ -8,7 +8,6 @@ export interface NewRequestNotification {
   created_at: string;
 }
 
-// ── Sound ─────────────────────────────────────────────────────────────────────
 // AudioContext must be created / resumed AFTER a user gesture (Chrome policy).
 // We create it lazily on first click, then reuse it forever.
 let _audioCtx: AudioContext | null = null;
@@ -62,7 +61,6 @@ export function dispatchClearAdminRequestUnread() {
   window.dispatchEvent(new Event('admin:clear-request-unread'));
 }
 
-// ── Browser OS notification ───────────────────────────────────────────────────
 function showBrowserNotification(req: NewRequestNotification) {
   if (!('Notification' in window) || Notification.permission !== 'granted') return;
   const amount = req.total_price
@@ -77,7 +75,6 @@ function showBrowserNotification(req: NewRequestNotification) {
   } catch { /* safari may throw */ }
 }
 
-// ── Main hook ─────────────────────────────────────────────────────────────────
 export function useAdminNotifications() {
   const [unreadCount, setUnreadCount]   = useState(0);
   const [latestRequest, setLatestRequest] = useState<NewRequestNotification | null>(null);
@@ -89,7 +86,6 @@ export function useAdminNotifications() {
   const pollRef       = useRef<ReturnType<typeof setInterval> | null>(null);
   const initialised   = useRef(false);
 
-  // ── Fire one notification ─────────────────────────────────────────────────
   const handleNewRequest = useCallback((row: any) => {
     if (!row?.id) return;
     if (notifiedIds.current.has(row.id)) return;
@@ -112,7 +108,6 @@ export function useAdminNotifications() {
     showBrowserNotification(notif);
   }, []);
 
-  // ── Poll Supabase for requests newer than watermark ───────────────────────
   const poll = useCallback(async () => {
     if (!lastSeenAt.current) return; // not yet initialised — skip
     try {
@@ -128,7 +123,6 @@ export function useAdminNotifications() {
     } catch { /* network/table error — silently skip */ }
   }, [handleNewRequest]);
 
-  // ── Init: fetch latest existing request to set watermark ─────────────────
   const init = useCallback(async () => {
     if (initialised.current) return;
     initialised.current = true;

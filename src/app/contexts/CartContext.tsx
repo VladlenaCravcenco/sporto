@@ -32,23 +32,32 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [cart, setCart] = useState<CartItem[]>([]);
 
+  const readCart = (): CartItem[] => {
+    try {
+      const stored = JSON.parse(localStorage.getItem('cart') || '[]');
+      return Array.isArray(stored) ? stored : [];
+    } catch { return []; }
+  };
+
   useEffect(() => {
-    const stored = localStorage.getItem('cart');
-    if (stored) {
-      try {
-        setCart(JSON.parse(stored));
-      } catch {
-        setCart([]);
-      }
-    }
+    const sync = () => setCart(readCart());
+    sync();
+    window.addEventListener('sporto:cart-updated', sync);
+    window.addEventListener('storage', sync);
+    return () => {
+      window.removeEventListener('sporto:cart-updated', sync);
+      window.removeEventListener('storage', sync);
+    };
   }, []);
 
   const saveCart = (newCart: CartItem[]) => {
     setCart(newCart);
     localStorage.setItem('cart', JSON.stringify(newCart));
+    window.dispatchEvent(new Event('sporto:cart-updated'));
   };
 
   const addToCart = (item: Omit<CartItem, 'quantity'>) => {
+    const cart = readCart();
     const existing = cart.find((c) => c.id === item.id);
     if (existing) {
       saveCart(cart.map((c) => c.id === item.id ? { ...c, quantity: c.quantity + 1 } : c));
@@ -58,12 +67,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   };
 
   const removeFromCart = (id: string) => {
-    saveCart(cart.filter((c) => c.id !== id));
+    saveCart(readCart().filter((c) => c.id !== id));
   };
 
   const updateQuantity = (id: string, delta: number) => {
     saveCart(
-      cart.map((c) =>
+      readCart().map((c) =>
         c.id === id ? { ...c, quantity: Math.max(1, c.quantity + delta) } : c
       )
     );
@@ -106,3 +115,5 @@ export function useCart() {
   if (!context) throw new Error('useCart must be used within CartProvider');
   return context;
 }
+
+export function useOptionalCart() { return useContext(CartContext); }

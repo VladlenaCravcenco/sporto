@@ -31,3 +31,9 @@ yarn-error.log*
 # Build output
 .tsbuildinfo
 node_modules/
+.next/
+
+# Generated TypeScript and Python caches
+*.tsbuildinfo
+__pycache__/
+*.pyc

@@ -25,12 +25,10 @@ export function AdminHub() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // ── Price list export state ───────────────────────────────────────────────
   const [exporting, setExporting]           = useState(false);
   const [exportLang, setExportLang]         = useState<'ro' | 'ru' | 'both'>('both');
   const [exportActive, setExportActive]     = useState(true);
   const [exportCategory, setExportCategory] = useState('all');
-  const [catOpen, setCatOpen]               = useState(false);
   const [categories, setCategories]         = useState<{ id: string; slug: string; name_ro: string }[]>([]);
 
   useEffect(() => {
@@ -56,7 +54,6 @@ export function AdminHub() {
     })();
   }, []);
 
-  // ── Загружаем категории с slug ────────────────────────────────────────────
   useEffect(() => {
     supabase
       .from('categories')
@@ -67,7 +64,6 @@ export function AdminHub() {
       });
   }, []);
 
-  // ── Экспорт ───────────────────────────────────────────────────────────────
   const handleExport = async () => {
     setExporting(true);
     try {
@@ -92,7 +88,6 @@ export function AdminHub() {
 
       if (!data.length) throw new Error('Нет данных после фильтрации');
 
-      // ── Колонки ────────────────────────────────────────────────────────────
       type ColDef = { key: string; header: string; width: number };
       const baseCols: ColDef[] = [
         { key: 'num',      header: '№',           width: 6  },
@@ -116,7 +111,6 @@ export function AdminHub() {
         ...baseCols.slice(4),
       ];
 
-      // ── ExcelJS ────────────────────────────────────────────────────────────
       const wb = new ExcelJS.Workbook();
       wb.creator  = 'Sportosfera Admin';
       wb.created  = new Date();
@@ -125,7 +119,6 @@ export function AdminHub() {
       // Ширины колонок
       ws.columns = cols.map(c => ({ width: c.width }));
 
-      // ── Строка 1: заголовок компании ───────────────────────────────────────
       const titleRow = ws.addRow(['Sportosfera S.R.L. — Прайс-лист']);
       ws.mergeCells(1, 1, 1, cols.length);
       titleRow.height = 28;
@@ -134,7 +127,6 @@ export function AdminHub() {
       titleCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF000000' } };
       titleCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
 
-      // ── Строка 2: мета ─────────────────────────────────────────────────────
       const metaText = [
         new Date().toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' }),
         `Категория: ${categoryLabel}`,
@@ -148,7 +140,6 @@ export function AdminHub() {
       metaCell.fill      = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF111111' } };
       metaCell.alignment = { vertical: 'middle', horizontal: 'left', indent: 1 };
 
-      // ── Строка 3: заголовки колонок ────────────────────────────────────────
       const headerRow = ws.addRow(cols.map(c => c.header));
       headerRow.height = 22;
       headerRow.eachCell(cell => {
@@ -161,7 +152,6 @@ export function AdminHub() {
       // Заморозить до строки 4
       ws.views = [{ state: 'frozen', xSplit: 0, ySplit: 3 }];
 
-      // ── Данные ─────────────────────────────────────────────────────────────
       const BG_ODD  = 'FFFAFAFA';
       const BG_EVEN = 'FFFFFFFF';
 
@@ -200,7 +190,6 @@ export function AdminHub() {
         });
       });
 
-      // ── Строка ИТОГО ───────────────────────────────────────────────────────
       ws.addRow([]); // пустая строка-отступ
       const totalRow = ws.addRow(['ИТОГО:', data.length, lang === 'ru' ? 'позиций' : 'poziții']);
       totalRow.height = 18;
@@ -210,7 +199,6 @@ export function AdminHub() {
         cell.alignment = { vertical: 'middle' };
       });
 
-      // ── Скачать ────────────────────────────────────────────────────────────
       const buffer = await wb.xlsx.writeBuffer();
       const blob   = new Blob([buffer], {
         type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -230,12 +218,8 @@ export function AdminHub() {
     }
   };
 
-  const catLabel = exportCategory === 'all'
-    ? (lang === 'ru' ? 'Все категории' : 'Toate categoriile')
-    : (categories.find(c => c.id === exportCategory)?.name_ro || exportCategory);
-
-  // ── All modules (flat) ────────────────────────────────────────────────────
   const modules = [
+    { to: '/admin/attributes', icon: <Settings className="w-6 h-6" />, title: lang === 'ru' ? 'Характеристики' : 'Caracteristici', desc: lang === 'ru' ? 'Параметры товаров и фильтры' : 'Parametri și filtre pentru produse', stat: '—', statBad: null, primary: false },
     { to: '/admin/requests',    icon: <ClipboardList className="w-6 h-6" />, title: t.hub.requestsTitle,   desc: t.hub.requestsDesc,   stat: '—',                                                              statBad: null,                                                                        primary: true  },
     { to: '/admin/clients',     icon: <Users         className="w-6 h-6" />, title: t.hub.clientsTitle,    desc: t.hub.clientsDesc,    stat: '—',                                                              statBad: null,                                                                        primary: false },
     { to: '/admin/products',    icon: <Package       className="w-6 h-6" />, title: t.hub.productsTitle,   desc: t.hub.productsDesc,   stat: stats ? `${stats.active} ${t.hub.activeLabel}` : '—',             statBad: stats && stats.inactive > 0 ? `${stats.inactive} ${t.hub.inactiveLabel}` : null, primary: false },
@@ -252,158 +236,54 @@ export function AdminHub() {
     { to: '/admin/content-pages', icon: <FileText    className="w-6 h-6" />, title: t.hub.contentPagesTitle, desc: t.hub.contentPagesDesc, stat: '—',                                                            statBad: null,                                                                        primary: false },
   ];
 
-  return (
-    <div className="bg-black text-white min-h-[calc(100vh-48px)]">
+  const groups = [
+    { title: t.hub.tabClients, routes: ['requests', 'clients'] },
+    { title: t.hub.tabProducts, routes: ['products', 'brands', 'categories', 'attributes', 'featured', 'import'] },
+    { title: t.hub.tabContent, routes: ['banners', 'contacts', 'popup', 'faq', 'services', 'maintenance', 'content-pages'] },
+  ];
 
-      {/* Pattern */}
-      <svg className="fixed inset-0 w-full h-full opacity-[0.03] pointer-events-none" xmlns="http://www.w3.org/2000/svg">
-        <defs>
-          <pattern id="grid-hub" width="40" height="40" patternUnits="userSpaceOnUse">
-            <path d="M40 0 L0 0 0 40" fill="none" stroke="#fff" strokeWidth="0.5" />
-          </pattern>
-        </defs>
-        <rect width="100%" height="100%" fill="url(#grid-hub)" />
-      </svg>
-
-      <div className="relative z-10 max-w-[1200px] mx-auto px-4 sm:px-6 py-6 sm:py-10">
-
-        {/* Welcome */}
-        <div className="mb-6 sm:mb-10">
-          <p className="text-[10px] sm:text-xs text-gray-600 uppercase tracking-[0.18em] sm:tracking-[0.2em] mb-2">Sportosfera S.R.L.</p>
-          <h1 className="text-xl sm:text-2xl text-white leading-tight">{t.hub.statsTitle}</h1>
-        </div>
-
-        {/* Stats bar */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-px bg-transparent sm:bg-white/10 mb-6 sm:mb-8 sm:border sm:border-white/10">
-          {[
-            { label: t.hub.totalLabel,    value: stats?.total,    icon: <Box         className="w-3.5 h-3.5" /> },
-            { label: t.hub.activeLabel,   value: stats?.active,   icon: <Eye         className="w-3.5 h-3.5" /> },
-            { label: t.hub.featuredLabel, value: stats?.featured, icon: <Star        className="w-3.5 h-3.5" /> },
-            { label: t.hub.noImageLabel,  value: stats?.noImage,  icon: <AlertCircle className="w-3.5 h-3.5" />, warn: true },
-          ].map(s => (
-            <div key={s.label} className="bg-black/80 border border-white/10 sm:border-0 px-3 sm:px-5 py-3 sm:py-4 min-w-0">
-              <div className={`flex items-center gap-1.5 mb-2 ${s.warn && s.value ? 'text-amber-500' : 'text-gray-600'}`}>
-                {s.icon}
-                <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.18em] sm:tracking-widest truncate">{s.label}</span>
-              </div>
-              <div className={`text-xl sm:text-2xl tabular-nums ${s.warn && s.value ? 'text-amber-400' : 'text-white'}`}>
-                {loadingStats ? <span className="text-gray-700">—</span> : s.value ?? 0}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* ── PRICE LIST EXPORT ─────────────────────────────────────────────── */}
-        <div className="mb-6 sm:mb-8 border border-white/20 bg-white/5 overflow-hidden">
-          <div className="flex items-start sm:items-center gap-3 px-4 sm:px-5 py-4 border-b border-white/10">
-            <div className="w-8 h-8 bg-white/10 flex items-center justify-center flex-shrink-0">
-              <Download className="w-4 h-4 text-white" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-[13px] sm:text-sm text-white uppercase tracking-[0.14em] sm:tracking-wider leading-tight">
-                {lang === 'ru' ? 'Выгрузить прайс-лист' : 'Exportă lista de prețuri'}
-              </p>
-              <p className="text-[11px] text-gray-500 mt-1 leading-relaxed">
-                {lang === 'ru' ? 'Актуальные данные из базы · Excel (.xlsx)' : 'Date actuale din bază · Excel (.xlsx)'}
-              </p>
-            </div>
-          </div>
-          <div className="px-4 sm:px-5 py-4 flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3">
-            {/* Language */}
-            <div className="grid grid-cols-3 gap-1.5 w-full sm:flex sm:items-center sm:gap-1">
-              {(['both', 'ru', 'ro'] as const).map(l => (
-                <button key={l} onClick={() => setExportLang(l)}
-                  className={`px-2.5 py-2 sm:py-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-wider border transition-colors whitespace-nowrap ${exportLang === l ? 'bg-white text-black border-white' : 'border-white/20 text-gray-400 hover:border-white/50 hover:text-white'}`}>
-                  {l === 'both' ? (lang === 'ru' ? 'Оба яз.' : 'Ambele') : l.toUpperCase()}
-                </button>
-              ))}
-            </div>
-            <div className="hidden sm:block w-px h-5 bg-white/10" />
-            {/* Active only */}
-            <button onClick={() => setExportActive(v => !v)}
-              className={`flex items-center justify-center sm:justify-start gap-2 px-3 py-2 sm:py-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-wider border transition-colors w-full sm:w-auto ${exportActive ? 'bg-white text-black border-white' : 'border-white/20 text-gray-400 hover:border-white/50 hover:text-white'}`}>
-              {exportActive && <Check className="w-3 h-3" />}
-              {lang === 'ru' ? 'Только активные' : 'Doar active'}
-            </button>
-            <div className="hidden sm:block w-px h-5 bg-white/10" />
-            {/* Category */}
-            <div className="relative w-full sm:w-auto">
-              <button onClick={() => setCatOpen(v => !v)}
-                className="flex items-center justify-between gap-2 w-full sm:w-auto px-3 py-2 sm:py-1.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-wider border border-white/20 text-gray-400 hover:border-white/50 hover:text-white transition-colors">
-                <span className="min-w-0 sm:max-w-[160px] truncate">{catLabel}</span>
-                <ChevronDown className="w-3 h-3 flex-shrink-0" />
-              </button>
-              {catOpen && (
-                <div className="absolute top-full left-0 right-0 sm:right-auto mt-1 bg-gray-900 border border-white/20 z-50 shadow-2xl min-w-[200px] max-h-60 overflow-y-auto">
-                  {[{ id: 'all', slug: 'all', name_ro: lang === 'ru' ? 'Все категории' : 'Toate categoriile' }, ...categories].map(c => (
-                    <button key={c.id} onClick={() => { setExportCategory(c.id); setCatOpen(false); }}
-                      className={`w-full text-left px-4 py-2 text-[11px] flex items-center justify-between gap-3 hover:bg-white/10 transition-colors ${exportCategory === c.id ? 'text-white' : 'text-gray-400'}`}>
-                      <span className="min-w-0 truncate">{c.name_ro}</span>
-                      {exportCategory === c.id && <Check className="w-3 h-3 flex-shrink-0" />}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="hidden sm:block flex-1" />
-            <button onClick={handleExport} disabled={exporting}
-              className="flex items-center justify-center gap-2 bg-white text-black px-5 py-2.5 sm:py-2 text-[10px] sm:text-[11px] uppercase tracking-[0.18em] sm:tracking-widest hover:bg-gray-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed w-full sm:w-auto">
-              {exporting
-                ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />{lang === 'ru' ? 'Генерация...' : 'Generare...'}</>
-                : <><Download className="w-3.5 h-3.5" />{lang === 'ru' ? 'Скачать Excel' : 'Descarcă Excel'}</>
-              }
-            </button>
-          </div>
-        </div>
-
-        {/* ── MODULE CARDS ──────────────────────────────────────────────────── */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          {modules.map(m => (
-            <Link key={m.to} to={m.to}
-              className={`group border transition-all duration-200 flex flex-col p-4 sm:p-6 hover:border-white min-w-0 ${
-                m.primary ? 'border-white bg-white text-black' : 'border-white/20 bg-white/5 text-white hover:bg-white/10'
-              }`}
-            >
-              <div className="flex items-start justify-between mb-4 sm:mb-6 gap-3">
-                <div className={`w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center flex-shrink-0 ${m.primary ? 'bg-black text-white' : 'bg-white/10 text-white'}`}>
-                  {m.icon}
-                </div>
-                <TrendingUp className={`w-4 h-4 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5 ${m.primary ? 'text-gray-400' : 'text-gray-700'}`} />
-              </div>
-              <h2 className={`text-[13px] sm:text-sm uppercase tracking-[0.12em] sm:tracking-wider mb-2 leading-snug break-words ${m.primary ? 'text-black' : 'text-white'}`}>
-                {m.title}
-              </h2>
-              <p className={`text-[11px] sm:text-xs leading-relaxed flex-1 mb-4 sm:mb-5 break-words ${m.primary ? 'text-gray-600' : 'text-gray-500'}`}>
-                {m.desc}
-              </p>
-              <div className="flex items-center gap-2 min-w-0 flex-wrap">
-                <span className={`text-[11px] sm:text-xs font-mono ${m.primary ? 'text-gray-500' : 'text-gray-600'}`}>
-                  {loadingStats ? '—' : m.stat}
-                </span>
-                {m.statBad && (
-                  <>
-                    <span className="text-gray-400">·</span>
-                    <span className="text-[11px] sm:text-xs text-red-400 break-words">{m.statBad}</span>
-                  </>
-                )}
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* Connection note */}
-        <div className="mt-6 sm:mt-8 border border-white/10 px-4 sm:px-5 py-4 flex gap-3">
-          <div className="w-1.5 h-1.5 bg-green-400 rounded-full mt-1.5 flex-shrink-0" />
-          <p className="text-[11px] sm:text-xs text-gray-500 leading-relaxed">
-            <strong className="text-gray-400">
-              {lang === 'ru' ? 'Всё подключено в реальном времени с сайтом.' : 'Totul este conectat live cu site-ul.'}
-            </strong>{' '}
-            {lang === 'ru'
-              ? 'Любое изменение, сохранённое в панели администратора, немедленно отображается на сайте для посетителей.'
-              : 'Orice modificare salvată în panou apare imediat pe site pentru vizitatori.'}
-          </p>
-        </div>
-      </div>
+  return <div className="admin-dashboard">
+    <div className="admin-dashboard-heading">
+      <div><p className="admin-eyebrow">Sportosfera S.R.L.</p><h1>{lang === 'ru' ? 'Рабочая панель' : 'Panou de administrare'}</h1><p>{lang === 'ru' ? 'Заявки, каталог и содержание сайта — в одном месте.' : 'Cereri, catalog și conținutul site-ului într-un singur loc.'}</p></div>
+      <Link to="/admin/requests" className="admin-primary-link"><ClipboardList size={16} />{lang === 'ru' ? 'Открыть заявки' : 'Deschide cererile'}</Link>
     </div>
-  );
+    <div className="admin-stats">
+      {[
+        { label: t.hub.totalLabel, value: stats?.total, icon: <Box size={16} /> },
+        { label: t.hub.activeLabel, value: stats?.active, icon: <Eye size={16} /> },
+        { label: t.hub.featuredLabel, value: stats?.featured, icon: <Star size={16} /> },
+        { label: t.hub.noImageLabel, value: stats?.noImage, icon: <AlertCircle size={16} />, warn: true },
+      ].map(stat => <div className={`admin-stat ${stat.warn && stat.value ? 'has-warning' : ''}`} key={stat.label}>
+        <span>{stat.label}{stat.icon}</span><strong>{loadingStats ? '—' : stat.value ?? 0}</strong>
+      </div>)}
+    </div>
+    <div className="admin-module-groups">
+      {groups.map(group => <section className="admin-module-group" key={group.title}>
+        <h2>{group.title}</h2>
+        {group.routes.map(route => {
+          const item = modules.find(module => module.to === `/admin/${route}`)!;
+          return <Link className="admin-module-link" to={item.to} key={item.to}>
+            <span className="admin-module-icon">{item.icon}</span>
+            <span><strong>{item.title}</strong><small>{item.stat !== '—' ? item.stat : item.desc}</small>{item.statBad && <small className="admin-module-warning">{item.statBad}</small>}</span>
+            <TrendingUp size={14} className="admin-module-arrow" />
+          </Link>;
+        })}
+      </section>)}
+    </div>
+    <details className="admin-export">
+      <summary><Download size={17} /><span>{lang === 'ru' ? 'Экспорт прайс-листа' : 'Exportă lista de prețuri'}</span><small>Excel .xlsx</small><ChevronDown size={16} /></summary>
+      <div className="admin-export-fields">
+        <label>{lang === 'ru' ? 'Язык' : 'Limba'}<select value={exportLang} onChange={e => setExportLang(e.target.value as 'both' | 'ru' | 'ro')}>
+          <option value="both">{lang === 'ru' ? 'Оба языка' : 'Ambele limbi'}</option><option value="ru">Русский</option><option value="ro">Română</option>
+        </select></label>
+        <label>{lang === 'ru' ? 'Категория' : 'Categoria'}<select value={exportCategory} onChange={e => setExportCategory(e.target.value)}>
+          <option value="all">{lang === 'ru' ? 'Все категории' : 'Toate categoriile'}</option>
+          {categories.map(category => <option key={category.id} value={category.id}>{category.name_ro}</option>)}
+        </select></label>
+        <label className="admin-export-check"><input type="checkbox" checked={exportActive} onChange={e => setExportActive(e.target.checked)} />{lang === 'ru' ? 'Только активные' : 'Doar active'}</label>
+        <button onClick={handleExport} disabled={exporting} className="admin-primary-link">{exporting ? <Loader2 size={16} className="animate-spin" /> : <Download size={16} />}{exporting ? (lang === 'ru' ? 'Подготовка…' : 'Se pregătește…') : (lang === 'ru' ? 'Скачать Excel' : 'Descarcă Excel')}</button>
+      </div>
+    </details>
+    <p className="admin-dashboard-note">{lang === 'ru' ? 'Сохранённые изменения используются на сайте. Перед удалением проверьте выбранные записи.' : 'Modificările salvate sunt folosite pe site. Verifică înregistrările selectate înainte de ștergere.'}</p>
+  </div>;
 }

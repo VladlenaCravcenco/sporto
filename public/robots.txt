@@ -12,6 +12,24 @@ Disallow: /forgot-password
 Disallow: /verify
 Disallow: /account
 Disallow: /order-request
+Disallow: /callback
+Disallow: /reset-password
+Disallow: /api/
+Disallow: /migration/
+Disallow: /ro/order-request
+Disallow: /ru/order-request
+Disallow: /ro/account
+Disallow: /ru/account
+Disallow: /ro/login
+Disallow: /ru/login
+Disallow: /ro/register
+Disallow: /ru/register
+Disallow: /ro/forgot-password
+Disallow: /ru/forgot-password
+Disallow: /ro/reset-password
+Disallow: /ru/reset-password
+Disallow: /ro/callback
+Disallow: /ru/callback
 
 # Sitemap
 Sitemap: https://www.sporto.md/sitemap.xml

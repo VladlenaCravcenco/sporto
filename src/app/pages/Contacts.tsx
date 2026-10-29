@@ -302,7 +302,7 @@ export function Contacts() {
     };
 
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-[#f5f6f7]">
       <SeoHead
         title={SEO_PAGES.contacts[language as Lang].title}
         description={SEO_PAGES.contacts[language as Lang].description}
@@ -312,19 +312,18 @@ export function Contacts() {
         jsonLd={LOCAL_BUSINESS_JSON_LD}
       />
 
-      {/* ── HERO ── */}
       <section className="bg-black text-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-16 md:py-24">
           <div className="grid lg:grid-cols-2 gap-12 items-end">
             <div>
               <div className="flex items-center gap-3 mb-8">
                 <div className="w-px h-4 bg-gray-700" />
-                <span className="text-xs text-gray-500 uppercase tracking-[0.2em]">{T.heroLabel}</span>
+                <span className="text-xs text-gray-400 uppercase tracking-[0.2em]">{T.heroLabel}</span>
               </div>
               <h1 className="text-4xl md:text-5xl lg:text-6xl text-white leading-[1.05] whitespace-pre-line mb-6">
                 {T.heroTitle}
               </h1>
-              <p className="text-sm text-gray-400 leading-relaxed max-w-md">{T.heroSub}</p>
+              <p className="text-sm text-gray-300 leading-relaxed max-w-md">{T.heroSub}</p>
             </div>
 
             <div className="hidden lg:grid grid-cols-2 gap-px bg-gray-800">
@@ -342,12 +341,10 @@ export function Contacts() {
         </div>
       </section>
 
-      {/* ── MAIN CONTENT ── */}
-      <section className="py-14 md:py-20 bg-white">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-14 md:py-20 bg-[#f5f6f7]">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid lg:grid-cols-[1fr_380px] gap-8 lg:gap-12 items-start">
 
-            {/* ── FORM ── */}
             <div className="border border-gray-100">
               {done ? (
                 <div className="flex flex-col items-center justify-center text-center px-10 py-20">
@@ -355,10 +352,10 @@ export function Contacts() {
                     <Check className="w-6 h-6 text-white" />
                   </div>
                   <h2 className="text-2xl tracking-tight text-black mb-4">{T.thankTitle}</h2>
-                  <p className="text-sm text-gray-500 leading-relaxed max-w-sm mb-10">{T.thankBody}</p>
+                  <p className="text-sm text-gray-600 leading-relaxed max-w-sm mb-10">{T.thankBody}</p>
                   <button
                     onClick={() => { setDone(false); setForm({ clientType: 'company', name: '', company: '', phone: '', email: '', type: '', message: '' }); }}
-                    className="text-[10px] uppercase tracking-[0.2em] text-gray-400 hover:text-black transition-colors border-b border-gray-200 hover:border-black pb-0.5"
+                    className="text-[10px] uppercase tracking-[0.2em] text-gray-600 hover:text-black transition-colors border-b border-gray-200 hover:border-black pb-0.5"
                   >
                     {T.thankReset}
                   </button>
@@ -367,41 +364,40 @@ export function Contacts() {
                 <form onSubmit={handleSubmit} noValidate>
                   <div className="px-8 pt-10 pb-8 border-b border-gray-100">
                     <h2 className="text-2xl tracking-tight text-black mb-2">{T.formTitle}</h2>
-                    <p className="text-xs text-gray-400 leading-relaxed">{T.formSub}</p>
+                    <p className="text-xs text-gray-600 leading-relaxed">{T.formSub}</p>
                   </div>
 
                   <div className="px-8 py-8 space-y-6">
-                    {/* Client type */}
+
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.clientTypeLabel}</label>
+                      <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.clientTypeLabel}</label>
                       <div className="flex border border-gray-200 w-full">
                         <button type="button"
                           onClick={() => setForm(p => ({ ...p, clientType: 'individual', company: '' }))}
-                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider transition-colors ${form.clientType === 'individual' ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-50'}`}>
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider transition-colors ${form.clientType === 'individual' ? 'bg-black text-white' : 'text-gray-600 hover:text-black hover:bg-gray-50'}`}>
                           <UserCircle className="w-3.5 h-3.5" />{T.individual}
                         </button>
                         <button type="button"
                           onClick={() => setForm(p => ({ ...p, clientType: 'company' }))}
-                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider border-l border-gray-200 transition-colors ${form.clientType === 'company' ? 'bg-black text-white' : 'text-gray-500 hover:text-black hover:bg-gray-50'}`}>
+                          className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-xs uppercase tracking-wider border-l border-gray-200 transition-colors ${form.clientType === 'company' ? 'bg-black text-white' : 'text-gray-600 hover:text-black hover:bg-gray-50'}`}>
                           <Briefcase className="w-3.5 h-3.5" />{T.companyType}
                         </button>
                       </div>
                     </div>
 
-                    {/* Name */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.nameLabel} <span className="text-black">*</span></label>
-                      <input type="text" value={form.name} onChange={setField('name')}
+                      <label htmlFor="contact-name" className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.nameLabel} <span className="text-black">*</span></label>
+                      <input id="contact-name" type="text" value={form.name} onChange={setField('name')}
                         placeholder={language === 'ro' ? 'Ion Popescu' : 'Иван Петров'}
                         className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors ${errors.name ? 'border-black' : 'border-gray-200'}`} />
                       {errors.name && <p className="mt-1.5 text-[10px] text-black">{errors.name}</p>}
                     </div>
 
-                    {/* Phone + Email */}
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.phoneLabel} <span className="text-black">*</span></label>
+                        <label htmlFor="contact-phone" className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.phoneLabel} <span className="text-black">*</span></label>
                         <PhoneInput
+                          id="contact-phone"
                           value={form.phone}
                           onChange={v => setForm(prev => ({ ...prev, phone: v }))}
                           placeholder="+373 (69) 12-34-56"
@@ -410,39 +406,36 @@ export function Contacts() {
                         {errors.phone && <p className="mt-1.5 text-[10px] text-black">{errors.phone}</p>}
                       </div>
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.emailLabel} <span className="text-black">*</span></label>
-                        <input type="email" value={form.email} onChange={setField('email')}
+                        <label htmlFor="contact-email" className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.emailLabel} <span className="text-black">*</span></label>
+                        <input id="contact-email" type="email" value={form.email} onChange={setField('email')}
                           placeholder={language === 'ro' ? 'email@compania.md' : 'email@company.md'}
                           className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors ${errors.email ? 'border-black' : 'border-gray-200'}`} />
                         {errors.email && <p className="mt-1.5 text-[10px] text-black">{errors.email}</p>}
                       </div>
                     </div>
 
-                    {/* Company */}
                     {form.clientType === 'company' && (
                       <div>
-                        <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.companyLabel} <span className="text-black">*</span></label>
-                        <input type="text" value={form.company} onChange={setField('company')} placeholder="Fitness Club SRL"
+                        <label htmlFor="contact-company" className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.companyLabel} <span className="text-black">*</span></label>
+                        <input id="contact-company" type="text" value={form.company} onChange={setField('company')} placeholder="Fitness Club SRL"
                           className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors ${errors.company ? 'border-black' : 'border-gray-200'}`} />
                         {errors.company && <p className="mt-1.5 text-[10px] text-black">{errors.company}</p>}
                       </div>
                     )}
 
-                    {/* Type */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.typeLabel} <span className="text-black">*</span></label>
-                      <select value={form.type} onChange={setField('type')}
-                        className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 focus:outline-none focus:bg-white focus:border-black transition-colors appearance-none cursor-pointer ${errors.type ? 'border-black' : 'border-gray-200'} ${!form.type ? 'text-gray-400' : 'text-gray-900'}`}>
+                      <label htmlFor="contact-type" className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.typeLabel} <span className="text-black">*</span></label>
+                      <select id="contact-type" value={form.type} onChange={setField('type')}
+                        className={`w-full h-11 px-4 text-sm bg-gray-50 border text-gray-900 focus:outline-none focus:bg-white focus:border-black transition-colors appearance-none cursor-pointer ${errors.type ? 'border-black' : 'border-gray-200'} ${!form.type ? 'text-gray-600' : 'text-gray-900'}`}>
                         <option value="" disabled>{language === 'ro' ? 'Selectați tipul…' : 'Выберите тип…'}</option>
                         {T.typeOptions.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
                       </select>
                       {errors.type && <p className="mt-1.5 text-[10px] text-black">{errors.type}</p>}
                     </div>
 
-                    {/* Message */}
                     <div>
-                      <label className="block text-[10px] uppercase tracking-[0.18em] text-gray-500 mb-2">{T.messageLabel}</label>
-                      <textarea value={form.message} onChange={setField('message')} placeholder={T.messagePlaceholder} rows={4}
+                      <label htmlFor="contact-message" className="block text-[10px] uppercase tracking-[0.18em] text-gray-600 mb-2">{T.messageLabel}</label>
+                      <textarea id="contact-message" value={form.message} onChange={setField('message')} placeholder={T.messagePlaceholder} rows={4}
                         className="w-full px-4 py-3 text-sm bg-gray-50 border border-gray-200 text-gray-900 placeholder-gray-300 focus:outline-none focus:bg-white focus:border-black transition-colors resize-none" />
                     </div>
                   </div>
@@ -461,24 +454,21 @@ export function Contacts() {
               )}
             </div>
 
-            {/* ── SIDEBAR ── */}
             <div className="flex flex-col gap-4">
 
-              {/* Mobile contacts */}
               <div className="lg:hidden grid grid-cols-2 gap-px bg-gray-100">
                 <div className="bg-white p-5 flex flex-col gap-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
-                  <div className="text-[10px] text-gray-400 uppercase tracking-widest">{T.legalEmail}</div>
+                  <Mail className="w-4 h-4 text-gray-600" />
+                  <div className="text-[10px] text-gray-600 uppercase tracking-widest">{T.legalEmail}</div>
                   <a href={`mailto:${email}`} className="text-xs text-gray-700 hover:text-black transition-colors">{email}</a>
                 </div>
                 <div className="bg-white p-5 flex flex-col gap-2">
-                  <PhoneIcon className="w-4 h-4 text-gray-400" />
-                  <div className="text-[10px] text-gray-400 uppercase tracking-widest">{T.legalPhone}</div>
+                  <PhoneIcon className="w-4 h-4 text-gray-600" />
+                  <div className="text-[10px] text-gray-600 uppercase tracking-widest">{T.legalPhone}</div>
                   <a href={`tel:${C.phone}`} className="text-xs text-gray-700 hover:text-black transition-colors">{phone}</a>
                 </div>
               </div>
 
-              {/* Legal card */}
               <div className="border border-gray-100 bg-white">
                 <div className="px-6 pt-6 pb-4 border-b border-gray-100 flex items-center gap-3">
                   <div className="w-8 h-8 bg-black flex items-center justify-center">
@@ -498,7 +488,7 @@ export function Contacts() {
                     <div key={row.label} className="flex gap-3">
                       <div className="mt-0.5 text-gray-300 flex-shrink-0">{row.icon}</div>
                       <div>
-                        <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-0.5">{row.label}</div>
+                        <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-0.5">{row.label}</div>
                         {row.href ? (
                           <a href={row.href} className="text-xs text-gray-700 hover:text-black transition-colors">{row.value}</a>
                         ) : (
@@ -510,16 +500,15 @@ export function Contacts() {
                 </div>
               </div>
 
-              {/* Partnership badge */}
               <div className="bg-black text-white p-6 flex flex-col gap-4">
                 <div className="w-8 h-8 bg-white/10 flex items-center justify-center">
-                  <Handshake className="w-4 h-4 text-gray-400" />
+                  <Handshake className="w-4 h-4 text-gray-600" />
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-[0.15em] text-white mb-2">
                     {language === 'ro' ? 'Parteneriat B2B' : 'Партнёрство B2B'}
                   </div>
-                  <p className="text-xs text-gray-500 leading-relaxed">
+                  <p className="text-xs text-gray-300 leading-relaxed">
                     {language === 'ro'
                       ? 'Oferim condiții speciale pentru parteneri cu comenzi regulate. Contactați-ne pentru a discuta termenii.'
                       : 'Предлагаем специальные условия для партнёров с регулярными заказами. Свяжитесь с нами для обсуждения условий.'}
@@ -527,9 +516,8 @@ export function Contacts() {
                 </div>
               </div>
 
-              {/* Messengers */}
               <div className="border border-gray-100 bg-white px-6 py-5">
-                <div className="text-[10px] text-gray-400 uppercase tracking-widest mb-4">
+                <div className="text-[10px] text-gray-600 uppercase tracking-widest mb-4">
                   {language === 'ro' ? 'Scrieți-ne direct' : 'Напишите нам напрямую'}
                 </div>
                 <div className="flex items-center gap-3 flex-wrap">
@@ -568,19 +556,18 @@ export function Contacts() {
         </div>
       </section>
 
-      {/* ── MAP ── */}
       <section className="bg-gray-50 border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8 py-10 md:py-14">
           <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <div className="w-px h-4 bg-gray-300" />
-                <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em]">
+                <span className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">
                   {language === 'ro' ? 'Locație' : 'Местоположение'}
                 </span>
               </div>
               <h2 className="text-xl text-gray-900 mb-1">{language === 'ro' ? 'Cum Ne Găsiți' : 'Как Нас Найти'}</h2>
-              <p className="text-sm text-gray-500">{address}</p>
+              <p className="text-sm text-gray-600">{address}</p>
             </div>
             <a href={C.mapsDirectionsUrl} target="_blank" rel="noopener noreferrer"
                className="inline-flex items-center gap-2 bg-black text-white px-5 py-3 text-xs uppercase tracking-widest hover:bg-gray-800 transition-colors flex-shrink-0">
@@ -596,7 +583,7 @@ export function Contacts() {
               title={language === 'ro' ? 'Locația noastră' : 'Наше местоположение'} />
           </div>
 
-          <div className="mt-3 flex items-center gap-2 text-xs text-gray-400">
+          <div className="mt-3 flex items-center gap-2 text-xs text-gray-600">
             <span className="w-1.5 h-1.5 bg-gray-300 rounded-full flex-shrink-0" />
             {language === 'ro'
               ? 'Reper: Volta2. Intrarea din stradă, poartă albastră.'
@@ -605,18 +592,17 @@ export function Contacts() {
         </div>
       </section>
 
-      {/* ── WHO WE WORK WITH ── */}
       <section className="py-14 md:py-20 bg-gray-50 border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-px h-4 bg-gray-300" />
-              <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em]">
+              <span className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">
                 {language === 'ro' ? 'Clienți' : 'Клиенты'}
               </span>
             </div>
             <h2 className="text-2xl text-gray-900 mb-2">{T.partnersTitle}</h2>
-            <p className="text-sm text-gray-500 max-w-lg">{T.partnersSub}</p>
+            <p className="text-sm text-gray-600 max-w-lg">{T.partnersSub}</p>
           </div>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
             {T.partners.map((p) => (
@@ -626,7 +612,7 @@ export function Contacts() {
                 </div>
                 <div>
                   <div className="text-xs uppercase tracking-wider text-gray-900 mb-1">{p.title}</div>
-                  <div className="text-xs text-gray-500 leading-relaxed">{p.desc}</div>
+                  <div className="text-xs text-gray-600 leading-relaxed">{p.desc}</div>
                 </div>
               </div>
             ))}
@@ -634,13 +620,12 @@ export function Contacts() {
         </div>
       </section>
 
-      {/* ── WHY US ── */}
-      <section className="py-14 md:py-20 bg-white border-t border-gray-100">
-        <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="py-14 md:py-20 bg-[#f5f6f7] border-t border-gray-100">
+        <div className="max-w-[1920px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="mb-10">
             <div className="flex items-center gap-3 mb-3">
               <div className="w-px h-4 bg-gray-300" />
-              <span className="text-[10px] text-gray-400 uppercase tracking-[0.2em]">
+              <span className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">
                 {language === 'ro' ? 'Avantaje' : 'Преимущества'}
               </span>
             </div>
@@ -649,10 +634,10 @@ export function Contacts() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-px bg-gray-100">
             {T.why.map((item) => (
               <div key={item.num} className="bg-white p-8 flex flex-col gap-6">
-                <span className="text-3xl text-gray-100 tabular-nums">{item.num}</span>
+                <span className="text-3xl text-gray-600 tabular-nums">{item.num}</span>
                 <div>
                   <div className="text-xs uppercase tracking-wider text-gray-900 mb-2">{item.title}</div>
-                  <div className="text-xs text-gray-500 leading-relaxed">{item.desc}</div>
+                  <div className="text-xs text-gray-600 leading-relaxed">{item.desc}</div>
                 </div>
               </div>
             ))}

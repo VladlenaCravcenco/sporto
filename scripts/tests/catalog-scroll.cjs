@@ -1,0 +1,11 @@
+const assert=require('node:assert/strict'),fs=require('node:fs'),ts=require('typescript');
+const out={};const window={location:{pathname:'/ru/catalog',search:'?page=3&category=sport'},scrollX:0,scrollY:1830,history:{state:{__NA:true,tree:{kept:true}},replaceState(value){this.state=value;}}};
+new Function('exports','window',ts.transpileModule(fs.readFileSync('app/_components/catalog-scroll.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2020}}).outputText)(out,window);
+out.saveCatalogPosition('/ru/product/test/id',{getBoundingClientRect:()=>({top:150})});
+assert.equal(window.history.state.__NA,true);assert.deepEqual(window.history.state.tree,{kept:true});
+assert.deepEqual(out.readCatalogPosition(),{url:'/ru/catalog?page=3&category=sport',x:0,y:1830,product:'/ru/product/test/id',offset:150});
+window.location.search='?page=4';assert.equal(out.readCatalogPosition(),null);
+window.location.pathname='/ru/product/test/id';out.saveCatalogPosition('/ru/product/another/id',{getBoundingClientRect:()=>({top:10})});assert.equal(window.history.state.sportoCatalogScroll.y,1830);
+window.location.pathname='/ro/brands/insportline';window.location.search='?page=2';window.scrollY=2210;out.saveCatalogPosition('/ro/product/test/id',{getBoundingClientRect:()=>({top:200})});assert.equal(out.readCatalogPosition().y,2210);
+window.history.state.sportoCatalogScroll.y=NaN;assert.equal(out.readCatalogPosition(),null);
+console.log('PASS: exact catalog/brand URL position, page/filter separation, preserved Next history state, product-page exclusion and invalid-state handling.');

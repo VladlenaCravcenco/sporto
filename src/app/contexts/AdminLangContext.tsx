@@ -1,9 +1,7 @@
 import { createContext, useContext, useState, useEffect, type ReactNode } from 'react';
 
-// ─── Types ────────────────────────────────────────────────────────────────────
 export type AdminLang = 'ru' | 'ro';
 
-// ─── Translations ─────────────────────────────────────────────────────────────
 const T = {
   ru: {
     nav: {
@@ -714,7 +712,6 @@ const T = {
 
 export type AdminTranslations = typeof T.ru;
 
-// ─── Context ──────────────────────────────────────────────────────────────────
 interface AdminLangCtx {
   lang: AdminLang;
   setLang: (l: AdminLang) => void;

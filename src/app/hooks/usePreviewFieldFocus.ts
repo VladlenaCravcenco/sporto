@@ -18,13 +18,21 @@ export function usePreviewFieldFocus() {
     if (clearTimer.current) clearTimeout(clearTimer.current);
     clearTimer.current = setTimeout(() => setActiveFieldId(null), 2000);
 
-    node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    let section: HTMLElement | null = node;
+    while (section) {
+      if (section instanceof HTMLDetailsElement) section.open = true;
+      section = section.parentElement;
+    }
+    node.dispatchEvent(new CustomEvent('admin-focus-field', { bubbles: true }));
+    requestAnimationFrame(() => {
+    node.scrollIntoView({ behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'center' });
 
     const control = node.matches('input, textarea, select')
       ? node
       : node.querySelector<HTMLElement>('input, textarea, select, button');
 
-    control?.focus();
+    control?.focus({ preventScroll: true });
+    });
   }, []);
 
   useEffect(() => () => {

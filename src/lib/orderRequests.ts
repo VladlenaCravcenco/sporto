@@ -23,6 +23,7 @@ export interface OrderRequestInput {
 
 type OrderRequestResponse = {
   accepted?: boolean;
+  notifications?: { client: string; admin: string };
   orderId?: string;
   clientId?: string | null;
   error?: string;
@@ -35,7 +36,7 @@ export class OrderRequestSubmissionError extends Error {
   }
 }
 
-export async function submitOrderRequest(input: OrderRequestInput): Promise<{ orderId: string; clientId: string | null }> {
+export async function submitOrderRequest(input: OrderRequestInput): Promise<{ orderId: string; clientId: string | null; notificationStatus: string }> {
   const response = await fetch('/api/order-request', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -47,6 +48,6 @@ export async function submitOrderRequest(input: OrderRequestInput): Promise<{ or
     throw new OrderRequestSubmissionError(result.error || 'request_not_saved', response.status);
   }
 
-  return { orderId: result.orderId, clientId: result.clientId ?? null };
+  return { orderId: result.orderId, clientId: result.clientId ?? null, notificationStatus: result.notifications?.client || 'not_configured' };
 }
 

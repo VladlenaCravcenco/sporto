@@ -1,3 +1,5 @@
+import { AdminBilingualField, AdminEditorSection } from '../components/AdminEditorSection';
+import { AdminEditorWorkspace } from '../components/AdminEditorWorkspace';
 import { useEffect, useState } from 'react';
 import { Save, Plus, Trash2, Eye, EyeOff, ChevronUp, ChevronDown } from 'lucide-react';
 import { useAdminLang } from '../contexts/AdminLangContext';
@@ -22,40 +24,7 @@ function bi(ro = '', ru = ''): BiText {
   return { ro, ru };
 }
 
-function BiField({ label, value, onChange, textarea }: {
-  label: string;
-  value: BiText;
-  onChange: (value: BiText) => void;
-  textarea?: boolean;
-}) {
-  const base = 'w-full bg-black border border-white/20 px-2.5 text-xs text-white placeholder-gray-700 focus:border-white/60 focus:outline-none transition-colors';
-  return (
-    <div className="min-w-0">
-      <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{label}</div>
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-        {(['ro', 'ru'] as const).map((lang) => (
-          <div key={lang} className="min-w-0">
-            <div className="text-[8px] text-gray-700 uppercase tracking-widest mb-1">{lang.toUpperCase()}</div>
-            {textarea ? (
-              <textarea
-                rows={3}
-                value={value[lang]}
-                onChange={(e) => onChange({ ...value, [lang]: e.target.value })}
-                className={`${base} py-1.5 resize-none`}
-              />
-            ) : (
-              <input
-                value={value[lang]}
-                onChange={(e) => onChange({ ...value, [lang]: e.target.value })}
-                className={`${base} h-8`}
-              />
-            )}
-          </div>
-        ))}
-      </div>
-    </div>
-  );
-}
+const BiField = AdminBilingualField;
 
 function TextField({ label, value, onChange }: {
   label: string;
@@ -64,11 +33,11 @@ function TextField({ label, value, onChange }: {
 }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{label}</div>
+      <div className="text-xs   admin-muted mb-1">{label}</div>
       <input
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full h-8 bg-black border border-white/20 px-2.5 text-xs text-white focus:border-white/60 focus:outline-none transition-colors"
+        className="w-full h-8 admin-surface border admin-border px-2.5 text-xs admin-ink admin-focus-border focus:outline-none transition-colors"
       />
     </div>
   );
@@ -82,12 +51,12 @@ function TextAreaField({ label, value, onChange, rows = 4 }: {
 }) {
   return (
     <div>
-      <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-1">{label}</div>
+      <div className="text-xs   admin-muted mb-1">{label}</div>
       <textarea
         rows={rows}
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full bg-black border border-white/20 px-2.5 py-1.5 text-xs text-white focus:border-white/60 focus:outline-none transition-colors resize-none"
+        className="w-full admin-surface border admin-border px-2.5 py-1.5 text-xs admin-ink admin-focus-border focus:outline-none transition-colors resize-none"
       />
     </div>
   );
@@ -112,17 +81,17 @@ function CardList<T>({
   return (
     <div className="space-y-2">
       {items.map((item, index) => (
-        <div key={index} className="border border-white/10 p-2.5">
+        <div key={index} className="border admin-border p-2.5">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-[9px] text-gray-600">#{index + 1}</span>
+            <span className="text-xs admin-muted">#{index + 1}</span>
             <div className="flex items-center gap-0.5">
-              <button onClick={() => onMove(index, -1)} disabled={index === 0} className="w-5 h-5 flex items-center justify-center text-gray-700 hover:text-white disabled:opacity-20">
+              <button aria-label={lang === 'ru' ? 'Переместить выше' : 'Mută în sus'} onClick={() => onMove(index, -1)} disabled={index === 0} className="w-5 h-5 flex items-center justify-center admin-ink admin-hover-ink disabled:opacity-20">
                 <ChevronUp className="w-3 h-3" />
               </button>
-              <button onClick={() => onMove(index, 1)} disabled={index === items.length - 1} className="w-5 h-5 flex items-center justify-center text-gray-700 hover:text-white disabled:opacity-20">
+              <button aria-label={lang === 'ru' ? 'Переместить ниже' : 'Mută în jos'} onClick={() => onMove(index, 1)} disabled={index === items.length - 1} className="w-5 h-5 flex items-center justify-center admin-ink admin-hover-ink disabled:opacity-20">
                 <ChevronDown className="w-3 h-3" />
               </button>
-              <button onClick={() => onRemove(index)} className="w-5 h-5 flex items-center justify-center text-gray-700 hover:text-red-400">
+              <button aria-label={lang === 'ru' ? 'Удалить элемент' : 'Șterge elementul'} onClick={() => onRemove(index)} className="w-5 h-5 flex items-center justify-center admin-ink hover:text-red-400">
                 <Trash2 className="w-3 h-3" />
               </button>
             </div>
@@ -134,7 +103,7 @@ function CardList<T>({
           })}
         </div>
       ))}
-      <button onClick={onAdd} className="w-full border border-dashed border-white/15 py-2 text-[10px] text-gray-600 hover:text-gray-400 hover:border-white/30 transition-colors flex items-center justify-center gap-1.5">
+      <button onClick={onAdd} className="w-full border border-dashed admin-border py-2 text-xs admin-muted hover:text-gray-400 admin-hover-border transition-colors flex items-center justify-center gap-1.5">
         <Plus className="w-3 h-3" />
         {lang === 'ru' ? 'Добавить' : 'Adaugă'}
       </button>
@@ -338,19 +307,19 @@ export function AdminMaintenance() {
   };
 
   return (
-    <div className="flex min-h-[calc(100vh-48px)] flex-col overflow-x-hidden bg-black lg:h-[calc(100vh-48px)] lg:flex-row lg:overflow-hidden">
-      <div className="w-full min-w-0 shrink-0 flex flex-col border-b border-white/10 lg:w-[520px] lg:border-b-0 lg:border-r lg:overflow-y-auto">
-        <div className="sticky top-[88px] z-10 bg-black border-b border-white/10 px-4 py-4 sm:px-5 lg:top-0">
+    <AdminEditorWorkspace languages>
+      <div className="admin-editor-pane">
+        <div className="sticky top-[88px] z-10 admin-surface border-b admin-border px-4 py-4 sm:px-5 lg:top-0">
           <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <p className="text-[10px] text-gray-600 uppercase tracking-[0.2em]">{l('Pagină', 'Страница')}</p>
-              <h1 className="break-all text-sm text-white sm:text-base">/maintenance-service</h1>
+              <p className="text-xs admin-muted  ">{l('Pagină', 'Страница')}</p>
+              <h1 className="break-all text-sm admin-ink sm:text-base">{isRu ? 'Техническое обслуживание' : 'Întreținere tehnică'}</h1>
             </div>
             <div className="flex flex-wrap items-center gap-2">
-              <button onClick={handleReset} className="h-8 px-3 text-[10px] text-gray-600 border border-white/10 hover:border-white/30 hover:text-gray-300 uppercase tracking-wider">
+              <button onClick={handleReset} className="h-8 px-3 text-xs admin-muted border admin-border admin-hover-border hover:text-gray-300  ">
                 {isRu ? 'Сброс' : 'Reset'}
               </button>
-              <button onClick={handleSave} disabled={!hasChanges || saving} className={`flex items-center gap-1.5 px-4 h-8 text-xs uppercase tracking-widest ${hasChanges ? 'bg-white text-black hover:bg-gray-100' : 'bg-white/10 text-gray-600 cursor-default'}`}>
+              <button onClick={handleSave} disabled={!hasChanges || saving} className={`flex items-center gap-1.5 px-4 h-8 text-xs   ${hasChanges ? 'admin-solid admin-on-solid admin-hover-surface' : 'admin-muted-surface admin-muted cursor-default'}`}>
                 <Save className="w-3 h-3" />
                 {saving ? (isRu ? 'Сохраняем' : 'Salvare') : (isRu ? 'Сохранить' : 'Salvează')}
               </button>
@@ -359,42 +328,42 @@ export function AdminMaintenance() {
         </div>
 
         <div className="min-w-0 px-4 py-5 space-y-6 sm:px-5">
-          <div ref={registerField('hero')} className={activeFieldId === 'hero' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Hero</div>
+          <AdminEditorSection ref={registerField('hero')} title={isRu ? 'Первый экран' : 'Primul ecran'} defaultOpen>
+
             <div className="space-y-3">
-              <BiField label="Eyebrow" value={data.hero_eyebrow} onChange={(value) => setField('hero_eyebrow', value)} />
+              <BiField label={isRu ? 'Надпись над заголовком' : 'Text deasupra titlului'} value={data.hero_eyebrow} onChange={(value) => setField('hero_eyebrow', value)} />
               <BiField label={isRu ? 'Заголовок' : 'Titlu'} value={data.hero_title} onChange={(value) => setField('hero_title', value)} textarea />
               <BiField label={isRu ? 'Описание' : 'Descriere'} value={data.hero_body} onChange={(value) => setField('hero_body', value)} textarea />
-              <BiField label="CTA" value={data.hero_cta} onChange={(value) => setField('hero_cta', value)} />
-              <BiField label={isRu ? 'Подпись под CTA' : 'Text sub CTA'} value={data.hero_sub} onChange={(value) => setField('hero_sub', value)} />
+              <BiField label={isRu ? 'Текст кнопки' : 'Textul butonului'} value={data.hero_cta} onChange={(value) => setField('hero_cta', value)} />
+              <BiField label={isRu ? 'Подпись под кнопкой' : 'Text sub buton'} value={data.hero_sub} onChange={(value) => setField('hero_sub', value)} />
             </div>
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('section_order')} className={activeFieldId === 'section_order' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Block order</div>
+          <AdminEditorSection ref={registerField('section_order')} title={isRu ? 'Порядок и видимость блоков' : 'Ordinea și vizibilitatea secțiunilor'}>
+
             <div className="space-y-2">
               {data.section_order.map((section, index) => {
                 const visible = data[showKey(section)] as boolean;
                 return (
-                  <div key={section} className="border border-white/10 px-3 py-2 flex items-center gap-2">
-                    <div className="min-w-0 flex-1 break-words text-[10px] text-gray-400 uppercase tracking-widest">{SECTION_TITLES[section]}</div>
-                    <button onClick={() => setField(showKey(section), (!visible) as PageData[keyof PageData])} className={`w-6 h-6 flex items-center justify-center ${visible ? 'text-green-400' : 'text-gray-600'}`}>
+                  <div key={section} className="border admin-border px-3 py-2 flex items-center gap-2">
+                    <div className="min-w-0 flex-1 break-words text-xs admin-muted  ">{isRu ? ({stats:'Цифры и преимущества',packages:'Пакеты обслуживания',process:'Этапы работы',services:'Услуги',delivery:'Доставка',cta:'Контактный блок'}[section]) : ({stats:'Cifre și avantaje',packages:'Pachete',process:'Etape',services:'Servicii',delivery:'Livrare',cta:'Contact'}[section])}</div>
+                    <button onClick={() => setField(showKey(section), (!visible) as PageData[keyof PageData])} className={`w-6 h-6 flex items-center justify-center ${visible ? 'text-green-400' : 'admin-muted'}`}>
                       {visible ? <Eye className="w-3 h-3" /> : <EyeOff className="w-3 h-3" />}
                     </button>
-                    <button onClick={() => moveSection(index, -1)} disabled={index === 0} className="w-6 h-6 flex items-center justify-center text-gray-700 hover:text-white disabled:opacity-20">
+                    <button onClick={() => moveSection(index, -1)} disabled={index === 0} className="w-6 h-6 flex items-center justify-center admin-ink admin-hover-ink disabled:opacity-20">
                       <ChevronUp className="w-3 h-3" />
                     </button>
-                    <button onClick={() => moveSection(index, 1)} disabled={index === data.section_order.length - 1} className="w-6 h-6 flex items-center justify-center text-gray-700 hover:text-white disabled:opacity-20">
+                    <button onClick={() => moveSection(index, 1)} disabled={index === data.section_order.length - 1} className="w-6 h-6 flex items-center justify-center admin-ink admin-hover-ink disabled:opacity-20">
                       <ChevronDown className="w-3 h-3" />
                     </button>
                   </div>
                 );
               })}
             </div>
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('stats')} className={activeFieldId === 'stats' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Stats</div>
+          <AdminEditorSection ref={registerField('stats')} title={isRu ? 'Цифры и преимущества' : 'Cifre și avantaje'}>
+
             <CardList
               items={data.stats}
               {...listHelpers<Stat>('stats', () => ({ n: bi(), label: bi() }))}
@@ -405,12 +374,12 @@ export function AdminMaintenance() {
                 </div>
               )}
             />
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('services')} className={activeFieldId === 'services' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Services</div>
+          <AdminEditorSection ref={registerField('services')} title={isRu ? 'Услуги' : 'Servicii'}>
+
             <div className="space-y-3 mb-3">
-              <BiField label="Eyebrow" value={data.services_eyebrow} onChange={(value) => setField('services_eyebrow', value)} />
+              <BiField label={isRu ? 'Надпись над заголовком' : 'Text deasupra titlului'} value={data.services_eyebrow} onChange={(value) => setField('services_eyebrow', value)} />
               <BiField label={isRu ? 'Заголовок секции' : 'Titlu secțiune'} value={data.services_title} onChange={(value) => setField('services_title', value)} textarea />
             </div>
             <CardList
@@ -424,12 +393,12 @@ export function AdminMaintenance() {
                 </div>
               )}
             />
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('packages')} className={activeFieldId === 'packages' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Packages</div>
+          <AdminEditorSection ref={registerField('packages')} title={isRu ? 'Пакеты обслуживания' : 'Pachete de servicii'}>
+
             <div className="space-y-3 mb-3">
-              <BiField label="Eyebrow" value={data.packages_eyebrow} onChange={(value) => setField('packages_eyebrow', value)} />
+              <BiField label={isRu ? 'Надпись над заголовком' : 'Text deasupra titlului'} value={data.packages_eyebrow} onChange={(value) => setField('packages_eyebrow', value)} />
               <BiField label={isRu ? 'Заголовок секции' : 'Titlu secțiune'} value={data.packages_title} onChange={(value) => setField('packages_title', value)} textarea />
             </div>
             <CardList
@@ -454,22 +423,21 @@ export function AdminMaintenance() {
                   </div>
                   <BiField label={isRu ? 'Период' : 'Perioadă'} value={item.period} onChange={(value) => update({ ...item, period: value })} />
                   <BiField label={isRu ? 'Подпись' : 'Notă'} value={item.note} onChange={(value) => update({ ...item, note: value })} />
-                  <BiField label="CTA" value={item.cta} onChange={(value) => update({ ...item, cta: value })} />
-                  <TextAreaField label="Features RO" value={item.features_ro} onChange={(value) => update({ ...item, features_ro: value })} rows={5} />
-                  <TextAreaField label="Features RU" value={item.features_ru} onChange={(value) => update({ ...item, features_ru: value })} rows={5} />
-                  <label className="flex items-center gap-2 text-xs text-gray-400">
+                  <BiField label={isRu ? 'Текст кнопки' : 'Textul butonului'} value={item.cta} onChange={(value) => update({ ...item, cta: value })} />
+                  <BiField label={isRu ? 'Что входит в пакет — каждый пункт с новой строки' : 'Ce include pachetul — câte un punct pe rând'} value={{ro: item.features_ro, ru: item.features_ru}} onChange={value => update({...item, features_ro:value.ro, features_ru:value.ru})} textarea />
+                  <label className="flex items-center gap-2 text-xs admin-muted">
                     <input type="checkbox" checked={item.featured} onChange={(e) => update({ ...item, featured: e.target.checked })} />
-                    Featured
+                    {isRu ? 'Выделить пакет как рекомендуемый' : 'Evidențiază pachetul recomandat'}
                   </label>
                 </div>
               )}
             />
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('process')} className={activeFieldId === 'process' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Process</div>
+          <AdminEditorSection ref={registerField('process')} title={isRu ? 'Этапы работы' : 'Etapele de lucru'}>
+
             <div className="space-y-3 mb-3">
-              <BiField label="Eyebrow" value={data.process_eyebrow} onChange={(value) => setField('process_eyebrow', value)} />
+              <BiField label={isRu ? 'Надпись над заголовком' : 'Text deasupra titlului'} value={data.process_eyebrow} onChange={(value) => setField('process_eyebrow', value)} />
               <BiField label={isRu ? 'Заголовок секции' : 'Titlu secțiune'} value={data.process_title} onChange={(value) => setField('process_title', value)} textarea />
             </div>
             <CardList
@@ -483,12 +451,12 @@ export function AdminMaintenance() {
                 </div>
               )}
             />
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('delivery')} className={activeFieldId === 'delivery' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">Delivery</div>
+          <AdminEditorSection ref={registerField('delivery')} title={isRu ? 'Условия доставки' : 'Condiții de livrare'}>
+
             <div className="space-y-3 mb-3">
-              <BiField label="Eyebrow" value={data.delivery_eyebrow} onChange={(value) => setField('delivery_eyebrow', value)} />
+              <BiField label={isRu ? 'Надпись над заголовком' : 'Text deasupra titlului'} value={data.delivery_eyebrow} onChange={(value) => setField('delivery_eyebrow', value)} />
               <BiField label={isRu ? 'Заголовок секции' : 'Titlu secțiune'} value={data.delivery_title} onChange={(value) => setField('delivery_title', value)} textarea />
               <BiField label={isRu ? 'Описание' : 'Descriere'} value={data.delivery_desc} onChange={(value) => setField('delivery_desc', value)} textarea />
               <BiField label={isRu ? 'Текст ссылки' : 'Text link'} value={data.delivery_link} onChange={(value) => setField('delivery_link', value)} />
@@ -504,34 +472,34 @@ export function AdminMaintenance() {
                 </div>
               )}
             />
-          </div>
+          </AdminEditorSection>
 
-          <div ref={registerField('cta')} className={activeFieldId === 'cta' ? 'ring-1 ring-white/40 bg-white/[0.03] p-2 -m-2' : ''}>
-            <div className="text-[9px] uppercase tracking-widest text-gray-600 mb-2 pb-1.5 border-b border-white/10">CTA</div>
+          <AdminEditorSection ref={registerField('cta')} title={isRu ? 'Контактный блок' : 'Secțiunea de contact'}>
+
             <div className="space-y-3">
               <BiField label={isRu ? 'Заголовок' : 'Titlu'} value={data.cta_title} onChange={(value) => setField('cta_title', value)} textarea />
               <BiField label={isRu ? 'Описание' : 'Descriere'} value={data.cta_body} onChange={(value) => setField('cta_body', value)} textarea />
-              <BiField label="CTA" value={data.cta_btn} onChange={(value) => setField('cta_btn', value)} />
+              <BiField label={isRu ? 'Текст кнопки' : 'Textul butonului'} value={data.cta_btn} onChange={(value) => setField('cta_btn', value)} />
               <BiField label={isRu ? 'Текст ссылки' : 'Text link'} value={data.cta_link} onChange={(value) => setField('cta_link', value)} />
             </div>
-          </div>
+          </AdminEditorSection>
         </div>
       </div>
 
-      <div className="min-w-0 flex-1 flex flex-col overflow-hidden">
-        <div className="border-b border-white/10 px-4 py-3 bg-black sm:px-5">
+      <div className="admin-preview-pane min-w-0 flex-1 flex flex-col overflow-hidden">
+        <div className="border-b admin-border px-4 py-3 admin-surface sm:px-5">
           <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="text-[10px] text-gray-600 uppercase tracking-widest">Preview</div>
+          <div className="text-xs admin-muted  ">Preview</div>
           <div className="flex items-center gap-1">
-            <button onClick={() => setPreviewLang('ro')} className={`px-3 py-1 text-[10px] uppercase tracking-wider ${previewLang === 'ro' ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>RO</button>
-            <button onClick={() => setPreviewLang('ru')} className={`px-3 py-1 text-[10px] uppercase tracking-wider ${previewLang === 'ru' ? 'bg-white/10 text-white' : 'text-gray-600 hover:text-gray-400'}`}>RU</button>
+            <button onClick={() => setPreviewLang('ro')} className={`px-3 py-1 text-xs   ${previewLang === 'ro' ? 'admin-muted-surface admin-ink' : 'admin-muted hover:text-gray-400'}`}>RO</button>
+            <button onClick={() => setPreviewLang('ru')} className={`px-3 py-1 text-xs   ${previewLang === 'ru' ? 'admin-muted-surface admin-ink' : 'admin-muted hover:text-gray-400'}`}>RU</button>
           </div>
           </div>
         </div>
-        <div className="flex-1 overflow-y-auto bg-white">
+        <div data-admin-preview className="flex-1 overflow-y-auto bg-white">
           <Preview data={data} lang={previewLang} activeFieldId={activeFieldId} focusField={focusField} />
         </div>
       </div>
-    </div>
+    </AdminEditorWorkspace>
   );
 }
